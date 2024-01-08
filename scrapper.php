@@ -2,7 +2,7 @@
 // FOR HTTP
 // Thanks to octoparse
 // USE php7.2 scrapper.php --with-openssl
-// VERSION -> 0 
+// VERSION -> 0.1 
 /** C VERSION OF COLORS : 
  * #define KNRM  "\x1B[0m" -> default in terminal 
  * #define KRED  "\x1B[31m"
@@ -20,53 +20,22 @@ $begin_color = "\033[01;";
 $end_color = "\033[0m";
 $text_in_color = "TEXT";
 $build_color_text = $begin_color . $white_color . $text_in_color . $end_color;
-$version = "0.0";
+$version = "0.1";
 
-function content_http(string $url) {
-	$html = file_get_contents($url);
-
-	$doc = new DOMDocument();
-
-	libxml_use_internal_errors(TRUE);
-
-	if(!empty($html)) {
-		$doc->loadHTML($html);
-		libxml_clear_errors();
-
-		$doc_xpath = new DOMXPath($doc);
-
-		$doc_row = $doc_xpath->query('//div[@id]');
-
-		if($doc_row->length > 0) {
-			foreach($doc_row as $row){
-				echo $row->nodeValue . "<br/>";
-			}
-		}
-	}
-}
 // FOR HTTPS : 
 // Thanks to CopyProgramming
-function content_https(string $url) { 
-	$arrContextOptions=array(
-		"ssl"=>array(
-				"verify_peer"=>false,
-				"verify_peer_name"=>false,
-			),
-		);  
-	$html = file_get_contents($url, false, stream_context_create($arrContextOptions));
-	$doc = new DOMDocument();
 
-	libxml_use_internal_errors(TRUE);
+function check($arg = NULL) {
+	if($arg == NULL)
+		return 0;
+	if($arg == "")
+		return 0;
+	return 1;
+}
 
-	if(!empty($html)) {
-		$doc->loadHTML($html);
-		libxml_clear_errors();
-
-		$doc_xpath = new DOMXPath($doc);
-		$doc_row = $doc_xpath->query('//div[@id]');
-		foreach($doc_row as $row)
-			echo $row->nodeValue . "<br/>";
-	}
+function print_error(string $php_errormsg) : int {
+	echo $php_errormsg . "\n";
+	return 0;
 }
 
 function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) {
@@ -124,27 +93,6 @@ function childs_path(DOMNodeList $nodesList, string $origin_node) {
 		}
 	}
 	return $child_nametags;	
-}
-
-function all_paths($child_path) {
-	$paths = "";
-	$save = "";
-	if(is_array($child_path)) 
-		if((array_key_exists("path",$child_path)))
-			$save = "/" . $child_path["path"];
-
-	if(sizeof($child_path) > 2) 
-		foreach($child_path as $elem) {
-			if(!is_string($elem)) 
-				if((key($elem)) != "path") 
-					$paths .= $save  . all_paths($elem) . "\n";
-				else 
-					$paths .= "/" . $elem["path"] . "\n";
-		
-		}
-	else 
-		$paths .= $save;
-	return $paths;
 }
 
 function all_paths_v2($child_path, string $origin_node) {
@@ -223,28 +171,6 @@ function all_datas_with_paths_v2($child_path, string $origin_node) {
 	return $paths;
 }
 
-function all_datas_with_paths(array $child_path) {
-	$datas = "";
-	$save = "";
-	if(is_array($child_path)) {
-		if((array_key_exists("path",$child_path)))
-			$save = $child_path["path"] . "/";
-		if((array_key_exists("data",$child_path)))
-			$save .= "[:" . $child_path["data"] . ":]";
-	}
-	if(sizeof($child_path) > 2) 
-		foreach($child_path as $elem) {
-			if(!is_string($elem)) 
-				if((key($elem)) != "path") 
-					$datas .= $save . all_datas_with_paths($elem) . "\n";
-				else 
-					$datas .= "/" . $elem["path"] . "\n";
-		}
-	else 
-		$datas .= $save;
-	return $datas;
-}
-
 function complete_path(DOMElement $target_elem = NULL) {
 	if($target_elem->tagName == "html") 
 		return "html";
@@ -272,40 +198,24 @@ function complete_path_with_childs_path(string $research_data, array $child_path
 
 function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "", 
 							string $content_to_scrap = "") : bool {
-	if($doc_xpath == NULL) {
-		echo "ERROR doc_xpath empty \n";
-		return 1;
-	}
-	if($query == "") {
-		echo "ERROR empty query \n";
-		return 1;
-	}
-
-	if($content_to_scrap == "") {
-		echo "ERROR nothing to scrap \n";
-		return 1;
+	$checks = [check($doc_xpath),check($query),check($content_to_scrap)];
+	$errors = ["doc_xpath empty","empty query","nothing to scrap"];
+	$index = 0;
+	foreach($checks as $check) {
+		if($check == 0)
+			return print_error($errors[$index]);
+		$index++;
 	}
 	// FIRST ->  SEARCH IN ALL DOCUMENT 
-	$true_query = "/".$query;
-	$doc_row = $doc_xpath->query($true_query);//$true_query);
-	print_r($doc_row[0]);
-	echo "with XPATH : \n";
+	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
+	$doc_row = $doc_xpath->query($true_query);
 	$all_childs = childs_path($doc_row[0]->childNodes,$query);
-	//var_dump($all_childs);
-	//print_r($all_childs);
-	//var_dump($all_childs);
 	$complete_path = complete_path_with_childs_path($content_to_scrap,$all_childs);
-	//echo "complete_path : $complete_path \n";
 	// - echo "paths :* \n" . all_paths_v2($all_childs,$query);
 	// - echo "datas :* \n". all_datas($all_childs) . "\n";
-	// -echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
+	// - echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
 
 	// SECOND -> ADAPTATION WITH THE COMPLETE PATH
-	//$doc_row = $doc_xpath->query('//'.$complete_path);
-	//$parent_path = complete_path($doc_row[0]);
-	//echo "PATH : $parent_path \n";
-	//print_r($all_childs);
-	//print_r($doc_row[0]->nextSibling->nextSibling);
 	echo "path of research :$complete_path \n";
 	return ($complete_path != "");
 }
@@ -335,7 +245,7 @@ function scrap_http(string $url) {
 }
 
 function scrap_other(string $protocol, string $url) {
-	return file_get_contents($url);
+	return NULL;//FOR THE MOMENT
 }
 
 function scrapping(string $url) {
@@ -350,6 +260,7 @@ function scrapping(string $url) {
 			break;
 		default;
 			$file = scrap_other($protocol,$url);
+			break;
 	}
 	$doc = new DOMDocument();
 	libxml_use_internal_errors(TRUE);
@@ -360,148 +271,6 @@ function scrapping(string $url) {
 	}
 	return NULL;
 }
-
-/*
-function parseUrl(string $url) : array {
-	$url_parsing = [];
-	$protocol = "";
-	$under_domain = [];
-	$final_domain = "";
-	$final_path = "";
-	$protocol = substr($url,0,strpos($url,"://"));
-	echo "protocol : $protocol \n";
-	return [];
-}*/
-
-
-
-function protocol(string $url) : string {
-	return parse_url($url,PHP_URL_SCHEME);
-}
-
-function content_html(string $url, bool $https_or_not, string $filter_type, string $filter) {
-	$html = "";
-	if($https_or_not == true) {
-		$options = [
-			'ssl' => [
-			  'verify_peer' => false,
-			  'verify_peer_name' => false,
-			],
-			'http'=> [
-				'method'=>"GET",
-				'header'=>"Accept-language: en\r\n" .
-						  "Cookie: foo=bar\r\n" .  // check function.stream-context-create on php.net
-						  "User-Agent: 
-						  	Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) 
-							AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b 
-							Safari/531.21.102011-10-16 20:23:10\r\n" // i.e. An iPad 
-			],
-		  ];
-		$context = stream_context_create($options);
-		$html = file_get_contents($url, false,$context);
-		echo "HTTPS \n";
-	}
-	else {
-		$html = file_get_contents($url);
-		echo "HTTP \n";
-	}
-	$doc = new DOMDocument();
-
-	libxml_use_internal_errors(TRUE);
-
-
-	# PATH TO UPDATE 
-	$random_id = "top_a_i";
-	$random_class = "container";
-	$query_id = "*[@id='$random_id']";
-	$query_class = "*[@class='$random_class']";
-	$query_tag = "form[1]/fieldset/div[1]/label"; // with xpath
-	$query_mix = "form/fieldset/div[@id='Nom']/label";
-	/**
-	 * Examples of xpath in http://localhost/projet_pw2/index.php : 
-	 * - form/fieldset/div/label -> all label for all forms
-	 * - form/fieldset/div[1]/label -> all label of div[1] in all forms
-	 * - form[1]/fieldset/div[1]/label -> label of div[1] in first form
-	 * - form/fieldset/div[@id='Nom']/label"; -> label of div with id = Nom in all forms (first form)
-	*/
-	if(!empty($html)) {
-		$doc->loadHTML($html);
-		libxml_clear_errors();
-		$doc_xpath = new DOMXPath($doc);
-		if($filter_type == "id")
-			$doc_row = $doc_xpath->query('//'.$query_id);
-		else if($filter_type == "class")
-			$doc_row = $doc_xpath->query('//'.$query_class);
-		else if($filter_type == "tag") 
-			$doc_row = $doc_xpath->query('//'.$query_mix);
-		
-		var_dump($doc_row);
-		echo "with XPATH : \n";
-		foreach($doc_row as $row) 
-			echo $row->nodeValue . "\n";
-
-
-		echo "with getelement \n";
-		$row_filter = "";
-		/*if($filter_type == "tag") 
-			$row_filter = $doc->getElementsByTagName($filter);
-		else if ($filter_type == "class") 
-			$row_filter = $doc->getElementsByClassName($filter);*/
-		/*if($filter_type == "tag") 
-			$row_filter = $doc->getElementsByTagName($filter);
-		echo $row_filter->length;
-		foreach($row_filter as $row) 
-			echo $row->textContent;*/
-		
-	}
-}
-
-function content_js(string $url, bool $https_or_not, string $filter) {
-	$html = "";
-	if($https_or_not == true) {
-		$options = [
-			'ssl' => [
-			  'verify_peer' => false,
-			  'verify_peer_name' => false,
-			],
-			'http'=> [
-				'method'=>"GET",
-				'header'=>"Accept-language: en\r\n" .
-						  "Cookie: foo=bar\r\n" .  // check function.stream-context-create on php.net
-						  "User-Agent: 
-						  	Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) 
-							AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b 
-							Safari/531.21.102011-10-16 20:23:10\r\n" // i.e. An iPad 
-			],
-		  ];
-		$context = stream_context_create($options);
-		$html = file_get_contents($url, false,$context);
-		echo "HTTPS \n";
-	}
-	else {
-		$html = file_get_contents($url);
-		echo "HTTP \n";
-	}
-	$doc = new DOMDocument();
-
-	libxml_use_internal_errors(TRUE);
-
-	if(!empty($html)) {
-		$doc->loadHTML($html);
-		libxml_clear_errors();
-
-		$doc_xpath = new DOMXPath($doc);
-		$doc_row = $doc_xpath->query('//'.$filter.'[@id]');
-
-		foreach($doc_row as $row) 
-			echo $row->nodeValue . "<br/>";
-	}
-	//echo $html;
-}
-
-
-var_dump($argv);
-# SCRAPPING OF PERSONAL PROJECT 
 
 function print_help(string $argv0) {
 	echo "\t   main \t command line : ". $argv0 . " [url] [query] --with-openssl\n";
@@ -519,10 +288,6 @@ $queries_array = [
 	"/html/body/header",
 	"/html/body",
 	"/html/body/div[1]"
-	// "/*[@id='firstHeading']" -> fonctionne -> Bienvenue sur Wikipédia
-	// /div/div[3]/main/div[1]/div/div[1]/nav/div[1]/div/ul/li[1]/a/span"
-	///html/body/div[1]/div[6]/div[2]/div[3]/a[3]
-	///html/body/div[1]/div[1]/div/div/div/div/div[2]/a
 ];
 
 $urls_array = [
@@ -550,7 +315,6 @@ $result_test = [
 ];
 
 function test(string $url, string $query, string $res) : bool {
-
 	return (content_scrap_html(scrapping($url),$query,$res));
 }
 
@@ -579,19 +343,21 @@ function main($argc, $argv) {
 	if($argc == 4) 
 		return content_scrap_html(scrapping($argv[1]),$argv[2]);
 	else {
-		if($argc > 1) {
-			if($argv[1] == "--help") 
-				print_help($argv[0]);
-			else if($argv[1] == "--test")
-				test_procedure();
-			else if($argv[1] == "--version")
-				print_version();
-		}
+		if($argc > 1) 
+			switch($argv[1])  {
+				case "--help": print_help($argv[0]);
+					break;
+				case "--test": test_procedure();
+					break;
+				case "--version": print_version();
+					break;
+				default:
+					break;
+			}
 		else 
 			echo "ERROR : format : ". $argv[0] . " [url] [query] --with-openssl\n";
 	}
 	return 1;
 }
-
 main($argc,$argv);
 ?>
