@@ -1,4 +1,39 @@
 <?php 
+// For document file 
+/**
+ * Short description for file
+ *
+ * Long description for file
+ *
+ * PHP version 7.2
+ *
+ * LICENSE: --
+ *
+ * @package    scrapper.php
+ * @author     chrisSmile0
+ * @copyright  2024 -> @author
+ * @license    [NO_LICENSE]
+ * @version    0.1
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper.php
+ * @since      File available since Release 0.0
+ * @deprecated NO_DECPRECATED
+*/
+
+// For document classe 
+/**
+ * [BRIEF]-> class description
+ * @param		-> class constructor params	
+*/
+
+// For document function 
+/**
+ * [BRIEF]->  
+ * @param  
+ * @example 
+ * @author 	-> chriSmile0
+ * @return
+ */
+
 // FOR HTTP
 // Thanks to octoparse
 // USE php7.2 scrapper.php --with-openssl
@@ -25,20 +60,47 @@ $version = "0.1";
 // FOR HTTPS : 
 // Thanks to CopyProgramming
 
-function check($arg = NULL) {
+/**
+ * [BRIEF] 	Check not null/empty/-1/false argument 
+ * @param	$arg	
+ * @example check(2<1)
+ * @author 	chriSmile0
+ * @return	int	0/1	if $arg is empty or false 1 if is initialize or true/>0
+ */
+function check($arg = NULL) : int {
 	if($arg == NULL)
 		return 0;
 	if($arg == "")
 		return 0;
+	if($arg == -1)
+		return 0;
+	if(!$arg)
+		return 0;
 	return 1;
 }
 
+/**
+ * [BRIEF]	print an error message  
+ * @param	string	$php_errormsg 
+ * @example print_error("ERROR, usage : prog arg1 arg2")
+ * @author	chriSmile0
+ * @return	int	0
+ */
 function print_error(string $php_errormsg) : int {
 	echo $php_errormsg . "\n";
 	return 0;
 }
 
-function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) {
+/**
+ * [BRIEF]	return the number of similar tag of the second param 
+ * 			in the nodeList
+ * @param	DOMNodeList $nodesList	the nodelist of the doc_xpath->query response
+ * @param	string 		$tag 		the tag to analyze
+ * @example	nb_tag_in_same_level($childs, "div")
+ * @author	chriSmile0
+ * @return	int the number of similar tag of $tag (include this tag)
+*/
+function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
 	$cpt = 0;
 	foreach($nodesList as $node) 
 		if($node->localName != NULL)
@@ -47,6 +109,32 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) {
 	return $cpt; 
 }
 
+/**
+ * [BRIEF]	A recursive function to explore the nodelist.
+ * 			In doc_xpath->query the result is compose of many things.
+ * 			But the interest is on the localName(ignore the "")
+ * 			If the nodeList contain a child then 
+ * 				search in each child if he had a child (recursion)
+ * 				and add the path to the current path and in the
+ * 				origin_node (recursion)
+ * 				If this child has no content it's not necessary to 
+ * 				continue (-> add the path and return)
+ * 				
+ * 				In the Xpath the div[@id] is use for determine the absolute
+ * 				path, we analyze each child for create this xpath 
+ * 				(-> @see nb_tag_in_same_level())
+ * 				
+ * 			Else (this child if the last child of the recursion) :
+ * 				We add the content of this child
+ * 
+ * @param	DOMNodeList $nodesList		the nodelist of the doc_xpath->query
+ * @param	string 		$origin_node	the begin of the exploration
+ * @example	childs_path($childs, "/html/body/div")
+ * @author	chriSmile0
+ * @return	array of array (@example return):
+ * 				- Array(Array(Array(data,path),path),path)
+ * 				- Array([],path)
+*/
 function childs_path(DOMNodeList $nodesList, string $origin_node) {
 	$nb_child = $nodesList->length;
 	$childs = $nodesList;
@@ -95,6 +183,21 @@ function childs_path(DOMNodeList $nodesList, string $origin_node) {
 	return $child_nametags;	
 }
 
+/**
+ * [BRIEF]	A recursive function to explore the child_path.
+ * 			The usage of this function use childs_path function (@see childs_path)
+ * 			If the array contain once array (parent have once child) then 
+ * 				explore the child+add_path or add_path+return 
+ * 			Else 
+ * 				If the parent contain many childs then explore each child 
+ * 				or just add path and return 
+ * 
+ * @param	$child_path				the array of childs_path function
+ * @param	string	$origin_node	the begin of the exploration
+ * @example	all_paths_v2($childs_path, "/html/body/div")
+ * @author	chriSmile0
+ * @return	array of string contain all paths of the $origin node
+*/
 function all_paths_v2($child_path, string $origin_node) {
 	$paths = "";
 	$size_of_path = 0;
@@ -122,6 +225,16 @@ function all_paths_v2($child_path, string $origin_node) {
 	return $paths;
 }
 
+/**
+ * [BRIEF]	A recursive function to explore the child_path.
+ * 			The usage of this function use childs_path function (@see childs_path)
+ * 
+ * @param	array	$child_path		the array of childs_path function
+ * @example	all_datas($child_path)
+ * @author	chriSmile0
+ * @return	array of string contain all datas of the $origin_node 
+ *				(data = visible text in the website display)
+*/
 function all_datas(array $child_path) {
 	$datas = "";
 	$save = "";
@@ -139,6 +252,19 @@ function all_datas(array $child_path) {
 	return $datas;
 }
 
+/**
+ * [BRIEF]	A recursive function to explore the child_path.
+ * 			The usage of this function use childs_path function (@see childs_path)
+ * 			This function return the data with the associative path. 
+ * 			(@see all_paths_v2 -> with the add of data -> l13 of the code) 
+ * 
+ * @param	$child_path			the array of childs_path function
+ * @param 	string $origin_node	the begin of the exploration
+ * @example	all_datas_with_paths_v2($child_path, "/html/body/div")
+ * @author	chriSmile0
+ * @return	array of string contain all paths with the associative content 
+ * 				or just a all paths if not associative content 
+*/
 function all_datas_with_paths_v2($child_path, string $origin_node) {
 	$paths = "";
 	$size_of_path = 0;
@@ -171,6 +297,15 @@ function all_datas_with_paths_v2($child_path, string $origin_node) {
 	return $paths;
 }
 
+/**
+ * [BRIEF]	Create an absolute path with the target_elem (child to parent , etc)
+ * 
+ * @param	DOMElement $target_elem	the target_elem 	
+ * @example	complete_path("div")
+ * @author	chriSmile0
+ * @return	string	the path 
+ * @?deprecated [UNTESTED_FUNCTION]
+*/
 function complete_path(DOMElement $target_elem = NULL) {
 	if($target_elem->tagName == "html") 
 		return "html";
@@ -178,7 +313,17 @@ function complete_path(DOMElement $target_elem = NULL) {
 		return complete_path($target_elem->parentNode) . "/" . $target_elem->tagName;
 }
 
-function complete_path_with_childs_path(string $research_data, array $child_path) {
+/**
+ * [BRIEF]	If the $research_data is found in the document so the path
+ * 			is return 
+ * 
+ * @param	string	$research data	the specific content do we search
+ * @param 	array	$child_path		(@see childs_path)
+ * @example	complete_path_with_childs_path("Connexion",$child_path)
+ * @author	chriSmile0
+ * @return	string	the path to reach the $research_data
+*/
+function complete_path_with_childs_path(string $research_data, array $child_path) : string {
 	$retour = "";
 	$cur_path_ok = "";
 	$exist_cur_path = (array_key_exists("path",$child_path));
@@ -196,6 +341,16 @@ function complete_path_with_childs_path(string $research_data, array $child_path
 	return $retour;
 }
 
+/**
+ * [BRIEF]	Research a specific content in a html file
+ * 
+ * @param	DOMXPath	$doc_xpath			the document in $doc_xpath
+ * @param	string 		$query				the query
+ * @param	string		$content_to_scrap	the content 
+ * @example	content_to_scrap_html(NULL,"/html/body/div","Connexion")
+ * @author	chriSmile0
+ * @return	bool	true if path is establish false if is not
+*/
 function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "", 
 							string $content_to_scrap = "") : bool {
 	$checks = [check($doc_xpath),check($query),check($content_to_scrap)];
@@ -220,7 +375,16 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
 	return ($complete_path != "");
 }
 
-function scrap_https(string $url)  {
+/**
+ * [BRIEF]	Create a stream context (with options) for create https context
+ * 			to capture the file in the $url target
+ * 
+ * @param	string	$url	the url target
+ * @example	scrap_https("https://www.google.com")
+ * @author	chriSmile0
+ * @return	string	the content of the file in the target url
+*/
+function scrap_https(string $url) : string  {
 	$options = [
 		'ssl' => [
 		  'verify_peer' => false,
@@ -240,14 +404,39 @@ function scrap_https(string $url)  {
 	return file_get_contents($url, false,$context);
 }
 
-function scrap_http(string $url) {
+/**
+ * [BRIEF]	It's http not options and no context needed (for the moment)
+ * 
+ * @param	string	$url	the url target 
+ * @example	scrap_http("http://example.com")
+ * @author	chriSmile0
+ * @return	string	the content of the file in the target url
+*/
+function scrap_http(string $url) : string {
 	return file_get_contents($url);
 }
 
-function scrap_other(string $protocol, string $url) {
-	return NULL;//FOR THE MOMENT
+/**
+ * [BRIEF]	[NOT IMPLEMENTED (-> for the moment)] -> 
+ * @param	string	$protocol	the target protocol
+ * @param	string 	$url		the target url
+ * @example scrap_other("ftp", "ftp://example_ftp")
+ * @author	chriSmile0
+ * @return	string	the content of the file in the target url
+*/
+function scrap_other(string $protocol, string $url) : string  {
+	return "";//FOR THE MOMENT
 }
 
+/**
+ * [BRIEF]	Select a different scrap method for different protocol in target
+ * 			url. Transform each scrap in html file 
+ * 
+ * @param	string	$url	the target url
+ * @example	scrapping("https://www.google.com")
+ * @author	chriSmile0
+ * @return	
+*/
 function scrapping(string $url) {
 	$protocol = parse_url($url, PHP_URL_SCHEME);
 	$file = "";
@@ -272,6 +461,18 @@ function scrapping(string $url) {
 	return NULL;
 }
 
+/**
+ * [BRIEF]	[HELP_PRINTER]
+ * 			- main 		print the command line for exec the main program	
+ * 			- --test	launch the test procedure
+ * 			- --help	print this help
+ * 			- --version print the program version (@see print_version)
+ * 
+ * @param	string	$argv0	the program name 
+ * @example	print_help("scrapper.php")
+ * @author	chriSmile0
+ * @return	void
+*/
 function print_help(string $argv0) {
 	echo "\t   main \t command line : ". $argv0 . " [url] [query] --with-openssl\n";
 	echo "\t --test \t command line : ". $argv0 . " --test --with-openssl\n";
@@ -279,6 +480,13 @@ function print_help(string $argv0) {
 	echo "\t --version \t print version\n";
 }
 
+/**
+ * [BRIEF]	[VERSION_PRINTER]
+ * @param	void
+ * @example	print_version()
+ * @author	chriSmile0
+ * @return	void
+*/
 function print_version() {
 	echo "Version of Scrapping program : ". $GLOBALS["version"] ."\n";
 	echo "Copyright @-2024 [:chriSmile0:] \n";
@@ -314,10 +522,26 @@ $result_test = [
 	]
 ];
 
+/**
+ * [BRIEF]	[TEST]
+ * @param	string	$url	the target url	
+ * @param	string	$query	the begin point of research in the capture file
+ * @param	string 	$res	the waited result (not the path, the content)
+ * @example	test("https://www.google.com","/html/body","Connexion")
+ * @author	chriSmile0
+ * @return	bool	
+*/
 function test(string $url, string $query, string $res) : bool {
 	return (content_scrap_html(scrapping($url),$query,$res));
 }
 
+/**
+ * [BRIEF]	[TESTS]	Launch the specific test with the array in param
+ * @param	array	$res_test	the array of test 
+ * @example	tests($result_test)
+ * @author	chriSmile0
+ * @return	bool 
+*/
 function tests(array $res_test) : bool {
 	$all_tests = [
 		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res']),
@@ -334,12 +558,30 @@ function tests(array $res_test) : bool {
 	return true; // 1 
 }
 
-function test_procedure() {
+/**
+ * [BRIEF]	[TEST_PROCEDURE]
+ * @param	void
+ * @example	test_procedure()
+ * @author	chriSmile0
+ * @return	bool
+*/
+function test_procedure() : bool {
 	echo "**TESTS** \n"; 
-	echo "TEST result : " . tests($GLOBALS["result_test"]) . "\n";
+	$test_res = tests($GLOBALS["result_test"]);
+	echo "TEST result : " . $test_res . "\n";
+	return $test_res;
 }
 
-function main($argc, $argv) {
+/**
+ * [BRIEF]	[MAIN_PROGRAM]
+ * @param	$argc	The number of paramter in the command line execution
+ * @param	$argv	The parameters of the command line execution
+ * @example	main($argc,"php scrapper.php --test")
+ * @author	chriSmile0
+ * @return	bool 1 if all is good, 0 if error in the command line or in the phase
+ * 				test or if the scrapping failed 
+*/
+function main($argc, $argv) : bool {
 	if($argc == 4) 
 		return content_scrap_html(scrapping($argv[1]),$argv[2]);
 	else {
@@ -347,7 +589,7 @@ function main($argc, $argv) {
 			switch($argv[1])  {
 				case "--help": print_help($argv[0]);
 					break;
-				case "--test": test_procedure();
+				case "--test": return test_procedure();
 					break;
 				case "--version": print_version();
 					break;
@@ -355,9 +597,18 @@ function main($argc, $argv) {
 					break;
 			}
 		else 
-			echo "ERROR : format : ". $argv[0] . " [url] [query] --with-openssl\n";
+			return print_error("ERROR : format : ". $argv[0] . " [url] [query] --with-openssl\n");
 	}
+	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
 main($argc,$argv);
+
+/**
+ * [BRIEF]	
+ * @param	
+ * @example	
+ * @author	
+ * @return	
+*/
 ?>
