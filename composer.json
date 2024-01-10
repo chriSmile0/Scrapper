@@ -1,5 +1,13 @@
 {
     "require": {
         "monolog/monolog": "2.0.*"
-    }
+    },
+	"description": "scrapping of http(s) file",
+	"license": "NO_LICENSE",
+	"authors": [
+		{
+			"name": "Chris",
+			"role": "Owner/Developer"
+		}
+	]
 }
