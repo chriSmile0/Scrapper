@@ -2,7 +2,7 @@
 
 ## Disclaimer 
 - **_This tool is not for collect personal information_**
-- Please respect the [RGPDs rules](!https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016R0679)
+- Please respect the [RGPDs rules](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016R0679)
 
 ## What is a scrapper
 A tool to collect any information of website pages :For example javascript,html,css sources
