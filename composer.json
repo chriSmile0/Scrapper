@@ -1,0 +1,11 @@
+{
+	"description": "scrapping of http(s) file",
+	"license": "proprietary",
+	"name": "no/name",
+	"authors": [
+		{
+			"name": "Chris",
+			"role": "Owner/Developer"
+		}
+	]
+}

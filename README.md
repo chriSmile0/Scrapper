@@ -30,7 +30,7 @@ Or API :
 ### V0
 - My work of research with my drafts 
 
-### V0.{0..?}
+### V0.1
 - Intermediate step and version
 
 ### V1.0 -> Soon 
