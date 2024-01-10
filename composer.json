@@ -3,7 +3,8 @@
         "monolog/monolog": "2.0.*"
     },
 	"description": "scrapping of http(s) file",
-	"license": "NO_LICENSE",
+	"license": "proprietary",
+	"name": "monolog/monolog",
 	"authors": [
 		{
 			"name": "Chris",
