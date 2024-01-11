@@ -72,8 +72,6 @@ function check($arg = NULL) : int {
 		return 0;
 	if($arg == "")
 		return 0;
-	if($arg == -1)
-		return 0;
 	if(!$arg)
 		return 0;
 	return 1;
@@ -319,24 +317,71 @@ function complete_path(DOMElement $target_elem = NULL) {
  * 
  * @param	string	$research data	the specific content do we search
  * @param 	array	$child_path		(@see childs_path)
+ * @param	string 	$cmp_or_pos		choice exact comparaison or include
+ * @example	complete_path_with_childs_path("Connexion",$child_path,"cmp") -> 1 path -> Google test 
+ * @example complete_path_with_childs_path("i","$childs_path","pos") -> many path -> Google test 
+ * @author	chriSmile0
+ * @return	string	the path to reach the $research_data
+*/
+function complete_path_with_childs_path(string $research_data, array $child_path, string $cmp_or_pos) : string {
+	$retour = "";
+	$cur_path_ok = "";
+	$exist_cur_path = (array_key_exists("path",$child_path));
+	$cur_path_ok = ($exist_cur_path) ? $child_path["path"] : "";
+	$c_o_p_lower = strtolower($cmp_or_pos);
+	$cmp_test = (!strcmp($c_o_p_lower,"cmp"));
+	$pos_test = (!strcmp($c_o_p_lower,"pos"));
+	$c_o_p_lower_test = ($cmp_test ? true : ($pos_test ? true : false)); 
+	if(!$c_o_p_lower_test)
+		return print_error("ERROR : choice for third argument in {'cmp','pos'}");
+	if(array_key_exists("data",$child_path)) {
+		if($cmp_test) {
+			if(strcmp($child_path["data"],$research_data)==0) 
+				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
+		}
+		else if($pos_test) {
+			if(strval(strpos($child_path["data"],$research_data)) >= "0") 
+				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
+		}
+			
+	}
+
+	foreach($child_path as $elem) 
+		if($elem) 
+			if(!is_string($elem)) {
+				$elem["path"] = $child_path["path"] . "/" . $elem["path"];
+				if(($rtn = complete_path_with_childs_path($research_data,$elem,$cmp_or_pos))!= "") 
+					$retour .=  $rtn . "\n" ;
+			}		
+
+	return $retour;
+}
+
+/**
+ * [BRIEF]	If the $research_data is found(in sub data) in the document so the path
+ * 			is return 
+ * 
+ * @param	string	$research data	the specific content do we search
+ * @param 	array	$child_path		(@see childs_path)
  * @example	complete_path_with_childs_path("Connexion",$child_path)
  * @author	chriSmile0
  * @return	string	the path to reach the $research_data
 */
-function complete_path_with_childs_path(string $research_data, array $child_path) : string {
+function complete_path_with_childs_path_v2(string $research_data, array $child_path) : string {
 	$retour = "";
 	$cur_path_ok = "";
 	$exist_cur_path = (array_key_exists("path",$child_path));
 	$cur_path_ok = ($exist_cur_path) ? $child_path["path"] : "";
 	if(array_key_exists("data",$child_path)) 
-		if(strcmp($child_path["data"],$research_data)==0) 
+		if(strpos($child_path["data"],$research_data)!=false)
 			$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
 
 	foreach($child_path as $elem) 
 		if($elem) 
-			if(!is_string($elem)) 
-				if(($rtn = complete_path_with_childs_path($research_data,$elem)) != "") 
+			if(!is_string($elem)) {
+				if(($rtn = complete_path_with_childs_path_v2($research_data,$elem)) != "") 
 					return "/" . $cur_path_ok . $rtn ;
+			}
 	
 	return $retour;
 }
@@ -346,15 +391,16 @@ function complete_path_with_childs_path(string $research_data, array $child_path
  * 
  * @param	DOMXPath	$doc_xpath			the document in $doc_xpath
  * @param	string 		$query				the query
- * @param	string		$content_to_scrap	the content 
+ * @param	string		$content_to_scrap	the content
+ * @param	string		$cmp_or_pos			choice exact comparaison or include 
  * @example	content_to_scrap_html(NULL,"/html/body/div","Connexion")
  * @author	chriSmile0
  * @return	bool	true if path is establish false if is not
 */
 function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "", 
-							string $content_to_scrap = "") : bool {
-	$checks = [check($doc_xpath),check($query),check($content_to_scrap)];
-	$errors = ["doc_xpath empty","empty query","nothing to scrap"];
+							string $content_to_scrap = "", string $cmp_or_pos = "") : bool {
+	$checks = [check($doc_xpath),check($query),check($content_to_scrap),check($cmp_or_pos)];
+	$errors = ["doc_xpath empty","empty query","nothing to scrap","'cmp'/'pos' nothing else"];
 	$index = 0;
 	foreach($checks as $check) {
 		if($check == 0)
@@ -365,7 +411,7 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
 	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
 	$doc_row = $doc_xpath->query($true_query);
 	$all_childs = childs_path($doc_row[0]->childNodes,$query);
-	$complete_path = complete_path_with_childs_path($content_to_scrap,$all_childs);
+	$complete_path = complete_path_with_childs_path($content_to_scrap,$all_childs,$cmp_or_pos);
 	// - echo "paths :* \n" . all_paths_v2($all_childs,$query);
 	// - echo "datas :* \n". all_datas($all_childs) . "\n";
 	// - echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
@@ -508,17 +554,20 @@ $result_test = [
 	[
 		'url' => $urls_array[0],
 		'query' => $queries_array[0],
-		'res' => "Reservation"
+		'res_c' => "Reservation",
+		'res_p' => "tion"
 	],
 	[
 		'url' => $urls_array[1],
 		'query' => $queries_array[1],
-		'res' => "Connexion"
+		'res_c' => "Connexion",
+		'res_p' => "i"
 	],
 	[
 		'url' => $urls_array[2],
 		'query' => $queries_array[2],
-		'res' => "Bienvenue sur Wikipédia"
+		'res_c' => "Bienvenue sur Wikipédia",
+		'res_p' => "Bienvenue"
 	]
 ];
 
@@ -531,8 +580,8 @@ $result_test = [
  * @author	chriSmile0
  * @return	bool	
 */
-function test(string $url, string $query, string $res) : bool {
-	return (content_scrap_html(scrapping($url),$query,$res));
+function test(string $url, string $query, string $res, string $cmp_o_pos) : bool {
+	return (content_scrap_html(scrapping($url),$query,$res,$cmp_o_pos));
 }
 
 /**
@@ -543,19 +592,36 @@ function test(string $url, string $query, string $res) : bool {
  * @return	bool 
 */
 function tests(array $res_test) : bool {
-	$all_tests = [
-		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res']),
-		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res']),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res'])
+	$all_tests_cmp = [
+		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_c'],"cmp"),
+		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_c'],"cmp"),
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp")
+	];
+	$all_tests_pos = [
+		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_p'],"pos"),
+		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_p'],"pos"),
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos")
 	];
 	$cpt = 1;
-	foreach($all_tests as $res) {
-		echo "\nTEST n°$cpt : ". (($res == true) ? "\033[01;32m GOOD\033[0m" : "\033[01;31m BAD\033[0m") ." \n"; 
-		$cpt++;
-		if($res == false)
-			return false;
+	$cpt1 = 1;
+	echo "EQUAL DATA TEST \n";
+	foreach($all_tests_cmp as $res) {
+		echo "\nTEST EQ n°$cpt1 : ". (($res == true) ? "\033[01;32m GOOD\033[0m" : "\033[01;31m BAD\033[0m") ." \n"; 
+		$cpt1++;
+		if($res == true)
+			$cpt++;
 	}
-	return true; // 1 
+
+	$cpt2 = 1;
+	echo "INCLUDE DATA TEST \n";
+	foreach($all_tests_pos as $res) {
+		echo "\nTEST INC n°$cpt2 : ". (($res == true) ? "\033[01;32m GOOD\033[0m" : "\033[01;31m BAD\033[0m") ." \n"; 
+		$cpt2++;
+		if($res == true)
+			$cpt++;
+	}
+
+	return ($cpt == (sizeof($all_tests_cmp)+sizeof($all_tests_pos))); // 1 
 }
 
 /**
@@ -573,6 +639,19 @@ function test_procedure() : bool {
 }
 
 /**
+ * [BRIEF]	The main procedure	
+ * @param	string	$url		the url
+ * @param	string	$research	the content to research
+ * @example sub_main("https://www.google.com","Connexion")
+ * @author	chriSmile0
+ * @return	array of path
+*/
+/*
+function sub_main(string $url, string $research) {
+
+}*/
+
+/**
  * [BRIEF]	[MAIN_PROGRAM]
  * @param	$argc	The number of paramter in the command line execution
  * @param	$argv	The parameters of the command line execution
@@ -582,8 +661,8 @@ function test_procedure() : bool {
  * 				test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 4) 
-		return content_scrap_html(scrapping($argv[1]),$argv[2]);
+	if($argc == 6) 
+		return content_scrap_html(scrapping($argv[1]),$argv[2],$argv[3],$argv[4]);
 	else {
 		if($argc > 1) 
 			switch($argv[1])  {

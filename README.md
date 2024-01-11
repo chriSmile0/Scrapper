@@ -30,8 +30,11 @@ Or API :
 ### V0
 - My work of research with my drafts 
 
-### V0.1
-- Intermediate step and version
+### V0.2
+- Add 'cmp' and 'pos : 
+  - 'cmp' for exact comparaison content
+  - 'pos' for include in content
+This update is for the possibility to return many path for any request
 
 ### V1.0 -> Soon 
 - Final first version 
