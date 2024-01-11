@@ -337,11 +337,11 @@ function complete_path_with_childs_path(string $research_data, array $child_path
 	if(array_key_exists("data",$child_path)) {
 		if($cmp_test) {
 			if(strcmp($child_path["data"],$research_data)==0) 
-				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
+				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok " : "";
 		}
 		else if($pos_test) {
 			if(strval(strpos($child_path["data"],$research_data)) >= "0") 
-				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
+				$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok " : "";
 		}
 			
 	}
@@ -351,39 +351,10 @@ function complete_path_with_childs_path(string $research_data, array $child_path
 			if(!is_string($elem)) {
 				$elem["path"] = $child_path["path"] . "/" . $elem["path"];
 				if(($rtn = complete_path_with_childs_path($research_data,$elem,$cmp_or_pos))!= "") 
-					$retour .=  $rtn . "\n" ;
+					$retour .=  $rtn ;
 			}		
-
-	return $retour;
-}
-
-/**
- * [BRIEF]	If the $research_data is found(in sub data) in the document so the path
- * 			is return 
- * 
- * @param	string	$research data	the specific content do we search
- * @param 	array	$child_path		(@see childs_path)
- * @example	complete_path_with_childs_path("Connexion",$child_path)
- * @author	chriSmile0
- * @return	string	the path to reach the $research_data
-*/
-function complete_path_with_childs_path_v2(string $research_data, array $child_path) : string {
-	$retour = "";
-	$cur_path_ok = "";
-	$exist_cur_path = (array_key_exists("path",$child_path));
-	$cur_path_ok = ($exist_cur_path) ? $child_path["path"] : "";
-	if(array_key_exists("data",$child_path)) 
-		if(strpos($child_path["data"],$research_data)!=false)
-			$retour = (array_key_exists("path",$child_path)) ? "/$cur_path_ok" : "";
-
-	foreach($child_path as $elem) 
-		if($elem) 
-			if(!is_string($elem)) {
-				if(($rtn = complete_path_with_childs_path_v2($research_data,$elem)) != "") 
-					return "/" . $cur_path_ok . $rtn ;
-			}
 	
-	return $retour;
+	return $retour ;
 }
 
 /**
@@ -395,10 +366,10 @@ function complete_path_with_childs_path_v2(string $research_data, array $child_p
  * @param	string		$cmp_or_pos			choice exact comparaison or include 
  * @example	content_to_scrap_html(NULL,"/html/body/div","Connexion")
  * @author	chriSmile0
- * @return	bool	true if path is establish false if is not
+ * @return	Array or bool if path is establish false if is not
 */
 function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "", 
-							string $content_to_scrap = "", string $cmp_or_pos = "") : bool {
+							string $content_to_scrap = "", string $cmp_or_pos = "") {
 	$checks = [check($doc_xpath),check($query),check($content_to_scrap),check($cmp_or_pos)];
 	$errors = ["doc_xpath empty","empty query","nothing to scrap","'cmp'/'pos' nothing else"];
 	$index = 0;
@@ -417,8 +388,10 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
 	// - echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
 
 	// SECOND -> ADAPTATION WITH THE COMPLETE PATH
-	echo "path of research :$complete_path \n";
-	return ($complete_path != "");
+	echo "path of research : \n $complete_path \n";
+	if(!strcmp($complete_path,""))
+		return array();
+	return explode(" ",$complete_path);
 }
 
 /**
@@ -581,7 +554,7 @@ $result_test = [
  * @return	bool	
 */
 function test(string $url, string $query, string $res, string $cmp_o_pos) : bool {
-	return (content_scrap_html(scrapping($url),$query,$res,$cmp_o_pos));
+	return (!empty(content_scrap_html(scrapping($url),$query,$res,$cmp_o_pos)));
 }
 
 /**
@@ -639,20 +612,19 @@ function test_procedure() : bool {
 }
 
 /**
- * [BRIEF]	The main procedure	
+ * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url		the url
  * @param	string	$research	the content to research
  * @example sub_main("https://www.google.com","Connexion")
  * @author	chriSmile0
  * @return	array of path
 */
-/*
-function sub_main(string $url, string $research) {
-
-}*/
+function sub_main(string $url, string $query, string $research, string $cmp_o_pos) {
+	return content_scrap_html(scrapping($url),$query,$research,$cmp_o_pos);
+}
 
 /**
- * [BRIEF]	[MAIN_PROGRAM]
+ * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
  * @param	$argc	The number of paramter in the command line execution
  * @param	$argv	The parameters of the command line execution
  * @example	main($argc,"php scrapper.php --test")
@@ -662,7 +634,7 @@ function sub_main(string $url, string $research) {
 */
 function main($argc, $argv) : bool {
 	if($argc == 6) 
-		return content_scrap_html(scrapping($argv[1]),$argv[2],$argv[3],$argv[4]);
+		return (empty(content_scrap_html(scrapping($argv[1]),$argv[2],$argv[3],$argv[4])));
 	else {
 		if($argc > 1) 
 			switch($argv[1])  {
