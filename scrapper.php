@@ -398,41 +398,62 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
  * [BRIEF]	Create a stream context (with options) for create https context
  * 			to capture the file in the $url target
  * 
- * @param	string	$url	the url target
+ * @param	string	$url		the url target
+ * @param	bool 	$with_js 	if 
  * @example	scrap_https("https://www.google.com")
  * @author	chriSmile0
  * @return	string	the content of the file in the target url
 */
-function scrap_https(string $url) : string  {
-	$options = [
-		'ssl' => [
-		  'verify_peer' => false,
-		  'verify_peer_name' => false,
-		],
-		'http'=> [
-			'method'=>"GET",
-			'header'=>"Accept-language: en\r\n" .
-					  "Cookie: foo=bar\r\n" .  // check function.stream-context-create on php.net
-					  "User-Agent: 
-						  Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) 
-						AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b 
-						Safari/531.21.102011-10-16 20:23:10\r\n" // i.e. An iPad 
-		],
-	  ];
-	$context = stream_context_create($options);
-	return file_get_contents($url, false,$context);
+function scrap_https(string $url, bool $with_js) : string  {
+	$output = "";
+	if($with_js) {
+		$url = escapeshellarg($url); // Replace with the target URL
+		$nodeScriptPath = 'scrape.js';
+		$output = shell_exec("node $nodeScriptPath $url");
+	}
+	else {
+		$options = [
+			'ssl' => [
+			'verify_peer' => false,
+			'verify_peer_name' => false,
+			],
+			'http'=> [
+				'method'=>"GET",
+				'header'=>"Accept-language: en\r\n" .
+						"Cookie: foo=bar\r\n" .  // check function.stream-context-create on php.net
+						"User-Agent: 
+							Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) 
+							AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b 
+							Safari/531.21.102011-10-16 20:23:10\r\n" // i.e. An iPad 
+			],
+		];
+		$context = stream_context_create($options);
+		$output = file_get_contents($url, false,$context);
+	}
+	return $output;
 }
 
 /**
  * [BRIEF]	It's http not options and no context needed (for the moment)
  * 
- * @param	string	$url	the url target 
+ * @param	string	$url		the url target 
+ * @param 	bool 	$with_js 	if we print the js renderer content
  * @example	scrap_http("http://example.com")
  * @author	chriSmile0
  * @return	string	the content of the file in the target url
 */
-function scrap_http(string $url) : string {
-	return file_get_contents($url);
+function scrap_http(string $url, bool $with_js) : string {
+	//$retour = file_get_contents($url);
+	$output = "";
+	if($with_js) {
+		$url = escapeshellarg($url); // Replace with the target URL
+		$nodeScriptPath = 'scrape.js';
+		$output = shell_exec("node $nodeScriptPath $url");
+	}
+	else {
+		$output = file_get_contents($url);
+	}
+	return $output;
 }
 
 /**
@@ -451,20 +472,21 @@ function scrap_other(string $protocol, string $url) : string  {
  * [BRIEF]	Select a different scrap method for different protocol in target
  * 			url. Transform each scrap in html file 
  * 
- * @param	string	$url	the target url
+ * @param	string	$url		the target url
+ * @param 	bool 	$with_js 	if we print the js renderer content
  * @example	scrapping("https://www.google.com")
  * @author	chriSmile0
  * @return	
 */
-function scrapping(string $url) {
+function scrapping(string $url, bool $with_js) {
 	$protocol = parse_url($url, PHP_URL_SCHEME);
 	$file = "";
 	switch ($protocol) {
 		case "https":
-			$file = scrap_https($url);
+			$file = scrap_https($url,$with_js);
 			break;
 		case "http":
-			$file = scrap_http($url);
+			$file = scrap_http($url,$with_js);
 			break;
 		default;
 			$file = scrap_other($protocol,$url);
@@ -514,7 +536,7 @@ function print_version() {
 $queries_array = [
 	"/html/body/header",
 	"/html/body",
-	"/html/body/div[1]"
+	"/html/body"
 ];
 
 $urls_array = [
@@ -546,15 +568,18 @@ $result_test = [
 
 /**
  * [BRIEF]	[TEST]
- * @param	string	$url	the target url	
- * @param	string	$query	the begin point of research in the capture file
- * @param	string 	$res	the waited result (not the path, the content)
+ * @param	string	$url		the target url	
+ * @param	string	$query		the begin point of research in the capture file
+ * @param	string 	$res		the waited result (not the path, the content)
+ * @param	string 	$cmp_o_pos	choice exact comparaison or include
+ * @param 	bool 	$with_js	if we print the js renderer content
  * @example	test("https://www.google.com","/html/body","Connexion")
  * @author	chriSmile0
  * @return	bool	
 */
-function test(string $url, string $query, string $res, string $cmp_o_pos) : bool {
-	return (!empty(content_scrap_html(scrapping($url),$query,$res,$cmp_o_pos)));
+function test(string $url, string $query, string $res, string $cmp_o_pos,
+				bool $with_js) : bool {
+	return (!empty(content_scrap_html(scrapping($url,$with_js),$query,$res,$cmp_o_pos)));
 }
 
 /**
@@ -566,14 +591,14 @@ function test(string $url, string $query, string $res, string $cmp_o_pos) : bool
 */
 function tests(array $res_test) : bool {
 	$all_tests_cmp = [
-		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_c'],"cmp"),
-		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_c'],"cmp"),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp")
+		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_c'],"cmp",false),
+		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_c'],"cmp",false),
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp",true)
 	];
 	$all_tests_pos = [
-		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_p'],"pos"),
-		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_p'],"pos"),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos")
+		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_p'],"pos",true),
+		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_p'],"pos",false),
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos",true)
 	];
 	$cpt = 1;
 	$cpt1 = 1;
@@ -614,13 +639,17 @@ function test_procedure() : bool {
 /**
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url		the url
+ * @param	string 	$query		the begin point of research in the capture file
  * @param	string	$research	the content to research
- * @example sub_main("https://www.google.com","Connexion")
+ * @param 	string 	$cmp_o_pos	choice exact comparaison or include
+ * @param 	bool 	$with_js	if we print the js renderer content
+ * @example sub_main("https://www.google.com","html/body/","Connexion","cmp",false)
  * @author	chriSmile0
  * @return	array of path
 */
-function sub_main(string $url, string $query, string $research, string $cmp_o_pos) {
-	return content_scrap_html(scrapping($url),$query,$research,$cmp_o_pos);
+function sub_main(string $url, string $query, string $research, 
+					string $cmp_o_pos, bool $with_js) {
+	return content_scrap_html(scrapping($url,$with_js),$query,$research,$cmp_o_pos);
 }
 
 /**
@@ -633,8 +662,8 @@ function sub_main(string $url, string $query, string $research, string $cmp_o_po
  * 				test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 6) 
-		return (empty(content_scrap_html(scrapping($argv[1]),$argv[2],$argv[3],$argv[4])));
+	if($argc == 7) 
+		return (empty(content_scrap_html(scrapping($argv[1],$argv[5]),$argv[2],$argv[3],$argv[4])));
 	else {
 		if($argc > 1) 
 			switch($argv[1])  {
@@ -648,7 +677,7 @@ function main($argc, $argv) : bool {
 					break;
 			}
 		else 
-			return print_error("ERROR : format : ". $argv[0] . " [url] [query] --with-openssl\n");
+			return print_error("ERROR : format : ". $argv[0] . " [url] [query] [research] ['cmp'/'pos'] [with_js?] --with-openssl\n");
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
