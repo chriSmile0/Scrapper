@@ -536,13 +536,16 @@ function print_version() {
 $queries_array = [
 	"/html/body/header",
 	"/html/body",
-	"/html/body"
+	"/html/body"//,
+	//"/html/body"
 ];
 
 $urls_array = [
 	"http://localhost/projet_pw2",
 	"https://www.google.com",
-	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"
+	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"//,
+	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
+	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
 ];
 
 $result_test = [
@@ -563,7 +566,14 @@ $result_test = [
 		'query' => $queries_array[2],
 		'res_c' => "Bienvenue sur Wikipédia",
 		'res_p' => "Bienvenue"
-	]
+	]/*,
+	[
+		'url' => $urls_array[3],
+		'query' => $queries_array[3],
+		'res_c' => "Rayons",
+		'res_p' => "Lardons"
+	]*/
+
 ];
 
 /**
@@ -593,12 +603,14 @@ function tests(array $res_test) : bool {
 	$all_tests_cmp = [
 		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_c'],"cmp",false),
 		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_c'],"cmp",false),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp",true)
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp",true)//,
+		//test($res_test[3]['url'],$res_test[3]['query'],$res_test[3]['res_c'],"cmp",true)
 	];
 	$all_tests_pos = [
 		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_p'],"pos",true),
 		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_p'],"pos",false),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos",true)
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos",true)//,
+		//test($res_test[3]['url'],$res_test[3]['query'],$res_test[3]['res_p'],"pos",false)
 	];
 	$cpt = 1;
 	$cpt1 = 1;
@@ -682,7 +694,7 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
 
 /**
  * [BRIEF]	
