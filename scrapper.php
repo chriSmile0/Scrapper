@@ -494,6 +494,7 @@ function scrapping(string $url, bool $with_js) {
 	}
 	$doc = new DOMDocument();
 	libxml_use_internal_errors(TRUE);
+	echo "file content : $file \n";
 	if(!empty($file)) {
 		$doc->loadHTML($file);
 		libxml_clear_errors();
