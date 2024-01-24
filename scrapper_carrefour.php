@@ -1,4 +1,7 @@
 <?php 
+## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
+
+
 // https://github.com/adonistividad/web-scraping/blob/master/scrape_carrefour.py
 // Carrefour : https://www.carrefour.fr/s?q=lardons
 // https://www.carrefour.fr/s?q=lardons&filters%5Bproduct.categories.name%5D=Charcuterie%20et%20Traiteur
@@ -8,14 +11,31 @@
 // https://www.carrefour.fr/s?q=lardons&noRedirect=1&page=2
 //$url =  "https://www.carrefour.fr/promotions?noRedirect=0&page=0";
 
-function extract_file_carrefour($url) {
-	return shell_exec("python3 carrefour_scraping.py ". $url . " &");
+namespace Facebook\WebDriver;
+
+use Facebook\WebDriver\Firefox\FirefoxOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
+
+require_once('vendor/autoload.php');
+
+function generate_driver() {
+	$host = 'http://localhost:4444/';
+
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+
+	return RemoteWebDriver::create($host, $capabilities);
 }
 
-//$out = extract_file_carrefour($url);
+function extract_source_carrefour($url,$driver) {
+	$driver->get($url);
+	$src = $driver->getPageSource();
+	return $src;
+}
 
-
-// to simplify 
 function all_subcontent_with_trunk(string $str, string $trunk, string $end_content = "") : array {
 	$res = array();
 	$offset = 0;
@@ -61,18 +81,6 @@ function search_product_in_script_json(string $output, string $product, array $l
 	$subcontent = array("products"=>$all_products,"informations"=>"{".$all_informations[0].$end."}}");
 	return $subcontent;
 }
-
-// Search in the script xml type the information
-function extract_data_script_carrefour(string $output) {
-
-}
-
-
-// Search the information in the html renderer 
-function extract_data_html_carrefour(string $output) {
-
-}
-
 
 function parse_json_product(string $output_json) : array {
 	return json_decode($output_json,true);
@@ -144,24 +152,18 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
 									parse_json_product($json),$needed_key));
 	}
 	
-	
 	return $rtn;
 }
 
-
-/*$out_txt = file_get_contents("OK_py_php.txt");
-$products_and_inf = search_product_in_script_json($out_txt,"lardons",["lardons"]);
-$all_prods = extract_info_for_all_products($products_and_inf["products"],$product_needed_key);
-$information = extract_needed_information(parse_json_product($products_and_inf["informations"]),$page_needed_key);
-print_r($information);*/
-
-
 function content_scrap_carrefour(string $url, string $target_product) : array {
 	$rtn = array();
-	$file_content = extract_file_carrefour($url);
+	$driver = generate_driver();
+	$file_content = extract_source_carrefour($url,$driver);
 	$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
-	if(empty($sp_res)) 
+	if(empty($sp_res)) {
+		$driver->quit();
 		return array();
+	}
 	$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
 	$infos = extract_needed_information(parse_json_product($sp_res["informations"]),$GLOBALS['page_needed_key']);
 	$nb_page = $infos['totalPage'];
@@ -169,13 +171,15 @@ function content_scrap_carrefour(string $url, string $target_product) : array {
 	$next_page = $current_page+1;
 	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
 		$url_ = $url."&noRedirect=1&page=".$i;
-		echo "url : $url_ \n";
-		$file_content = extract_file_carrefour($url_);
+		$file_content = extract_source_carrefour($url_,$driver);
 		$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
-		if(empty($sp_res)) 
+		if(empty($sp_res)) {
+			$driver->quit();
 			return $rtn;
+		}
 		$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
 	}
+	$driver->quit();
 	return $rtn;
 }
 
@@ -194,8 +198,8 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 
-//main($argc,$argv);
-$url = "https://carrefour.fr/s?q=lardons";
+main($argc,$argv);
+/*$url = "https://carrefour.fr/s?q=lardons";
 $target = "lardons";
-//print_r(content_scrap_carrefour($url,$target));
+print_r(content_scrap_carrefour($url,$target));*/
 ?>
