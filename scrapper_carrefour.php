@@ -1,15 +1,46 @@
 <?php 
 ## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
 
+// [DEBUT->]https://github.com/adonistividad/web-scraping/blob/master/scrape_carrefour.py
 
-// https://github.com/adonistividad/web-scraping/blob/master/scrape_carrefour.py
-// Carrefour : https://www.carrefour.fr/s?q=lardons
-// https://www.carrefour.fr/s?q=lardons&filters%5Bproduct.categories.name%5D=Charcuterie%20et%20Traiteur
-// https://www.carrefour.fr/s?q=lardons&filters[product.categories.name]=Charcuterie et Traiteur
-//sub_main($argv[1],$argv[2],$argv[3],$argv[4],$argv[5])
-// https://www.carrefour.fr/promotions?noRedirect=0&page=0 ;
-// https://www.carrefour.fr/s?q=lardons&noRedirect=1&page=2
-//$url =  "https://www.carrefour.fr/promotions?noRedirect=0&page=0";
+
+// URL1 = https://www.carrefour.fr/s?q=lardons
+// URL2 = https://www.carrefour.fr/s?q=lardons&filters%5Bproduct.categories.name%5D=Charcuterie%20et%20Traiteur
+
+// For document file 
+/**
+ * Short description for file
+ *
+ * Long description for file
+ *
+ * PHP version 7.2
+ *
+ * LICENSE: --
+ *
+ * @package    scrapper.php
+ * @author     chrisSmile0
+ * @copyright  2024 -> @author
+ * @license    [NO_LICENSE]
+ * @version    0.1
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper.php
+ * @since      File available since Release 0.0
+ * @deprecated NO_DECPRECATED
+*/
+
+// For document classe 
+/**
+ * [BRIEF]-> class description
+ * @param		-> class constructor params	
+*/
+
+// For document function 
+/**
+ * [BRIEF]->  
+ * @param  
+ * @example 
+ * @author 	-> chriSmile0
+ * @return
+ */
 
 namespace Facebook\WebDriver;
 
@@ -19,6 +50,13 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 
 require_once('vendor/autoload.php');
 
+/**
+ * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
+ * 				(localhost:4444)
+ * @example	generate_driver()
+ * @author	chriSmile0
+ * @return	/
+*/
 function generate_driver() {
 	$host = 'http://localhost:4444/';
 
@@ -30,13 +68,40 @@ function generate_driver() {
 	return RemoteWebDriver::create($host, $capabilities);
 }
 
-function extract_source_carrefour($url,$driver) {
+/**
+ * [BRIEF]	simulate the url get in the browser and return the display content
+ * 			[THIS TECHNIC IS USE FOR BYPASS CLOUDFLARE]
+ * @param	string	$url	the url to get in the browser
+ * @param 	/		$driver	the driver instance
+ * @example	extract_source_carrefour((@see URL1),$driver)
+ * @author	chriSmile0
+ * @return	string	the display content of the url renderer
+*/
+function extract_source_carrefour(string $url,$driver) : string {
 	$driver->get($url);
 	$src = $driver->getPageSource();
 	return $src;
 }
 
-function all_subcontent_with_trunk(string $str, string $trunk, string $end_content = "") : array {
+/**
+ * [BRIEF]	That's a new version of the same name function in 'scrapper_leclerc.php'
+ * 			If the trunk is empty and end_content not empty then 
+ * 				the substr begin in the offset '0' of the str and the end is in the of 
+ * 				the end_content trunk
+ *			Else 
+ * 				we search in the the str the trunk and the end_content and we 
+ * 				create the substr between these trunks
+ * 
+ * @param	string	$str			the str to search trunk
+ * @param	string	$trunk			the trunk to search
+ * @param	string	$end_content	the end delimiter
+ * @example	all_subcontent_with_trunk("Hello world it's me","world","me")
+ * @author	chriSmile0
+ * @return	array	array with the trunk without the end content in 
+ * 					in tabs for each instance of trunk in str
+ * @version	1.5		
+*/
+function all_subcontent_with_trunk(string $str, string $trunk = "", string $end_content = "") : array {
 	$res = array();
 	$offset = 0;
 	$copy_str = $str;
@@ -70,7 +135,18 @@ function all_subcontent_with_trunk(string $str, string $trunk, string $end_conte
 	return $res;
 }
 
-function search_product_in_script_json(string $output, string $product, array $list_of_product) : array  {
+/**
+ * [BRIEF]	Split the data by product if the target product is in a predefined 
+ * 			list 
+ * 									
+ * @param	string	$output				datas
+ * @param	string	$product			product to research in datas
+ * @example	search_product_in_script_json("search:{"data:[....]","lardons",["lardons"])
+ * @author	chriSmile0
+ * @return	array	split the data by product or empty array if product is not
+ * 						in the list
+*/
+function search_product_in_script_json(string $output, string $product) : array  {
 	$first = "\"search\":{\"data\":[";
 	$end = "\"keyword\":\"".$product."\"";
 	$subcontent = all_subcontent_with_trunk($output,$first,$end);
@@ -82,6 +158,13 @@ function search_product_in_script_json(string $output, string $product, array $l
 	return $subcontent;
 }
 
+/**
+ * [BRIEF]	json_decode in array -> (associative -> true)
+ * @param	$output_json	output_json string to transform in array 
+ * @example	parse_json_product(...)
+ * @author	chriSmile0
+ * @return	array	json -> array 
+*/
 function parse_json_product(string $output_json) : array {
 	return json_decode($output_json,true);
 }
@@ -119,6 +202,15 @@ $page_needed_key = [ // On META
 	"keyword",
 ];
 
+/**
+ * [BRIEF]	It's possible to store all data but not for you, it's important
+ * 			to store the display the most useful data 
+ * @param	array	$json			
+ * @param	array	$needed_key			
+ * @example extract_needed_information_pro($json, [title,price])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print
+*/
 function extract_needed_information_pro(array $json, array $needed_key) : array {
 	$rtn = array();
 	$sub_json_needed = $json["attributes"];
@@ -136,6 +228,14 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
 	return $rtn;
 }
 
+/**
+ * [BRIEF]	Information on the research and the pages information
+ * @param	array	$json			
+ * @param	array	$needed_key			
+ * @example extract_needed_information($json, [title,price])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print
+*/
 function extract_needed_information(array $json, array $needed_key) : array {
 	$rtn = array();
 	$sub_json_needed = $json["meta"];
@@ -145,6 +245,15 @@ function extract_needed_information(array $json, array $needed_key) : array {
 	return $rtn;
 }
 
+/**
+ * [BRIEF]	(@see extract_needed_information_pro) but for all products
+ * @param	array	$tab_json	all products we have store		
+ * @param	array	$needed_key	list of information we need			
+ * @example extract_info_for_all_products($tab_json, [totalPage,currentPage])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print for all 
+ * 					products
+*/
 function extract_info_for_all_products(array $tab_json, array $needed_key) : array {
 	$rtn = array();
 	foreach($tab_json as $json) {
@@ -155,6 +264,14 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
 	return $rtn;
 }
 
+/**
+ * [BRIEF]	The main procedure -> for include in other path 
+ * @param	string	$url			the url to scrap
+ * @param	string 	$target_product	the target product
+ * @example content_scrap_carrefour((@see URL1),"lardons")
+ * @author	chriSmile0
+ * @return	array 	array of all product with specific information that we needed
+*/
 function content_scrap_carrefour(string $url, string $target_product) : array {
 	$rtn = array();
 	$driver = generate_driver();
@@ -183,6 +300,15 @@ function content_scrap_carrefour(string $url, string $target_product) : array {
 	return $rtn;
 }
 
+/**
+ * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
+ * @param	$argc	The number of parameter in the command line execution
+ * @param	$argv	The parameters of the command line execution
+ * @example	main($argc,"php7.2 scrapper_carrefour.php (@see URL1) lardons")
+ * @author	chriSmile0
+ * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
+ * 					test or if the scrapping failed 
+*/
 function main($argc, $argv) : bool {
 	if($argc == 4) {
 		if(empty(content_scrap_carrefour($argv[1],$argv[2]))) {
@@ -198,8 +324,16 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 
-main($argc,$argv);
+//main($argc,$argv);
 /*$url = "https://carrefour.fr/s?q=lardons";
 $target = "lardons";
 print_r(content_scrap_carrefour($url,$target));*/
+
+/**
+ * [BRIEF]	
+ * @param	
+ * @example	
+ * @author	chrisSmile0
+ * @return	
+*/
 ?>

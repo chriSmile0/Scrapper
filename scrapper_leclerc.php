@@ -1,6 +1,42 @@
 <?php 
-// URL = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
+// URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
+
+// For document file 
+/**
+ * Short description for file
+ *
+ * Long description for file
+ *
+ * PHP version 7.2
+ *
+ * LICENSE: --
+ *
+ * @package    scrapper.php
+ * @author     chrisSmile0
+ * @copyright  2024 -> @author
+ * @license    [NO_LICENSE]
+ * @version    0.1
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper.php
+ * @since      File available since Release 0.0
+ * @deprecated NO_DECPRECATED
+*/
+
+// For document classe 
+/**
+ * [BRIEF]-> class description
+ * @param		-> class constructor params	
+*/
+
+// For document function 
+/**
+ * [BRIEF]->  
+ * @param  
+ * @example 
+ * @author 	-> chriSmile0
+ * @return
+ */
+
 $test_product = [
 	"Lardons"
 ];
@@ -21,7 +57,14 @@ $extract_list_item = [
 	"sUrlPageProduit"
 ];
 
-function extract_data_script_leclerc($url) {
+/**
+ * [BRIEF]	A function for extract the html content of the leclerc website
+ * @param	string 	$url	The number of paramter in the command line execution
+ * @example	extract_data_script_leclerc((@see URL1))
+ * @author	chriSmile0
+ * @return	string 	the content of the file
+*/
+function extract_data_script_leclerc(string $url) : string {
 	$options = [
 		'ssl' => [
 		'verify_peer' => false,
@@ -42,6 +85,18 @@ function extract_data_script_leclerc($url) {
 	return $output;
 }
 
+/**
+ * [BRIEF]	
+ * @param	string	$str			the str to search trunk
+ * @param	string	$trunk			the trunk to search
+ * @param	string	$end_content	the end delimiter
+ * @example	all_subcontent_with_trunk("Hello world it's me","world","me")
+ * @author	chriSmile0
+ * @return	array	array with the trunk without the end content in 
+ * 					in tabs for each instance of trunk in str
+ * @version	1.0 	NEW_VERSION IN SCRAPPER_CARREFOUR.php file 
+ * @deprecate soon 
+*/
 function all_subcontent_with_trunk(string $str, string $trunk, string $end_content = "") : array {
 	$res = array();
 	$offset = 0;
@@ -56,6 +111,19 @@ function all_subcontent_with_trunk(string $str, string $trunk, string $end_conte
 	return $res;
 }
 
+/**
+ * [BRIEF]	Split the data by product if the target product is in a predefined 
+ * 			list 
+ * 			[NB:] -> the second line if pop because the datas in store
+ * 								in the last CDATA script		
+ * @param	string	$output				datas
+ * @param	string	$product			product to research in datas
+ * @param	array	$list_of_product	the list of searchable product
+ * @example	search_product("CDATA..sLibelleLigne1,price ...//]","lardons",["lardons"])
+ * @author	chriSmile0
+ * @return	array	split the data by product or empty array if product is not
+ * 						in the list
+*/
 function search_product(string $output, string $product, array $list_of_product) : array {
 	$subcontent = all_subcontent_with_trunk($output,"CDATA","//]]");
 	$last_cdata_content = array_pop($subcontent);
@@ -80,6 +148,16 @@ function search_product(string $output, string $product, array $list_of_product)
 	return $retour;
 }
 
+
+/**
+ * [BRIEF]	It's possible to store all data but not for you, it's important
+ * 			to store the display the most useful data 
+ * @param	array	$product_sheet			
+ * @param	array	$extract_list				
+ * @example extract_needed_information($product_sheet, [price,title])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print
+*/
 function extract_needed_information(array $product_sheet, array $extract_list) : array  {
 	$rtn = array();
 	foreach($extract_list as $e_l)
@@ -88,6 +166,15 @@ function extract_needed_information(array $product_sheet, array $extract_list) :
 	return $rtn;
 }
 
+/**
+ * [BRIEF]	(@see extract_needed_information) but for all products
+ * @param	array	$products	all products we have store		
+ * @param	array	$ex_list	the extract_list 			
+ * @example extract_needed_information($product_sheet, [price,title])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print for all 
+ * 					products
+*/
 function extract_needed_information_of_all_product(array $products, array $ex_list) : array {
 	$rtn = array();
 	foreach($products as $product)
@@ -96,7 +183,15 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
 	return $rtn;
 }
 
-function content_scrap_leclerc(string $url, string $target_product) : array{
+/**
+ * [BRIEF]	The main procedure -> for include in other path 
+ * @param	string	$url			the url to scrap
+ * @param	string 	$target_product	the target product
+ * @example content_scrap_leclerc((@see URL1),"lardons")
+ * @author	chriSmile0
+ * @return	array 	array of all product with specific information that we needed
+*/
+function content_scrap_leclerc(string $url, string $target_product) : array {
 	$file_content = extract_data_script_leclerc($url);
 	$s_p_res = search_product($file_content,$target_product,$GLOBALS['list_of_product']);
 	if(empty($s_p_res))
@@ -105,6 +200,15 @@ function content_scrap_leclerc(string $url, string $target_product) : array{
 	return $all_products_find;
 }
 
+/**
+ * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
+ * @param	$argc	The number of parameter in the command line execution
+ * @param	$argv	The parameters of the command line execution
+ * @example	main($argc,"php7.2 scrapper_leclerc.php (@see URL1) lardons")
+ * @author	chriSmile0
+ * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
+ * 					test or if the scrapping failed 
+*/
 function main($argc, $argv) : bool {
 	if($argc == 4) {
 		if(empty(content_scrap_leclerc($argv[1],$argv[2]))) {
@@ -119,5 +223,12 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
+/**
+ * [BRIEF]	
+ * @param	
+ * @example	
+ * @author	
+ * @return	
+*/
 ?>
