@@ -17,12 +17,12 @@
  *
  * LICENSE: --
  *
- * @package    scrapper.php
+ * @package    scrapper_carrefour.php
  * @author     chrisSmile0
  * @copyright  2024 -> @author
  * @license    [NO_LICENSE]
- * @version    0.1
- * @link       https://github.com/chriSmile0/Scrapper/scrapper.php
+ * @version    1.0
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper_carrefour.php
  * @since      File available since Release 0.0
  * @deprecated NO_DECPRECATED
 */
