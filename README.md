@@ -21,22 +21,48 @@ Or API :
 
 ## How 
 - With PHP and the docXpath
+- With [php-webdriver](https://github.com/php-webdriver/php-webdriver)
 
 ## Why 
 - For my project **PriceComparator**
 - Developpement of your own tools is important to understand and learn many things.
+
+## Usage 
+- `project.php` for known how the different tools works
+- `scrapper*.php` the differents files for scraping mission
+- `vendor` add lib for php 
+- `node_modules(hide with .gitignore)` for node.js module 
+- `*.json/*.txt` for different test to build program to efficient scraping 
+
+`php project.php --info` it's a good start
+
 ## Version 
 
-### V0
-- My work of research with my drafts 
+### V0.5
+- Basic version of scrapper : 
+  - [x] http, https
+  - [x] html content generate by JS -> `puppeteer`  
+  - [ ] cloudflare security 
 
-### V0.2
-- Add 'cmp' and 'pos : 
-  - 'cmp' for exact comparaison content
-  - 'pos' for include in content
-This update is for the possibility to return many path for any request
-
-### V1.0 -> Soon 
+- Specific version for specific website : 
+  - The french supermarket compagny : 
+    - [Leclerc)](https://leclerc.fr) : 
+      - [x] usage of https of basic version 
+      - [x] parse specific JS -> json
+      - [ ] bypass cloudflare -> no cloudflare on this website 
+    - [Carrefour](https://www.carrefour.fr) : 
+      - [ ] usage of https of basic version 
+      - [x] parse specifig JS -> json 
+      - [x] bypass cloudflare -> cloudflare security 
+  
+### V1.0 -> Next release  
 - Final first version 
+- Others compagny to scrape :
+  - [ ] [Auchan](https://www.auchan.fr)
+  - [ ] [Lidl](https://www.lidl.fr)
+  - [ ] [Systeme_U](https://www.magasins-u.com)
+  - [ ] [Monoprix](https://www.monoprix.fr)
+  - [ ] [Intermaché](https://www.intermarche.com)
+
 
 ## Features 
