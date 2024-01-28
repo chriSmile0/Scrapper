@@ -55,7 +55,7 @@ $begin_color = "\033[01;";
 $end_color = "\033[0m";
 $text_in_color = "TEXT";
 $build_color_text = $begin_color . $white_color . $text_in_color . $end_color;
-$version = "0.1";
+$version = "2.0";
 
 // FOR HTTPS : 
 // Thanks to CopyProgramming
@@ -108,6 +108,47 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
 }
 
 /**
+ * [BRIEF]	A check if the $tag_name contain data in the standard 
+ * 			by definition (div,article,aside, and others) not contain data directly
+ * 			
+ * @param	string 	$tag_name 	the tag to analyze
+ * @example	tag_with_content("div")
+ * @author	chriSmile0
+ * @return	bool	boolean if it"s a tag name with content
+*/
+function tag_with_content(string $tag_name) : bool {
+	switch($tag_name) {
+		case "h1":
+			break;
+		case "h2":
+			break;
+		case "h3";
+			break;
+		case "h4":
+			break;
+		case "h5":
+			break;
+		case "h6";
+			break;
+		case "p":
+			break;
+		case "li":
+			break;
+		case "span":
+			break;
+		case "a":
+			break;
+		case "button":
+			break;
+		case "label":
+			break;
+		default:
+			return false;
+	}
+	return true;
+}
+
+/**
  * [BRIEF]	A recursive function to explore the nodelist.
  * 			In doc_xpath->query the result is compose of many things.
  * 			But the interest is on the localName(ignore the "")
@@ -132,6 +173,7 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
  * @return	array of array (@example return):
  * 				- Array(Array(Array(data,path),path),path)
  * 				- Array([],path)
+ * @version 2.0
 */
 function childs_path(DOMNodeList $nodesList, string $origin_node) {
 	$nb_child = $nodesList->length;
@@ -159,6 +201,33 @@ function childs_path(DOMNodeList $nodesList, string $origin_node) {
 					$child_nametags = array_merge($child_nametags,[$res=>$add]);
 					if(!array_key_exists("path",$child_nametags)) 
 						$child_nametags[$res] = array_merge($child_nametags[$res],["path"=>$res]);
+					if(tag_with_content($child->tagName)==true) {
+						$stock_length = "";
+						$stock_data_next = "";
+						$key_next = array_keys($child_nametags[$res])[0];
+						if($key_next!=NULL) 
+							if(array_key_exists($key_next,$child_nametags[$res])) 
+								if(!is_string($child_nametags[$res][$key_next]))
+									if(array_key_exists("data",$child_nametags[$res][$key_next])) 
+										if(($stock_data_next = $child_nametags[$res][$key_next]["data"])) {
+											$text_content = $child->textContent;
+											$stock_length = strlen($stock_data_next); 
+											$insert = substr($text_content,strpos($text_content,$stock_data_next)+$stock_length);
+											$i = 0;
+											while(!IntlChar::isalnum($insert[$i]))
+												$i++;
+											$j = $i;
+											$end = ($insert[strlen($insert)-1]=="\n") ? -1 : NULL;
+											//echo 
+											$insert = substr($insert,$i,$end);
+											if($text_content != $stock_data_next) 
+												$child_nametags[$res] = array_merge($child_nametags[$res],["data"=>$insert]); 
+											
+										}
+									
+							
+						
+					}
 				}
 				else {
 					$child_nametags = array_merge($child_nametags,[$res=>[]]);
@@ -239,12 +308,14 @@ function all_datas(array $child_path) {
 	if(is_array($child_path)) 
 		if((array_key_exists("data",$child_path)))
 			if($child_path["data"] != " ")
-				$save = "[:" . $child_path["data"] . ":]";
+				$save = "[:" . $child_path["data"] . ":]\n";
 
 	foreach($child_path as $elem) 
 		if(!is_string($elem)) 
-			if((key($elem)) != "path") 
-				$datas .= all_datas($elem) . "\n";
+			if((key($elem)) != "path") {
+				$res = all_datas($elem);//. "\n";
+				$datas .= ($res != " ") ? $res : "";
+			}
 
 	$datas .= $save;
 	return $datas;
@@ -276,20 +347,27 @@ function all_datas_with_paths_v2($child_path, string $origin_node) {
 		}
 		else {
 			$save .= "/" . $origin_node;
-			$save .=  "[:" . $child_path["data"] . ":]";
+			$save .=  "[:" . $child_path["data"] . ":]\n";
 			$paths .= $save;
 		}
 	}
 	else {
 		if($size_of_path > 2) {
+			$minus = 1;
+			if(array_key_exists("data",$child_path)) {
+				$minus++;
+				$paths .= "/" . $origin_node . "[:".$child_path["data"].":]\n";
+			}
 			$keys = array_keys($child_path);
-			$size_wo_path = $size_of_path-1;
-			for($i = 0; $i < $size_wo_path; $i++) 
-				$paths .= all_datas_with_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]) . "\n";
+			$size_wo_path = $size_of_path-$minus;
+			for($i = 0; $i < $size_wo_path; $i++) {
+				$res = all_datas_with_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]);
+				$paths .= ($res != " ") ? $res."" : "";
+			}
 		}
 		else {
 			if($size_of_path != 0)
-				$paths .= "/" . $origin_node;
+				$paths .= "/" . $origin_node . "\n";
 		}
 	}
 	return $paths;
@@ -381,11 +459,13 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
 	// FIRST ->  SEARCH IN ALL DOCUMENT 
 	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
 	$doc_row = $doc_xpath->query($true_query);
+	//var_dump($doc_row);
 	$all_childs = childs_path($doc_row[0]->childNodes,$query);
+	//var_dump($all_childs);
 	$complete_path = complete_path_with_childs_path($content_to_scrap,$all_childs,$cmp_or_pos);
 	// - echo "paths :* \n" . all_paths_v2($all_childs,$query);
-	// - echo "datas :* \n". all_datas($all_childs) . "\n";
-	// - echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
+	//echo "datas :* \n". all_datas($all_childs);
+	echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
 
 	// SECOND -> ADAPTATION WITH THE COMPLETE PATH
 	echo "path of research : \n $complete_path \n";
@@ -494,7 +574,7 @@ function scrapping(string $url, bool $with_js) {
 	}
 	$doc = new DOMDocument();
 	libxml_use_internal_errors(TRUE);
-	echo "file content : $file \n";
+	//echo "file content : $file \n";
 	if(!empty($file)) {
 		$doc->loadHTML($file);
 		libxml_clear_errors();
@@ -537,16 +617,18 @@ function print_version() {
 $queries_array = [
 	"/html/body/header",
 	"/html/body",
-	"/html/body"//,
+	"/html/body",//,
+	"/html/body/div[3]/div[2]/div[2]/div[4]/article[13]"
 	//"/html/body"
 ];
 
 $urls_array = [
 	"http://localhost/projet_pw2",
 	"https://www.google.com",
-	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"//,
-	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
-	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
+	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal",
+	"https://www.auchan.fr/charcuterie-traiteur-pain/charcuterie/lardons-des-eminces/lardons-allumettes-poitrine/ca-n12010401"
+	//https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
+	////"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
 ];
 
 $result_test = [
@@ -696,6 +778,7 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 //main($argc,$argv);
+sub_main($urls_array[3],$queries_array[3],"AUCHAN SOLIDAIRES","cmp",true);
 
 /**
  * [BRIEF]	
