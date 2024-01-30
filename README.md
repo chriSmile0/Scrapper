@@ -27,7 +27,7 @@ Or API :
 - For my project **PriceComparator**
 - Developpement of your own tools is important to understand and learn many things.
 
-## Usage 
+## Usage 
 - `project.php` for known how the different tools works
 - `scrapper*.php` the differents files for scraping mission
 - `vendor` add lib for php 
@@ -43,10 +43,12 @@ Or API :
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
   - [ ] cloudflare security 
+  - [x] text in tag with another tag $\color{green}\textsf{(V2.0\ scrapper.php)}$
+
 
 - Specific version for specific website : 
   - The french supermarket compagny : 
-    - [Leclerc)](https://leclerc.fr) : 
+    - [Leclerc](https://leclerc.fr) : 
       - [x] usage of https of basic version 
       - [x] parse specific JS -> json
       - [ ] bypass cloudflare -> no cloudflare on this website 
