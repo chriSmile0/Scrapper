@@ -23,8 +23,8 @@ function print_info_scrapper() {
 	[PARAMETERS]
 		[URL] 	->	\033[01;37mhttps://example.com\033[0m
 		[QUERY] ->	the start of research,\033[01;37m html/body\033[0m is obvious but if we known 
-					the website it's possible to precise the path 
-					maybe aftet a first scrape with the query\033[01;37m html/body/div/article \033[0mfor example   
+				the website it's possible to precise the path 
+				maybe aftet a first scrape with the query\033[01;37m html/body/div/article \033[0mfor example   
 
 	[OPTIONS]\n";
 	echo "		php $prog --test --with-openssl\n";
@@ -52,13 +52,11 @@ function print_info_scrapper_leclerc() {
 		(Not usage of the second parameters for the moment)
 	
 	[MAIN]
-		php $prog [url] [research_product_type] --with-openssl\n
+		php $prog [url] [research_product_type] --with-openssl
 
 	[PARAMETERS]
 		[URL] -> \033[01;37m https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons\033[0m
-		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
-	\n";
-					
+		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";			
 	echo "[**END LECLERC BASIC SCRAPPER INFORMATIONS**]\n";
 }
 
@@ -85,14 +83,11 @@ function print_info_scrapper_carrefour() {
 		(Not usage of the second parameters for the moment)
 	
 	[MAIN]
-		php $prog [url] [research_product_type] --with-openssl\n
+		php $prog [url] [research_product_type] --with-openss
 
 	[PARAMETERS]
 		[URL] -> \033[01;37m https://www.carrefour.fr/s?q=lardons \033[0m
-		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
-	\n";
-
-
+		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";
 	echo "[**END CARREFOUR SCRAPPER INFORMATIONS**]\n";
 }
 

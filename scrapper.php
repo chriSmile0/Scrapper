@@ -13,7 +13,7 @@
  * @author     chrisSmile0
  * @copyright  2024 -> @author
  * @license    [NO_LICENSE]
- * @version    0.1
+ * @version    2.0
  * @link       https://github.com/chriSmile0/Scrapper/scrapper.php
  * @since      File available since Release 0.0
  * @deprecated NO_DECPRECATED
@@ -55,7 +55,7 @@ $begin_color = "\033[01;";
 $end_color = "\033[0m";
 $text_in_color = "TEXT";
 $build_color_text = $begin_color . $white_color . $text_in_color . $end_color;
-$version = "0.1";
+$version = "2.0";
 
 // FOR HTTPS : 
 // Thanks to CopyProgramming
@@ -65,16 +65,35 @@ $version = "0.1";
  * @param	$arg	
  * @example check(2<1)
  * @author 	chriSmile0
- * @return	int	0/1	if $arg is empty or false 1 if is initialize or true/>0
+ * @return	int	0/1	if $arg is empty or false ->0 if is initialize or true ->1
+ * @version 2.0
  */
 function check($arg = NULL) : int {
 	if($arg == NULL)
-		return 0;
-	if($arg == "")
-		return 0;
+		return print_error("ERROR : empty arg");
+	if($arg === "")
+		return print_error("ERROR : empty arg");
 	if(!$arg)
-		return 0;
+		return print_error("ERROR : empty arg");
 	return 1;
+}
+
+/**
+ * [BRIEF] 	Check if the $arg is in the list of $possible_args
+ * @param	void	$arg			the arg to check
+ * @param	array	$possible_arg	array of args 
+ * @example check_args(2,[1,2,3])
+ * @author 	chriSmile0
+ * @return	int	0/1	if $arg is not in the array ->0 if is in the array ->1 
+ * @version 1.0
+ */
+function check_args($arg , array $possible_args) : bool {
+	foreach($possible_args as $p_a) 
+		if($p_a == $arg)
+			return true;
+	$ar_to_str = implode('/',$possible_args);
+	echo "ERROR : $arg not equal to $ar_to_str\n";
+	return false;
 }
 
 /**
@@ -108,6 +127,32 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
 }
 
 /**
+ * [BRIEF]	Return the alphanuricals content of a string
+ * @param	string 	$str	the string to extract the alphanumericals content
+ * @example	alphanumericals_of_str("\n HERE "\n")
+ * @author	chriSmile0
+ * @return	string the number of similar tag of $tag (include this tag)
+*/
+function alphanumericals_of_str(string $str) : string {
+	$i = 0;
+	$len = strlen($str);
+	
+	while($i < $len && (!((ord($str[$i]) > 32 && ord($str[$i]) <= 127))))
+		$i++;
+	if($i != $len) {
+		$debut = $i;
+		while($i < $len && ((ord($str[$i]) > 32 && ord($str[$i]) <= 127)))
+			$i++;
+		$end = $i;
+		$length_str = $end-$debut;
+		$insert = substr($str,$debut,$length_str);
+		$insert = substr($insert,0 ,$end);
+		return $insert;
+	}
+	return "";
+}
+
+/**
  * [BRIEF]	A recursive function to explore the nodelist.
  * 			In doc_xpath->query the result is compose of many things.
  * 			But the interest is on the localName(ignore the "")
@@ -121,6 +166,11 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
  * 				In the Xpath the div[@id] is use for determine the absolute
  * 				path, we analyze each child for create this xpath 
  * 				(-> @see nb_tag_in_same_level())
+ * 
+ * 				It's possible to certain tag contain another tag with content 
+ * 				and content for example : <p>Bonjour, <b>You</b></p>
+ * 				In this case we add Bonjour in the data of 'p' and 
+ * 				the data of 'b' in the specific array for b
  * 				
  * 			Else (this child if the last child of the recursion) :
  * 				We add the content of this child
@@ -132,6 +182,7 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
  * @return	array of array (@example return):
  * 				- Array(Array(Array(data,path),path),path)
  * 				- Array([],path)
+ * @version 2.0
 */
 function childs_path(DOMNodeList $nodesList, string $origin_node) {
 	$nb_child = $nodesList->length;
@@ -149,7 +200,6 @@ function childs_path(DOMNodeList $nodesList, string $origin_node) {
 					else
 						$same_tag = array_merge($same_tag,[$res=>[$child_of_tag,0]]);
 				}
-				
 				if($child_of_tag > 1) {
 					$val = strval($same_tag[$res][1]+1);
 					$res .= ($same_tag[$res][0] > 1) ? "[$val]" : "";
@@ -164,20 +214,22 @@ function childs_path(DOMNodeList $nodesList, string $origin_node) {
 					$child_nametags = array_merge($child_nametags,[$res=>[]]);
 					if(!array_key_exists("path",$child_nametags)) 
 						$child_nametags[$res] = array_merge($child_nametags[$res],["path"=>$res]);
-					
 				}
 			}
+			else {
+				if(($res = alphanumericals_of_str($child->textContent)) != "")
+					$child_nametags += ["data"=>$res];
+			}	
 		}
 	}
 	if($origin_node != "") 
 		$child_nametags += ["path"=>$origin_node];
 
-	if($nb_child == 1) {
-		if(!array_key_exists("data",$childs[0])) {
+	if($nb_child == 1) 
+		if(!array_key_exists("data",$childs[0])) 
 			if($childs[0]->textContent) // ->data first vesion -> bug with google
 				$child_nametags += ["data"=>$childs[0]->textContent]; // ""
-		}
-	}
+			
 	return $child_nametags;	
 }
 
@@ -206,18 +258,19 @@ function all_paths_v2($child_path, string $origin_node) {
 		if($key != "data") 
 			$paths .= all_paths_v2($child_path[$key],$origin_node."/".$key);
 		else 
-			$paths .= "/" . $origin_node;
+			$paths .= "/" . $origin_node . "\n";
 	}
 	else {
 		if($size_of_path > 2) {
 			$keys = array_keys($child_path);
 			$size_wo_path = $size_of_path-1;
+			var_dump($size_wo_path);
 			for($i = 0; $i < $size_wo_path; $i++) 
-				$paths .= all_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]) . "\n";
+				$paths .= all_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]);
 		}
 		else {
 			if($size_of_path != 0)
-				$paths .= "/" . $origin_node;
+				$paths .= "/" . $origin_node ."\n";
 		}
 	}
 	return $paths;
@@ -239,12 +292,14 @@ function all_datas(array $child_path) {
 	if(is_array($child_path)) 
 		if((array_key_exists("data",$child_path)))
 			if($child_path["data"] != " ")
-				$save = "[:" . $child_path["data"] . ":]";
+				$save = "[:" . $child_path["data"] . ":]\n";
 
 	foreach($child_path as $elem) 
 		if(!is_string($elem)) 
-			if((key($elem)) != "path") 
-				$datas .= all_datas($elem) . "\n";
+			if((key($elem)) != "path") {
+				$res = all_datas($elem);//. "\n";
+				$datas .= ($res != " ") ? $res : "";
+			}
 
 	$datas .= $save;
 	return $datas;
@@ -276,20 +331,27 @@ function all_datas_with_paths_v2($child_path, string $origin_node) {
 		}
 		else {
 			$save .= "/" . $origin_node;
-			$save .=  "[:" . $child_path["data"] . ":]";
+			$save .=  "[:" . $child_path["data"] . ":]\n";
 			$paths .= $save;
 		}
 	}
 	else {
 		if($size_of_path > 2) {
+			$minus = 1;
+			if(array_key_exists("data",$child_path)) {
+				$minus++;
+				$paths .= "/" . $origin_node . "[:".$child_path["data"].":]\n";
+			}
 			$keys = array_keys($child_path);
-			$size_wo_path = $size_of_path-1;
-			for($i = 0; $i < $size_wo_path; $i++) 
-				$paths .= all_datas_with_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]) . "\n";
+			$size_wo_path = $size_of_path-$minus;
+			for($i = 0; $i < $size_wo_path; $i++) {
+				$res = all_datas_with_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]);
+				$paths .= ($res != " ") ? $res."" : "";
+			}
 		}
 		else {
 			if($size_of_path != 0)
-				$paths .= "/" . $origin_node;
+				$paths .= "/" . $origin_node . "\n";
 		}
 	}
 	return $paths;
@@ -357,6 +419,28 @@ function complete_path_with_childs_path(string $research_data, array $child_path
 	return $retour ;
 }
 
+
+function choice_printable_infos(string $adds, $all_childs, string $query = "") : string {
+	$retour = "";
+	switch($adds) {
+		case "paths":
+			echo "**PATHS**\n";
+			$retour = all_paths_v2($all_childs,$query);
+			break;
+		case "datas":
+			echo "**DATAS**\n";
+			$retour = all_datas($all_childs);
+			break;
+		case "pa_with_da":
+			echo "**PATHS_WITH_DATAS**\n";
+			$retour = all_datas_with_paths_v2($all_childs,$query);
+			break;
+		default:
+			break;
+	}
+	return $retour;
+}
+
 /**
  * [BRIEF]	Research a specific content in a html file
  * 
@@ -369,26 +453,33 @@ function complete_path_with_childs_path(string $research_data, array $child_path
  * @return	Array or bool if path is establish false if is not
 */
 function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "", 
-							string $content_to_scrap = "", string $cmp_or_pos = "") {
-	$checks = [check($doc_xpath),check($query),check($content_to_scrap),check($cmp_or_pos)];
-	$errors = ["doc_xpath empty","empty query","nothing to scrap","'cmp'/'pos' nothing else"];
-	$index = 0;
-	foreach($checks as $check) {
+							string $adds = "") {
+	$checks = [check($doc_xpath),check($query),check_args($adds,["paths","datas","pa_with_da"])];
+	foreach($checks as $check) 
 		if($check == 0)
-			return print_error($errors[$index]);
-		$index++;
-	}
-	// FIRST ->  SEARCH IN ALL DOCUMENT 
+			return 0;
+
 	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
 	$doc_row = $doc_xpath->query($true_query);
 	$all_childs = childs_path($doc_row[0]->childNodes,$query);
-	$complete_path = complete_path_with_childs_path($content_to_scrap,$all_childs,$cmp_or_pos);
-	// - echo "paths :* \n" . all_paths_v2($all_childs,$query);
-	// - echo "datas :* \n". all_datas($all_childs) . "\n";
-	// - echo "paths_and_datas :* \n" . all_datas_with_paths_v2($all_childs,$query);
+	$retour = choice_printable_infos($adds,$all_childs,$query);
 
-	// SECOND -> ADAPTATION WITH THE COMPLETE PATH
-	echo "path of research : \n $complete_path \n";
+	if(!strcmp($retour,""))
+		return array();
+	return explode("\n",$retour);
+}
+
+function search_specific_information(DOMXPath $doc_xpath = NULL, string $query, 
+										string $research = "", string $cmp_or_pos = "") {
+	$checks = [check($doc_xpath),check($query),check($research),check_args($cmp_or_pos,["cmp","pos"])];
+	foreach($checks as $check) 
+		if($check == 0)
+			return 0;
+	
+	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
+	$doc_row = $doc_xpath->query($true_query);
+	$all_childs = childs_path($doc_row[0]->childNodes,$query);
+	$complete_path = complete_path_with_childs_path($research,$all_childs,$cmp_or_pos);
 	if(!strcmp($complete_path,""))
 		return array();
 	return explode(" ",$complete_path);
@@ -443,7 +534,6 @@ function scrap_https(string $url, bool $with_js) : string  {
  * @return	string	the content of the file in the target url
 */
 function scrap_http(string $url, bool $with_js) : string {
-	//$retour = file_get_contents($url);
 	$output = "";
 	if($with_js) {
 		$url = escapeshellarg($url); // Replace with the target URL
@@ -478,7 +568,9 @@ function scrap_other(string $protocol, string $url) : string  {
  * @author	chriSmile0
  * @return	
 */
-function scrapping(string $url, bool $with_js) {
+function scrapping(string $url, string $with_js) {
+	if(check_args($with_js,["true","false"]) == 0)
+		return NULL;
 	$protocol = parse_url($url, PHP_URL_SCHEME);
 	$file = "";
 	switch ($protocol) {
@@ -494,7 +586,6 @@ function scrapping(string $url, bool $with_js) {
 	}
 	$doc = new DOMDocument();
 	libxml_use_internal_errors(TRUE);
-	echo "file content : $file \n";
 	if(!empty($file)) {
 		$doc->loadHTML($file);
 		libxml_clear_errors();
@@ -516,7 +607,8 @@ function scrapping(string $url, bool $with_js) {
  * @return	void
 */
 function print_help(string $argv0) {
-	echo "\t   main \t command line : ". $argv0 . " [url] [query] --with-openssl\n";
+	echo "\t --search \t command line : ". $argv0 . " --search [url] [query] [research] ['cmp'/'pos'] [with_js?] --with-openssl\n";
+	echo "\t --content \t command line : ". $argv0 . " --content [url] [query] ['paths'/'datas'/'pa_with_da'] [with_js?] --with-openssl\n";
 	echo "\t --test \t command line : ". $argv0 . " --test --with-openssl\n";
 	echo "\t --help \t print this help\n";
 	echo "\t --version \t print version\n";
@@ -537,16 +629,13 @@ function print_version() {
 $queries_array = [
 	"/html/body/header",
 	"/html/body",
-	"/html/body"//,
-	//"/html/body"
+	"/html/body"
 ];
 
 $urls_array = [
 	"http://localhost/projet_pw2",
 	"https://www.google.com",
-	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"//,
-	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
-	//"https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
+	"https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"
 ];
 
 $result_test = [
@@ -567,14 +656,7 @@ $result_test = [
 		'query' => $queries_array[2],
 		'res_c' => "Bienvenue sur Wikipédia",
 		'res_p' => "Bienvenue"
-	]/*,
-	[
-		'url' => $urls_array[3],
-		'query' => $queries_array[3],
-		'res_c' => "Rayons",
-		'res_p' => "Lardons"
-	]*/
-
+	]
 ];
 
 /**
@@ -589,8 +671,8 @@ $result_test = [
  * @return	bool	
 */
 function test(string $url, string $query, string $res, string $cmp_o_pos,
-				bool $with_js) : bool {
-	return (!empty(content_scrap_html(scrapping($url,$with_js),$query,$res,$cmp_o_pos)));
+				string $with_js) : bool {
+	return (!empty(search_specific_information(scrapping($url,$with_js),$query,$res,$cmp_o_pos)));
 }
 
 /**
@@ -604,14 +686,12 @@ function tests(array $res_test) : bool {
 	$all_tests_cmp = [
 		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_c'],"cmp",false),
 		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_c'],"cmp",false),
-		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp",true)//,
-		//test($res_test[3]['url'],$res_test[3]['query'],$res_test[3]['res_c'],"cmp",true)
+		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_c'],"cmp",true)
 	];
 	$all_tests_pos = [
 		test($res_test[0]['url'],$res_test[0]['query'],$res_test[0]['res_p'],"pos",true),
 		test($res_test[1]['url'],$res_test[1]['query'],$res_test[1]['res_p'],"pos",false),
 		test($res_test[2]['url'],$res_test[2]['query'],$res_test[2]['res_p'],"pos",true)//,
-		//test($res_test[3]['url'],$res_test[3]['query'],$res_test[3]['res_p'],"pos",false)
 	];
 	$cpt = 1;
 	$cpt1 = 1;
@@ -622,7 +702,6 @@ function tests(array $res_test) : bool {
 		if($res == true)
 			$cpt++;
 	}
-
 	$cpt2 = 1;
 	echo "INCLUDE DATA TEST \n";
 	foreach($all_tests_pos as $res) {
@@ -631,7 +710,6 @@ function tests(array $res_test) : bool {
 		if($res == true)
 			$cpt++;
 	}
-
 	return ($cpt == (sizeof($all_tests_cmp)+sizeof($all_tests_pos))); // 1 
 }
 
@@ -660,9 +738,9 @@ function test_procedure() : bool {
  * @author	chriSmile0
  * @return	array of path
 */
-function sub_main(string $url, string $query, string $research, 
-					string $cmp_o_pos, bool $with_js) {
-	return content_scrap_html(scrapping($url,$with_js),$query,$research,$cmp_o_pos);
+function sub_main_search(string $url, string $query, string $research, 
+					string $cmp_o_pos, string $with_js) {
+	return search_specific_information(scrapping($url,$with_js),$query,$research,$cmp_o_pos);
 }
 
 /**
@@ -675,27 +753,54 @@ function sub_main(string $url, string $query, string $research,
  * 				test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 7) 
-		return (empty(content_scrap_html(scrapping($argv[1],$argv[5]),$argv[2],$argv[3],$argv[4])));
+	$retour = 0;
+	if($argc > 1) {
+		switch($argv[1])  {
+			case "--help": print_help($argv[0]);
+				break;
+			case "--test": return test_procedure();
+				break;
+			case "--version": print_version();
+				break;
+			case "--content":
+				if($argc != 7) 
+					return print_error("ERROR : ". $argv[0] . " --content [url] [query] ['paths'/'datas'/'pa_with_da'] [with_js?] --with-openssl");
+				
+				$retour = content_scrap_html(scrapping($argv[2],$argv[5]),$argv[3],$argv[4]);
+				if($retour == 0)
+					return 0;
+				var_dump($retour);
+				if(empty($retour)) 
+					echo "NO CONTENT FOUND\n";
+				break;
+			case "--search": 
+				if($argc != 8) 
+					return print_error("ERROR : ". $argv[0] . " --search [url] [query] [research] ['cmp'/'pos'] [with_js?] --with-openssl");
+				
+				$retour = search_specific_information(scrapping($argv[2],$argv[6]),$argv[3],$argv[4],$argv[5]);
+				if($retour == 0)
+					return 0;
+				var_dump($retour);
+				if(empty($retour)) 
+					echo "RESEARCH TARGET NOT FOUND\n";
+				break;
+			default:
+				echo "**USAGE**\n";
+				print_help($argv[0]);
+				echo "**END USAGE**\n";
+				return 0;
+				break;
+		}
+	}
 	else {
-		if($argc > 1) 
-			switch($argv[1])  {
-				case "--help": print_help($argv[0]);
-					break;
-				case "--test": return test_procedure();
-					break;
-				case "--version": print_version();
-					break;
-				default:
-					break;
-			}
-		else 
-			return print_error("ERROR : format : ". $argv[0] . " [url] [query] [research] ['cmp'/'pos'] [with_js?] --with-openssl\n");
+		return print_error("ERROR in arguments (@see --help\n");
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
+main($argc,$argv);
+//sub_main_search($urls_array[3],$queries_array[3],"AUCHAN SOLIDAIRES","cmp",true);
+//print_help("scrapper.php");
 
 /**
  * [BRIEF]	
