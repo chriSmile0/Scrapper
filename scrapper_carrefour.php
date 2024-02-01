@@ -45,8 +45,16 @@
 namespace Facebook\WebDriver;
 
 use Facebook\WebDriver\Firefox\FirefoxOptions;
+use Facebook\WebDriver\Interactions\Internal\WebDriverCoordinates;
+use Facebook\WebDriver\Interactions\Internal\WebDriverMouseAction;
+use Facebook\WebDriver\Interactions\Touch\WebDriverDownAction;
+use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Facebook\WebDriver\WebDriverHasInputDevices;
+use Facebook\WebDriver\Support\Events\EventFiringWebDriver;
+use Facebook\WebDriver\Support\Events\EventHandler;
+use Facebook\WebDriver\Support\Events\EventFiringWebElement;
 
 require_once('vendor/autoload.php');
 
@@ -62,7 +70,7 @@ function generate_driver() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->addArguments(['-headless']);
+	//$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 
 	return RemoteWebDriver::create($host, $capabilities);
@@ -328,6 +336,81 @@ function main($argc, $argv) : bool {
 /*$url = "https://carrefour.fr/s?q=lardons";
 $target = "lardons";
 print_r(content_scrap_carrefour($url,$target));*/
+
+
+
+//INTERMARCHE 
+$url_entrance = "https://www.intermarche.com/";
+$path_to_choice = "/html/body/div[2]/div[1]/main/div[1]/div[2]/div[2]/div[2]/div[1]/div/input"; //-> xpath for location
+$path_to_proposal = "/html/body/div[2]/div[1]/main/div[1]/div[2]/div[2]/div[2]/div[2]"; // -> selection proposition 
+$path_to_first_choice =  "/html/body/div[2]/div[1]/main/div[1]/div[2]/div[2]/div[2]/div[2]/div[2]"; // -> for first choice 
+
+$content_by_class = "selectAddressForStore__content"; // div1/div = choice, div[2] = results
+$choice_by_class = "selectAddressForStore__search";
+$result_by_class = "selectAddressForStore__results";
+
+$driver = generate_driver();
+$driver->get($url_entrance);
+//$driver->manage()->window()->maximize();
+sleep(4);
+/*var_dump($driver->findElement(WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))->getText());
+$driver->findElement(WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))->click();// no cookies */
+
+
+
+//$driver->executeScript("scroll(0,700)");
+//sleep(4);
+$elem_to_move = $driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div[3]/div/div[1]/div[2]/a'));
+//var_dump($elem_to_move->getLocation());
+//$driver->executeScript(';',$elem_to_move);
+/*$driver->executeScript("document.getElementsByClassName('prehomeStoreLocator__header__heading__item')[0].innerHTML = 'coucou';");
+$driver->executeScript("document.getElementById('btn-preHomeUserLogin').innerHTML = 'lol';");*/
+//$driver->executeScript("document.getElementById('btn-preHomeUserLogin').click();");
+$driver->executeScript("document.body.style.background = 'blue';");
+
+sleep(3);
+var_dump($driver->findElement(WebDriverBy::className('prehomeStoreLocator__header__heading__item'))->getText());
+
+
+$choice = $driver->findElement(WebDriverBy::className($choice_by_class));
+var_dump($choice->findElement(WebDriverBy::tagName('input'))->getAttribute('placeholder'));
+$choice->findElement(WebDriverBy::tagName('input'))->sendKeys('Paris');
+sleep(1);
+$results_content = $driver->findElement(WebDriverBy::className($result_by_class));
+$results = $results_content->getText();
+$clickable_results = $results_content;
+$res_divs = $clickable_results->findElements(WebDriverBy::className('selectAddressForStore__suggestion'));
+$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
+//var_dump($driver->getMouse()->mouseMove($res_divs[1]->getCoordinates()));
+sleep(2);
+/*
+$action = new WebDriverActions($driver);
+var_dump($res_divs[3]->getText());
+//$action->click($res_divs[3]);
+$action->moveToElement($res_divs[3])->click()->perform();
+sleep(3);
+$choiceees = $driver->findElement(WebDriverBy::className($choice_by_class));
+var_dump($choiceees->findElement(WebDriverBy::tagName('input'))->getAttribute('value'));
+
+//$driver->getMouse()->mouseClick($res_divs[1]);
+//var_dump($res_divs[1]->getText());
+//$res_divs[1]->click();
+//var_dump($driver->getAttribute("title"));
+/*$res_in_array = explode("\n",$results);
+var_dump($res_in_array);*/
+
+
+
+
+/*var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div[1]/div[2]/div[2]/div[2]/div/div/input'))->getAttribute('placeholder'));
+var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div[1]/div[2]/div[2]/div[2]/div/div/input'))->getAttribute('value'));
+
+var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[2]'))->getText());*/
+
+$driver->quit();
+
+
+
 
 /**
  * [BRIEF]	
