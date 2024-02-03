@@ -85,11 +85,13 @@ function util_subcontenttrunk(string $output,string $trunk = "", array $end_cont
 	if($trunk !== "")
 		$output = substr($output,$offst+=strpos($output,$trunk));
 	$end = $end_content[0];
-	echo "output : $output \n";
 	$min_offset = strpos($output,$end,0);
 	$found = ($min_offset !== FALSE) ? true : false;
+	if($found === false)
+		$min_offset = strlen($output);
 	for($i = 1; $i < $len_end_content; $i++) {
-		if(($tmp_pos = strpos($output,$end_content[$i],0)) < $min_offset) {
+		$tmp_pos = strpos($output,$end_content[$i],0);
+		if(($tmp_pos !== FALSE) && ($tmp_pos < $min_offset)) {
 			$min_offset = $tmp_pos;
 			$min_index = $i;
 			$found = true;
@@ -110,27 +112,32 @@ function util_subcontenttrunk(string $output,string $trunk = "", array $end_cont
  * 				we search in the the str the trunk and the end_content and we 
  * 				create the substr between these trunks
  * 
- * @param	string	$str			the str to search trunk
- * @param	string	$trunk			the trunk to search
- * @param	string	$end_content	the end delimiter
+ * @param	string			$str			the str to search trunk
+ * @param	string			$trunk			the trunk to search
+ * @param	array			$end_content	the end(s) delimiter
+ * @param 	bool 			$with_end		if we want add end delimiter or not in the substring
+ * @param	int<-len_end,0> $size_end		0 complete end, -len_end = false on $with_end
  * @example	all_subcontent_with_trunk("Hello world it's me","world","me")
  * @author	chriSmile0
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
- * @version	2.0	-> NEW VERSION
+ * @version	2.1	-> NEW VERSION
 */
-function all_subcontent_with_trunk_v2(string $str, string $trunk = "", string $end_content = "") : array {
+function all_subcontent_with_trunk_v21(string $str, string $trunk = "", 
+										array $end_content, bool $with_end, 
+										int $size_end = 0) : array {
 	$res = array();
 	$copy_str = $str;
 	$original_trunk = $trunk;
-	$original_end = $end_content;
+	$original_end = (empty($end_content)) ? "" : $end_content[0];
 	$next = "";
 	if($original_trunk != "") {
 		if($original_end != "") {
 			while(($pos = strpos($copy_str,$trunk)) !== FALSE) {
+				//USE util_subcontenttrunk here if it"s necessary !!
 				$s_str = substr($copy_str,$pos);
 				$offset_next = 0;
-				$res[] = substr($s_str,0,$offset_next=strpos($s_str,$end_content));
+				$res[] = substr($s_str,0,$offset_next=strpos($s_str,$original_end));
 				$next = substr($s_str,$offset_next);
 				$copy_str = $next;
 			}
@@ -152,12 +159,13 @@ function all_subcontent_with_trunk_v2(string $str, string $trunk = "", string $e
 		}
 	}
 	else {
-		$trunk = $end_content;
-		while(($pos = strpos($copy_str,$trunk)) !== FALSE) {
+		while(!empty($res_util = util_subcontenttrunk($copy_str,"",$end_content,0))) {
+			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
+			var_dump($res_util);
 			$s_str = $copy_str;
 			$offset_next = 0;
-			$res[] = substr($s_str,0,$offset_next=strpos($s_str,$end_content));
-			$next = substr($s_str,$offset_next+strlen($trunk));
+			$res[] = substr($s_str,0,($offset_next=$res_util[1])+$with_end_trunk);
+			$next = substr($s_str,$offset_next+strlen($res_util[0]));
 			$copy_str = $next;
 		}
 	}
@@ -181,17 +189,15 @@ function all_subcontent_with_trunk_v2(string $str, string $trunk = "", string $e
 function search_product_in_script_json(string $output, string $product) : array  {
 	$first = "\"list\":{\"products\":[";
 	$end = "e},\"filters\":"; // e because true or false on hasNextPage has same end (e)
-	//"\"hasReduction\":";
-	$possible_end = [",\"hasReduction\":false}",",\"hasReduction\":true}"];
-	$subcontent = all_subcontent_with_trunk_v2($output,$first,$end);
+	$possible_end = [",\"hasReduction\":false},",",\"hasReduction\":true},"];
+	$subcontent = all_subcontent_with_trunk_v21($output,$first,[$end],false);
 	$subcontent[0] .= $end; // "close meta" -> the end of meta is not interesting
 	$subcontent[0] = substr($subcontent[0],strlen($first));
-	$all_products = all_subcontent_with_trunk_v2($subcontent[0],"",$possible_end[0]);
+	$all_products = all_subcontent_with_trunk_v21($subcontent[0],"",$possible_end,true,-1);
 	var_dump($all_products);
-	$all_informations = all_subcontent_with_trunk_v2(array_pop($all_products),"\"meta\":{\"",$end);
-	$subcontent = array("products"=>$all_products,"informations"=>"{".$all_informations[0]."e}");
+	$all_informations = all_subcontent_with_trunk_v21(array_pop($all_products),"\"meta\":{\"",[$end],false);
+	$subcontent = array("products"=>$all_products,"informations"=>"{".$all_informations[0]."e}}");
 	return $subcontent;
-	//return $subcontent;
 }
 
 /**
@@ -206,40 +212,38 @@ function parse_json_product(string $output_json) : array {
 	return json_decode($output_json,true);
 }
 
-// TO CHANGE !!! 
 $list_of_product = [
 	"lardons"
 ];
 
+
 $product_needed_key = [ // On ATTRIBUTES
-	"ean" => [],
-	"title" => [],
-	"brand" => [],
-	"slug" => [],
-	"offerServiceId" => [],
-	"offers" => [
-		"ean" => [
-			"offerServiceId" => [
-				"attributes" => [
-					"price",
-					"promotion",
-					"promotions"
-				],
-			],
-		],
+	"type" => [],
+	"offers" => [],
+	"promotions" => [],
+	"prices" => [
+		"productPrice"
 	],
-	"packaging" => [],
-	"nutriscore" => [],
+	"id" => [],
+	"ean" => [],
+	"informations" => [
+		"title",
+		"packaging",
+		"brand",
+	],
+	"url" => [],
+	"hasReduction" => []
 ];
 
 $page_needed_key = [ // On META 
 	"total",
-	"itemsPerPage",
+	"page",
+	"perPage",
 	"totalPage",
-	"currentPage",
+	"hasPreviousPage",
+	"hasNextPage",
 	"keyword",
 ];
-
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
