@@ -23,6 +23,10 @@ use Facebook\WebDriver\Support\Events\EventFiringWebDriver;
 use Facebook\WebDriver\Support\Events\EventHandler;
 use Facebook\WebDriver\Support\Events\EventFiringWebElement;
 
+require_once('vendor/autoload.php');
+
+
+
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
@@ -35,12 +39,18 @@ function generate_driver() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions();
-	//$firefoxOptions->addArguments(['-headless']); -> !!
+	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 
 	return RemoteWebDriver::create($host, $capabilities);
 }
 
+
+function extract_source(string $url, $driver) {
+	$driver->get($url);
+	$src = $driver->getPageSource();
+	return $src;
+}
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
@@ -52,26 +62,33 @@ function generate_driver() {
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
-function extract_source_intermarche(string $url,$driver, string $town) : string {
+function extract_source_intermarche(string $url,$driver, string $town, string $target) : string {
 	$driver->get($url);
 	$choice_by_class = "selectAddressForStore__search";
 
 	//COOKIE
+	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))));
 	$driver->findElement(WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))->click();
 	//COOKIE DISABLE -> use js for click on the button 
 
 	$choice = $driver->findElement(WebDriverBy::className($choice_by_class));
 	$choice->findElement(WebDriverBy::tagName('input'))->sendKeys($town);
-	sleep(1); // wait_until is better 
+	//sleep(1); // wait_until is better 
+	$driver->wait()->until(WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(WebDriverBy::className('selectAddressForStore__suggestion')));
 	$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
-	sleep(1); // wait until is better 
+	//sleep(1); // wait until is better 
 	
+	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button')));
 	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button'))->click();
+	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className('search-input__input')));
+
 	$research_box = $driver->findElement(WebDriverBy::className('search-input__input'));
-	$research_box->sendKeys('Lardons');
+	//check target 
+	$research_box->sendKeys($target);
 	$research_box->sendKeys(WebDriverKeys::ENTER);
 	//source code to receive 
-	sleep(1); // wait until is better 
+	// - /html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div = PRODUCT
+	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div')));
 	$src = $driver->getPageSource();
 	return $src;
 }
@@ -161,7 +178,6 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 	else {
 		while(!empty($res_util = util_subcontenttrunk($copy_str,"",$end_content,0))) {
 			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
-			var_dump($res_util);
 			$s_str = $copy_str;
 			$offset_next = 0;
 			$res[] = substr($s_str,0,($offset_next=$res_util[1])+$with_end_trunk);
@@ -194,7 +210,6 @@ function search_product_in_script_json(string $output, string $product) : array 
 	$subcontent[0] .= $end; // "close meta" -> the end of meta is not interesting
 	$subcontent[0] = substr($subcontent[0],strlen($first));
 	$all_products = all_subcontent_with_trunk_v21($subcontent[0],"",$possible_end,true,-1);
-	var_dump($all_products);
 	$all_informations = all_subcontent_with_trunk_v21(array_pop($all_products),"\"meta\":{\"",[$end],false);
 	$subcontent = array("products"=>$all_products,"informations"=>"{".$all_informations[0]."e}}");
 	return $subcontent;
@@ -213,7 +228,8 @@ function parse_json_product(string $output_json) : array {
 }
 
 $list_of_product = [
-	"lardons"
+	"lardons",
+	"oeufs"
 ];
 
 
@@ -239,11 +255,70 @@ $page_needed_key = [ // On META
 	"total",
 	"page",
 	"perPage",
-	"totalPage",
 	"hasPreviousPage",
 	"hasNextPage",
-	"keyword",
 ];
+
+/**
+ * [BRIEF]	Information on the research and the pages information
+ * @param	array	$json			
+ * @param	array	$needed_key			
+ * @example extract_needed_information($json, [title,price])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print
+*/
+function extract_needed_information(array $json, array $needed_key) : array {
+	$rtn = array();
+	$sub_json_needed = $json["meta"];
+	foreach($needed_key as $val) 
+		$rtn = array_merge($rtn,[$val=>$sub_json_needed[$val]]);
+	
+	return $rtn;
+}
+
+/**
+ * [BRIEF]	(@see extract_needed_information_pro) but for all products
+ * @param	array	$tab_json	all products we have store		
+ * @param	array	$needed_key	list of information we need			
+ * @example extract_info_for_all_products($tab_json, [totalPage,currentPage])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print for all 
+ * 					products
+*/
+function extract_info_for_all_products(array $tab_json, array $needed_key) : array {
+	$rtn = array();
+	foreach($tab_json as $json) {
+		array_push($rtn,extract_needed_information_pro(
+									parse_json_product($json),$needed_key));
+	}
+	
+	return $rtn;
+}
+
+/**
+ * [BRIEF]	It's possible to store all data but not for you, it's important
+ * 			to store the display the most useful data 
+ * @param	array	$json			
+ * @param	array	$needed_key			
+ * @example extract_needed_information_pro($json, [title,price])
+ * @author	chriSmile0
+ * @return	array	array with the data with want to store/share/print
+*/
+function extract_needed_information_pro(array $json, array $needed_key) : array {
+	$rtn = array();
+	foreach($needed_key as $k=>$value) {
+		if((strcmp($k,"prices")==0) || (strcmp($k,"informations")==0))
+			continue;
+		$rtn = array_merge($rtn,[$k=>$json[$k]]);
+	}
+	$sub_info = $json["prices"]["productPrice"];
+	$rtn = array_merge($rtn,["prices"=>$sub_info]);
+	$sub_key_info = $needed_key["informations"];
+	$rtn = array_merge($rtn,["informations"=>[]]);
+	foreach($sub_key_info as $k=>$value)
+		$rtn["informations"] = array_merge($rtn["informations"],[$value=>$json["informations"][$value]]);
+	return $rtn;
+}
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
@@ -256,29 +331,31 @@ $page_needed_key = [ // On META
 function content_scrap_intermarche(string $url, string $target_product, string $town) : array {
 	$rtn = array();
 	$driver = generate_driver();
-	$file_content = extract_source_intermarche($url,$driver,$town);
+	$file_content = extract_source_intermarche($url,$driver,$town,$target_product);
 	$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
 	if(empty($sp_res)) {
 		$driver->quit();
 		return array();
 	}
-	/*$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
+	$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
 	$infos = extract_needed_information(parse_json_product($sp_res["informations"]),$GLOBALS['page_needed_key']);
-	$nb_page = $infos['totalPage'];
-	$current_page = $infos['currentPage'];
+	
+	$nb_page = $infos['total'] / $infos['perPage'];
+
+	$current_page = $infos['page'];
+	$new_url = $driver->getCurrentURL();
 	$next_page = $current_page+1;
 	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
-		$url_ = $url."&noRedirect=1&page=".$i;
-		$file_content = extract_source_carrefour($url_,$driver);
+		$url_ = $new_url."?page=".$i;
+		$file_content = extract_source($url_,$driver);
 		$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
 		if(empty($sp_res)) {
 			$driver->quit();
 			return $rtn;
 		}
 		$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
-	}*/
+	}
 	$driver->quit();
-	$rtn = array();
 	return $rtn;
 }
 
@@ -306,8 +383,9 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 //main($argc,$argv);
-$res = search_product_in_script_json(file_get_contents("script_intermarche.txt"),"lardons");
-var_dump($res);
+//$res = search_product_in_script_json(file_get_contents("script_intermarche.txt"),"lardons");
+//var_dump($res);
+var_dump(content_scrap_intermarche("https://www.intermarche.com/","oeufs","Paris"));
 echo "coucou it's intermarche\n";
 //var_dump(util_subcontenttrunk("John marc John nny marcus John mike","John",["marc"],0));
 //var_dump(all_subcontent_with_trunk_2("John marc nny marcus John mike nny","John",["nny"]));
