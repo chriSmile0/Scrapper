@@ -45,8 +45,17 @@
 namespace Facebook\WebDriver;
 
 use Facebook\WebDriver\Firefox\FirefoxOptions;
+use Facebook\WebDriver\Interactions\Internal\WebDriverCoordinates;
+use Facebook\WebDriver\Interactions\Internal\WebDriverMouseAction;
+use Facebook\WebDriver\Interactions\Touch\WebDriverDownAction;
+use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Facebook\WebDriver\WebDriverKeyboard;
+use Facebook\WebDriver\WebDriverHasInputDevices;
+use Facebook\WebDriver\Support\Events\EventFiringWebDriver;
+use Facebook\WebDriver\Support\Events\EventHandler;
+use Facebook\WebDriver\Support\Events\EventFiringWebElement;
 
 require_once('vendor/autoload.php');
 
@@ -323,17 +332,13 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-
-//main($argc,$argv);
-/*$url = "https://carrefour.fr/s?q=lardons";
-$target = "lardons";
-print_r(content_scrap_carrefour($url,$target));*/
+main($argc,$argv);
 
 /**
  * [BRIEF]	
  * @param	
  * @example	
- * @author	chrisSmile0
+ * @author	chriSmile0
  * @return	
 */
 ?>
