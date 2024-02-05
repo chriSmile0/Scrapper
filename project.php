@@ -1,11 +1,13 @@
 <?php  
 require_once('infos_programs.php');
 $version = "0.5";
-$programs = ["scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php"];
+$programs = ["scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
+				"scrapper_intermarche.php"];
 
 /**
  * [BRIEF]	[LOCAL_INFO_PRINTER]
- * @example	print_info("") / print_info("scrapper.php")
+ * @param	void
+ * @example	print_info_local()
  * @author	chriSmile0
  * @return	void
 */
@@ -35,6 +37,9 @@ function print_info(string $arg = "") {
 		case $GLOBALS['programs'][2]:
 				print_info_scrapper_carrefour();
 			break;
+		case $GLOBALS['programs'][3]:
+				print_info_scrapper_intermarche();
+			break;
 		default: 
 			print_info_local();
 			break;
@@ -47,7 +52,7 @@ function print_info(string $arg = "") {
  * 			- --help	print this help
  * 			- --version print the program version (@see print_version)
  * 
- * @param	string	$argv0	the program name 
+ * @param	void
  * @author	chriSmile0
  * @return	void
 */
@@ -69,7 +74,15 @@ function print_version() {
 	echo "Copyright @-2024 [:chriSmile0:] \n";
 }
 
-
+/**
+ * [BRIEF]	[MAIN_PROGRAM] 
+ * @param	$argc	The number of parameter in the command line execution
+ * @param	$argv	The parameters of the command line execution
+ * @example	main($argc,"php7.2 project.php --help)
+ * @author	chriSmile0
+ * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
+ * 					test or if the scrapping failed 
+*/
 function main($argc, $argv) : bool {
 	if($argc > 1) {
 		switch($argv[1])  {

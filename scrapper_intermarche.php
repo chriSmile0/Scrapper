@@ -30,6 +30,7 @@ require_once('vendor/autoload.php');
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
+ * @param 	void 
  * @example	generate_driver()
  * @author	chriSmile0
  * @return	/
@@ -45,7 +46,14 @@ function generate_driver() {
 	return RemoteWebDriver::create($host, $capabilities);
 }
 
-
+/**
+ * [BRIEF]	simulate the url get in the browser and return the display content
+ * @param	string	$url	the url to get in the browser
+ * @param 	/		$driver	the driver instance
+ * @example	extract_source((@see URL1),$driver)
+ * @author	chriSmile0
+ * @return	string	the display content of the url renderer
+*/
 function extract_source(string $url, $driver) {
 	$driver->get($url);
 	$src = $driver->getPageSource();
@@ -54,11 +62,11 @@ function extract_source(string $url, $driver) {
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
- * 			[THIS TECHNIC IS USE FOR BYPASS CLOUDFLARE]
  * @param	string	$url	the url to get in the browser
  * @param 	/		$driver	the driver instance
- * @param 	/		$town 	the city in the research area
- * @example	extract_source_carrefour((@see URL1),$driver)
+ * @param 	string	$town 	the city in the research area
+ * @param	string	$target	the product we want to research
+ * @example	extract_source_intermarche((@see URL1),$driver,"Paris","lardons")
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
@@ -73,28 +81,40 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 
 	$choice = $driver->findElement(WebDriverBy::className($choice_by_class));
 	$choice->findElement(WebDriverBy::tagName('input'))->sendKeys($town);
-	//sleep(1); // wait_until is better 
+	
 	$driver->wait()->until(WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(WebDriverBy::className('selectAddressForStore__suggestion')));
 	$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
-	//sleep(1); // wait until is better 
 	
 	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button')));
 	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button'))->click();
+	
 	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className('search-input__input')));
-
 	$research_box = $driver->findElement(WebDriverBy::className('search-input__input'));
-	//check target 
+	
 	$research_box->sendKeys($target);
 	$research_box->sendKeys(WebDriverKeys::ENTER);
-	//source code to receive 
+	
 	// - /html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div = PRODUCT
 	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div')));
 	$src = $driver->getPageSource();
 	return $src;
 }
 
-
-function util_subcontenttrunk(string $output,string $trunk = "", array $end_content,int  $offset) : array {
+/**
+ * [BRIEF]	Detection of the closest element of $end_content array we are in the 
+ * 			$output
+ * 			This is use for create sub content of unique trunk but with many
+ * 			possible end
+ * @param	string	$output			the string to parse	
+ * @param 	string	$trunk			the trunk to research in the string
+ * @param	array	$end_content	many string to end the sub content
+ * @example	util_subcontenttrunk("Life Dead Repeat","L",["ead","eat"])
+ * @author	chriSmile0
+ * @return	array	[$end_content[?],the offset of the begin of this element, 
+ * 						the $offset of the $trunk is detected] // USAGE $trunk = "" -> V1.0
+ * @version	1.0
+*/
+function util_subcontent_trunk(string $output,string $trunk = "", array $end_content) : array {
 	$min_offset = strlen($output);
 	$min_index = 0;
 	$len_end_content = sizeof($end_content);
@@ -138,7 +158,7 @@ function util_subcontenttrunk(string $output,string $trunk = "", array $end_cont
  * @author	chriSmile0
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
- * @version	2.1	-> NEW VERSION
+ * @version	2.1	-> NEW VERSION -> deprecated [CARREFOUR] and [LECLERC] version 
 */
 function all_subcontent_with_trunk_v21(string $str, string $trunk = "", 
 										array $end_content, bool $with_end, 
@@ -151,7 +171,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 	if($original_trunk != "") {
 		if($original_end != "") {
 			while(($pos = strpos($copy_str,$trunk)) !== FALSE) {
-				//USE util_subcontenttrunk here if it"s necessary !!
+				//USE util_subcontent_trunk(...) here if it"s necessary !!
 				$s_str = substr($copy_str,$pos);
 				$offset_next = 0;
 				$res[] = substr($s_str,0,$offset_next=strpos($s_str,$original_end));
@@ -176,7 +196,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 		}
 	}
 	else {
-		while(!empty($res_util = util_subcontenttrunk($copy_str,"",$end_content,0))) {
+		while(!empty($res_util = util_subcontent_trunk($copy_str,"",$end_content))) {
 			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
 			$s_str = $copy_str;
 			$offset_next = 0;
@@ -200,7 +220,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
  * @author	chriSmile0
  * @return	array	split the data by product or empty array if product is not
  * 						in the list
- * @version CARREFOUR_VERSION -> to generalize
+ * @version CARREFOUR_VERSION -> to generalize with $first,$end, and $possible_end -> NEXT_VERSION
 */
 function search_product_in_script_json(string $output, string $product) : array  {
 	$first = "\"list\":{\"products\":[";
@@ -324,7 +344,7 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url			the url to scrap
  * @param	string 	$target_product	the target product
- * @example content_scrap_carrefour((@see URL1),"lardons")
+ * @example content_scrap_intermarche((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
@@ -363,7 +383,7 @@ function content_scrap_intermarche(string $url, string $target_product, string $
  * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
  * @param	$argc	The number of parameter in the command line execution
  * @param	$argv	The parameters of the command line execution
- * @example	main($argc,"php7.2 scrapper_carrefour.php (@see URL1) lardons")
+ * @example	main($argc,"php7.2 scrapper_intermarche.php (@see URL1) lardons Paris")
  * @author	chriSmile0
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
@@ -376,21 +396,14 @@ function main($argc, $argv) : bool {
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
-//$res = search_product_in_script_json(file_get_contents("script_intermarche.txt"),"lardons");
-//var_dump($res);
-var_dump(content_scrap_intermarche("https://www.intermarche.com/","oeufs","Paris"));
-echo "coucou it's intermarche\n";
-//var_dump(util_subcontenttrunk("John marc John nny marcus John mike","John",["marc"],0));
-//var_dump(all_subcontent_with_trunk_2("John marc nny marcus John mike nny","John",["nny"]));
+main($argc,$argv);
 
-//var_dump(all_subcontent_with_trunk_v2("John marc nny John mike nny dd","Johnnny",""));
 /**
  * [BRIEF]	
  * @param	
