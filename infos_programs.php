@@ -96,20 +96,41 @@ function print_info_scrapper_carrefour() {
 
 // NEXT RELEASE 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_CARREFOUR]
+ * [BRIEF]	[INFO_PRINTER_SCRAPPER_AUCHAN]
  * @param	void
  * @author	chriSmile0
  * @return	void
 */
 function print_info_scrapper_auchan() {
 	echo "[**AUCHAN SCRAPPER INFORMATIONS**]\n";
+	$prog = "scrapper_auchan.php";
+	echo "\t[BRIEF]	 
+		It's use for scrap the html content directly
 
+		For this tool we use \033[01;37m php-webdriver\033[0m to simulate a browser and  
+		use the source code of the page for obtain data and parse these last
+
+		It's important to known that website display 14 items in first the
+		page and 30 items in the next page of a research.
+		It's necessary to get again the next page in the browser for 
+		obtain all datas on a specific url. 
+
+		The result is an array of all products we are in the URL target
+		(Not usage of the second parameters for the moment)
+	
+	[MAIN]
+		php $prog [url] [research_product_type] [town] --with-openssl
+
+	[PARAMETERS]
+		[URL] -> \033[01;37m https://www.auchan.fr \033[0m
+		[research_product_type] -> the product we search,\033[01;37m lardons/oeufs\033[0m
+		[town] -> the research area \033[01;37mParis/Lyon\033[0m\n\n";
 
 	echo "[**END AUCHAN BASIC SCRAPPER INFORMATIONS**]\n";
 }
 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_CARREFOUR]
+ * [BRIEF]	[INFO_PRINTER_SCRAPPER_LIDL]
  * @param	void
  * @author	chriSmile0
  * @return	void
@@ -122,7 +143,7 @@ function print_info_scrapper_lidl() {
 }
 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_CARREFOUR]
+ * [BRIEF]	[INFO_PRINTER_SCRAPPER_SYSTEMU]
  * @param	void
  * @author	chriSmile0
  * @return	void
@@ -135,7 +156,7 @@ function print_info_scrapper_systemeU() {
 }
 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_CARREFOUR]
+ * [BRIEF]	[INFO_PRINTER_SCRAPPER_MONOPRIX]
  * @param 	void
  * @author	chriSmile0
  * @return	void
@@ -148,7 +169,7 @@ function print_info_scrapper_monoprix() {
 }
 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_CARREFOUR]
+ * [BRIEF]	[INFO_PRINTER_SCRAPPER_INTERMARCHE]
  * @param	void
  * @author	chriSmile0
  * @return	void
