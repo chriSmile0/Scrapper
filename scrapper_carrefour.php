@@ -3,10 +3,6 @@
 
 // [DEBUT->]https://github.com/adonistividad/web-scraping/blob/master/scrape_carrefour.py
 
-
-// URL1 = https://www.carrefour.fr/s?q=lardons
-// URL2 = https://www.carrefour.fr/s?q=lardons&filters%5Bproduct.categories.name%5D=Charcuterie%20et%20Traiteur
-
 // For document file 
 /**
  * Short description for file
@@ -40,22 +36,15 @@
  * @example 
  * @author 	-> chriSmile0
  * @return
- */
+*/
+// URL1 = https://www.carrefour.fr/s?q=lardons
+// URL2 = https://www.carrefour.fr/s?q=lardons&filters%5Bproduct.categories.name%5D=Charcuterie%20et%20Traiteur
 
 namespace Facebook\WebDriver;
 
 use Facebook\WebDriver\Firefox\FirefoxOptions;
-use Facebook\WebDriver\Interactions\Internal\WebDriverCoordinates;
-use Facebook\WebDriver\Interactions\Internal\WebDriverMouseAction;
-use Facebook\WebDriver\Interactions\Touch\WebDriverDownAction;
-use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
-use Facebook\WebDriver\WebDriverKeyboard;
-use Facebook\WebDriver\WebDriverHasInputDevices;
-use Facebook\WebDriver\Support\Events\EventFiringWebDriver;
-use Facebook\WebDriver\Support\Events\EventHandler;
-use Facebook\WebDriver\Support\Events\EventFiringWebElement;
 
 require_once('vendor/autoload.php');
 

@@ -1,4 +1,40 @@
 <?php 
+## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
+// For document file 
+/**
+ * Short description for file
+ *
+ * Long description for file
+ *
+ * PHP version 7.2
+ *
+ * LICENSE: --
+ *
+ * @package    scrapper_auchan.php
+ * @author     chrisSmile0
+ * @copyright  2024 -> @author
+ * @license    [NO_LICENSE]
+ * @version    1.0
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper_auchan.php
+ * @since      File available since Release 0.0
+ * @deprecated NO_DECPRECATED
+*/
+
+// For document classe 
+/**
+ * [BRIEF]-> class description
+ * @param		-> class constructor params	
+*/
+
+// For document function 
+/**
+ * [BRIEF]->  
+ * @param  
+ * @example 
+ * @author 	-> chriSmile0
+ * @return
+*/
+
 // URL1 = "https://www.intermarche.com/" -> choice magasin  
 // URL2 = "https://www.intermarche.com/acceuil" -> after choice 
 
@@ -11,17 +47,8 @@
 
 namespace Facebook\WebDriver;
 use Facebook\WebDriver\Firefox\FirefoxOptions;
-use Facebook\WebDriver\Interactions\Internal\WebDriverCoordinates;
-use Facebook\WebDriver\Interactions\Internal\WebDriverMouseAction;
-use Facebook\WebDriver\Interactions\Touch\WebDriverDownAction;
-use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
-use Facebook\WebDriver\WebDriverKeyboard;
-use Facebook\WebDriver\WebDriverHasInputDevices;
-use Facebook\WebDriver\Support\Events\EventFiringWebDriver;
-use Facebook\WebDriver\Support\Events\EventHandler;
-use Facebook\WebDriver\Support\Events\EventFiringWebElement;
 
 require_once('vendor/autoload.php');
 
