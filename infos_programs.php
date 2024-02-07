@@ -163,7 +163,24 @@ function print_info_scrapper_systemeU() {
 */
 function print_info_scrapper_monoprix() {
 	echo "[**MONOPRIX SCRAPPER INFORMATIONS**]\n";
+	$prog = "scrapper_monoprix.php";
+	echo "\t[BRIEF]	 
+		It's use for scrap the data in the js array/json
+		For scrap this set of data we use \033[01;37m php-webdriver\033[0m or
+		\033[01;37m puppeteer\033[0m		
 
+		This js/array contain many data per product but we extract many of
+		these for our tool (the most useful (price,brand) for the moment
+		(The all items is on the same URL (not necessary to go to another url)
+
+		The result is an array of all products we are in the URL target
+	
+	[MAIN]
+		php $prog [url] [research_product_type] --with-openssl
+
+	[PARAMETERS]
+		[URL] -> \033[01;37m https://https://courses.monoprix.fr/products/search?q=\033[0m
+		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";			
 
 	echo "[**END MONOPRIX SCRAPPER INFORMATIONS**]\n";
 }
