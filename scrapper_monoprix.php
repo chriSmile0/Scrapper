@@ -58,7 +58,7 @@ function generate_driver() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions();
-	//$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 
 	return RemoteWebDriver::create($host, $capabilities);
@@ -68,9 +68,9 @@ function generate_driver() {
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
  * 			with the first products and the $driver with the change state
- * @param	string	$url	the url to get in the browser
+ * @param	string	$url			the url to get in the browser
  * @param 	int		$js_or_selenium	0 for js 1 for sele
- * @example	extract_source_monoprix((@see URL1),$driver,"lardons")
+ * @example	extract_source_monoprix((@see URL1),1)
  * @author	chriSmile0
  * @return	string	the source code
 */
@@ -102,10 +102,8 @@ function extract_source_monoprix(string $url, int $js_or_selenium) : string {
 	*/
 
 	$url = escapeshellarg($url); // Replace with the target URL
-		$nodeScriptPath = 'scrape.js';
-		$output = shell_exec("node $nodeScriptPath $url");
-	//ON PEUT GREP car chaque recherche fait toujours la même taille 
-	//$rtn = shell_exec('cat $output | grep productEntities');
+	$nodeScriptPath = 'scrape.js';
+	$output = shell_exec("node $nodeScriptPath $url");
 	return $output;
 }
 
@@ -164,15 +162,15 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
  * @param 	bool 			$with_end		if we want add end delimiter or not in the substring
  * @param	int<-len_end,0> $size_end		0 complete end, -len_end = false on $with_end
  * @param 	string			$adds			add in end of each subcontent
- * @example	all_subcontent_with_trunk("Hello world it's me","world","me")
+ * @example	all_subcontent_with_trunk_v21("Hello world it's me","world",["me"],true,0,"}")
  * @author	chriSmile0
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
  * @version	2.2	-> NEW VERSION, $adds version 
 */
 function all_subcontent_with_trunk_v21(string $str, string $trunk = "", 
-										array $end_content, bool $with_end, 
-										int $size_end = 0, string $adds) : array {
+										array $end_content, bool $with_end = false, 
+										int $size_end = 0, string $adds = "") : array {
 	$res = array();
 	$copy_str = $str;
 	$original_trunk = $trunk;
@@ -234,7 +232,7 @@ $product_needed_key = [ // On ATTRIBUTES
  * [BRIEF]	(@see extract_needed_information_pro) but for all products
  * @param	array	$tab_json	all products we have store		
  * @param	array	$needed_key	list of information we need			
- * @example extract_info_for_all_products($tab_json, [totalPage,currentPage])
+ * @example extract_info_for_all_products($tab_json, [price,brand])
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print for all 
  * 					products
@@ -254,7 +252,7 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
  * 			to store the display the most useful data 
  * @param	array	$json			
  * @param	array	$needed_key			
- * @example extract_needed_information_pro($json, [title,price])
+ * @example extract_needed_information_pro($json, [name,price])
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print
 */
@@ -289,7 +287,7 @@ function content_scrap_monoprix(string $url, string $target_product) : array {
  * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
  * @param	$argc	The number of parameter in the command line execution
  * @param	$argv	The parameters of the command line execution
- * @example	main($argc,"php7.2 scrapper_intermarche.php (@see URL1) lardons Paris")
+ * @example	main($argc,"php7.2 scrapper_monoprix.php (@see URL1) lardons ")
  * @author	chriSmile0
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 

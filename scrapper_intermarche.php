@@ -181,7 +181,7 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
  * @param	array			$end_content	the end(s) delimiter
  * @param 	bool 			$with_end		if we want add end delimiter or not in the substring
  * @param	int<-len_end,0> $size_end		0 complete end, -len_end = false on $with_end
- * @example	all_subcontent_with_trunk("Hello world it's me","world","me")
+ * @example	all_subcontent_with_trunk("Hello world it's me","world",["me"],true,0)
  * @author	chriSmile0
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
@@ -243,7 +243,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
  * 									
  * @param	string	$output				datas
  * @param	string	$product			product to research in datas
- * @example	search_product_in_script_json("search:{"data:[....]","lardons",["lardons"])
+ * @example	search_product_in_script_json("search:{"data:[....]","lardons")
  * @author	chriSmile0
  * @return	array	split the data by product or empty array if product is not
  * 						in the list
