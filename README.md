@@ -22,6 +22,10 @@ Or API :
 ## How 
 - With PHP and the docXpath
 - With [php-webdriver](https://github.com/php-webdriver/php-webdriver)
+- With [puppeteer](https://github.com/puppeteer/puppeteer)
+- With [puppeteer-extra](https://github.com/berstend/puppeteer-extra)
+
+
 
 ## Why 
 - For my project **PriceComparator**
@@ -38,7 +42,7 @@ Or API :
 
 ## Version 
 
-### V0.5
+### V0.9 
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -48,23 +52,35 @@ Or API :
 
 - Specific version for specific website : 
   - The french supermarket compagny : 
-    - [Leclerc](https://leclerc.fr) : 
-      - [x] usage of https of basic version 
+    - [Leclerc](https://leclerc.fr) `NOT_FINISH`: 
       - [x] parse specific JS -> json
-      - [ ] bypass cloudflare -> no cloudflare on this website 
-    - [Carrefour](https://www.carrefour.fr) : 
-      - [ ] usage of https of basic version 
-      - [x] parse specifig JS -> json 
-      - [x] bypass cloudflare -> cloudflare security 
+      - [x] usage of https of [basic version](scrapper.php) : 
+      - [ ] NoBot Solutions
+    - [Carrefour](https://www.carrefour.fr) `ǸOT_FINISH` : 
+      - [x] parse specific JS -> json
+      - [x] usage of `php-webdriver` 
+      - [x] NoBot Solutions -> **Cloudflare**
+    - [Auchan](https://www.auchan.fr) : 
+      - [x] parse text in html tag
+      - [x] usage of `php-webdriver`
+      - [ ] NoBot Solutions 
+    - [Monoprix](https://www.monoprix.fr) : 
+      - [x] parse specific JS -> json 
+      - [x] usage of `puppeteer` or `php-webdriver` is possible
+      - [x] products for all stores in the target country
+      - [ ] NoBot Solutions
+    - [Intermaché](https://www.intermarche.com) :
+      - [x] parse specific JS -> json 
+      - [x] usage of `php-webdriver`
+      - [ ] NoBot Solutions 
+    - [Systeme_U](https://www.magasins-u.com) : 
+      - [x] parse specific JS -> json (products only on the display page)
+      - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
+      - [x] NoBot Solutions -> **DataDome** Solution
+      - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
   
-### V1.0 -> Next release  
+### V1.0 -> Cleaning and finish details release (next!!)  
 - Final first version 
-- Others compagny to scrape :
-  - [ ] [Auchan](https://www.auchan.fr)
-  - [ ] [Lidl](https://www.lidl.fr)
-  - [ ] [Systeme_U](https://www.magasins-u.com)
-  - [ ] [Monoprix](https://www.monoprix.fr)
-  - [ ] [Intermaché](https://www.intermarche.com)
 
 
 ## Features 

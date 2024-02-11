@@ -307,8 +307,4 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 main($argc,$argv);
-//$drv = generate_driver();
-//var_dump(extract_source_monoprix("https://courses.monoprix.fr/products/search?q=lardons",1));
-/*$url = "https://courses.monoprix.fr/products/search?q=";
-var_dump(content_scrap_monoprix($url,"lardons"));*/
 ?>

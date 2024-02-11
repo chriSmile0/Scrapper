@@ -76,7 +76,6 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
 	if($trunk !== "")
 		$output = substr($output,$offst+=strpos($output,$trunk));
 	$end = $end_content[0];
-	var_dump($end);
 	$min_offset = strpos($output,$end,0);
 	$found = ($min_offset !== FALSE) ? true : false;
 	if($found === false)
@@ -245,13 +244,10 @@ function content_scrap_systemeu(string $url, string $target_product, string $tow
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
 	$products_lines = extract_source_systemeu($url,$town,$target_product);
-	//var_dump($products_lines);
 	$sp_res = search_product_in_script_json($products_lines,$target_product);
-	//var_dump($sp_res);
 	if(empty($sp_res))
 		return $rtn;
 	$res = extract_info_for_all_products($sp_res,$GLOBALS['product_needed_key']);
-	var_dump($res);
 	return $res;
 }
 
@@ -279,7 +275,6 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 main($argc,$argv);
-
 /**
  * [BRIEF]	
  * @param	

@@ -430,7 +430,6 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 main($argc,$argv);
-
 /**
  * [BRIEF]	
  * @param	
