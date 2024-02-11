@@ -1,4 +1,8 @@
 node_modules/
 *.log
-*.txt
+/*.txt
 test*.json
+test*.js 
+source_code*.js
+*.png
+*.html

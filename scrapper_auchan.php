@@ -239,7 +239,6 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 main($argc,$argv);
-//content_scrap_auchan("https://www.auchan.fr","lardons","Paris");
 
 /**
  * [BRIEF]	
