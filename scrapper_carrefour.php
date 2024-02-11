@@ -98,6 +98,7 @@ function extract_source_carrefour(string $url,$driver) : string {
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
  * @version	1.5		
+ * @deprecate?	soon
 */
 function all_subcontent_with_trunk(string $str, string $trunk = "", string $end_content = "") : array {
 	$res = array();

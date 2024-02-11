@@ -223,7 +223,7 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
+main($argc,$argv);
 /**
  * [BRIEF]	
  * @param	

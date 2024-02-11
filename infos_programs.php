@@ -130,25 +130,12 @@ function print_info_scrapper_auchan() {
 }
 
 /**
- * [BRIEF]	[INFO_PRINTER_SCRAPPER_LIDL]
- * @param	void
- * @author	chriSmile0
- * @return	void
-*/
-function print_info_scrapper_lidl() {
-	echo "[**LIDL SCRAPPER INFORMATIONS**]\n";
-
-
-	echo "[**END LIDL BASIC SCRAPPER INFORMATIONS**]\n";
-}
-
-/**
  * [BRIEF]	[INFO_PRINTER_SCRAPPER_SYSTEMU]
  * @param	void
  * @author	chriSmile0
  * @return	void
 */
-function print_info_scrapper_systemeU() {
+function print_info_scrapper_systemeu() {
 	echo "[**SYSTEME_U SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_systemeu.php";
 	echo "\t[BRIEF]	 

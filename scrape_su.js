@@ -29,9 +29,9 @@ puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
  *          And the goal is to extract JSON content (line 20) of each page
  *          for have informations of the products display on each page.
  * 
- * @param { string } url
- * @param { string } town
- * @param { string } product 
+ * @param { string }  url
+ * @param { string }  town
+ * @param { string }  product 
  * @return { string } a parse solution to gather all products of the differents
  *                    pages in on string to parse with my 'php' algorithm 
  */

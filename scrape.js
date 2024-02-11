@@ -1,6 +1,6 @@
 
 // save this as scrape.js
-// Thanks to : https://webscraping.ai/faq/php/how-can-i-handle-javascript-rendered-content-in-php-web-scraping
+// Thanks to : https://webscraping.ai/faq/php/how-can-i-handle-javascript-rendered-content-in-php-web-scraping <3
 const { argv } = require('process');
 const puppeteer = require('puppeteer');
 

@@ -264,7 +264,6 @@ function all_paths_v2($child_path, string $origin_node) {
 		if($size_of_path > 2) {
 			$keys = array_keys($child_path);
 			$size_wo_path = $size_of_path-1;
-			var_dump($size_wo_path);
 			for($i = 0; $i < $size_wo_path; $i++) 
 				$paths .= all_paths_v2($child_path[$keys[$i]],$origin_node. "/".$keys[$i]);
 		}
