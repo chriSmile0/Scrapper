@@ -282,7 +282,7 @@ function main($argc, $argv) : bool {
 /*$url = "https://www.coursesu.com/drive/home";
 $driver = generate_driver();
 var_dump(extract_source_systemeu($url,$driver,"Paris","lardons"));*/
-$to_parse = file_get_contents("test_final_OK.txt");
+$to_parse = file_get_contents("testsParse/test_final_OK.txt");
 $res_parse = search_product_in_script_json($to_parse,"lardons");
 print_r(extract_info_for_all_products($res_parse["products"],$GLOBALS['product_needed_key']));
 // GOOD BUT NOT TO FINISH GO TO GENERALIZE WITH UPDATE OF JS 
