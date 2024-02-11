@@ -20,7 +20,6 @@
  * @deprecated NO_DECPRECATED
 */
 
-use function Facebook\WebDriver\extract_info_for_all_products as WebDriverExtract_info_for_all_products;
 
 // For document classe 
 /**
@@ -43,15 +42,15 @@ use function Facebook\WebDriver\extract_info_for_all_products as WebDriverExtrac
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
  * @param	string	$url	the url to get in the browser
- * @param 	/		$driver	the driver instance
  * @param 	string	$town 	the city in the research area
  * @param	string	$target	the product we want to research
- * @example	extract_source_intermarche((@see URL1),$driver,"Paris","lardons")
+ * @example	extract_source_systemu((@see URL1),$driver,"Paris","lardons")
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
-function extract_source_systemeu(string $url,$driver, string $town, string $target) : string {
-	$src = shell_exec('node scrape_su.js $town $target'); // to finish in the js file 
+function extract_source_systemeu(string $url, string $town, string $target) : string {
+	$town_ = escapeshellarg($town);
+	$src = shell_exec("node scrape_su.js $town_ $target");
 	return $src;
 }
 
@@ -97,7 +96,7 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
 }
 
 /**
- * [BRIEF]	That's a new version of the same name function in 'scrapper_leclerc.php'
+ * [BRIEF]	That's a new version of the same name function in 'scrapper_intermarche.php'
  * 			If the trunk is empty and end_content not empty then 
  * 				the substr begin in the offset '0' of the str and the end is in the of 
  * 				the end_content trunk
@@ -182,9 +181,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 */
 function search_product_in_script_json(string $output, string $product) : array  {
 	$end_product = ["},{","}],"];
-	$all_products = all_subcontent_with_trunk_v21($output,"{\"promotion\"",$end_product,true,-2);
-	$subcontent = array("products"=>$all_products);
-	return $subcontent;
+	return all_subcontent_with_trunk_v21($output,"{\"promotion\"",$end_product,true,-2);
 }
 
 
@@ -238,38 +235,41 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url			the url to scrap
- * @param 	string 	$town			the research area
  * @param	string 	$target_product	the target product
- * @example content_scrap_systemeu((@see URL1),"Paris","lardons")
+ * @param 	string 	$town			the research area
+ * @example content_scrap_systemeu((@see URL1),"lardons","75001, Paris")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_systemu(string $url, string $target_product) : array {
+function content_scrap_systemeu(string $url, string $target_product, string $town) : array {
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
-	/*$script = extract_source_systemu($url.$target_product,1);
-	if(empty($prods = all_subcontent_with_trunk_v21($script,"{\"productId\":",[",\"retailerFinancingPlanIds\""],false,0,"}")))
+	$products_lines = extract_source_systemeu($url,$town,$target_product);
+	//var_dump($products_lines);
+	$sp_res = search_product_in_script_json($products_lines,$target_product);
+	//var_dump($sp_res);
+	if(empty($sp_res))
 		return $rtn;
-
-	$rtn = array_merge($rtn,extract_info_for_all_products($prods,$GLOBALS['product_needed_key']));*/
-	return $rtn;
+	$res = extract_info_for_all_products($sp_res,$GLOBALS['product_needed_key']);
+	var_dump($res);
+	return $res;
 }
 
 /**
  * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
  * @param	$argc	The number of parameter in the command line execution
  * @param	$argv	The parameters of the command line execution
- * @example	main($argc,"php7.2 scrapper_intermarche.php (@see URL1) lardons Paris")
+ * @example	main($argc,"php7.2 scrapper_systemeu.php (@see URL1) lardons '75001, Paris'")
  * @author	chriSmile0
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
 	if($argc == 5) {
-		/*if(empty(content_scrap_systemeu($argv[1],$argv[2],$argv[3]))) {
+		if(empty(content_scrap_systemeu($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
-		}*/
+		}
 	}
 	else {
 		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
@@ -278,14 +278,7 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
-/*$url = "https://www.coursesu.com/drive/home";
-$driver = generate_driver();
-var_dump(extract_source_systemeu($url,$driver,"Paris","lardons"));*/
-$to_parse = file_get_contents("testsParse/test_final_OK.txt");
-$res_parse = search_product_in_script_json($to_parse,"lardons");
-print_r(extract_info_for_all_products($res_parse["products"],$GLOBALS['product_needed_key']));
-// GOOD BUT NOT TO FINISH GO TO GENERALIZE WITH UPDATE OF JS 
+main($argc,$argv);
 
 /**
  * [BRIEF]	

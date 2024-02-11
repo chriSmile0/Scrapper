@@ -1,8 +1,10 @@
 <?php  
 require_once('infos_programs.php');
 $version = "0.5";
-$programs = ["scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
-				"scrapper_intermarche.php","scrapper_auchan.php","scrapper_monoprix.php"];
+$programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
+				"scrapper_intermarche.php","scrapper_auchan.php",
+				"scrapper_monoprix.php","scrapper_systemeu.php"
+			];
 
 /**
  * [BRIEF]	[LOCAL_INFO_PRINTER]
@@ -45,6 +47,9 @@ function print_info(string $arg = "") {
 			break;
 		case $GLOBALS['programs'][5]:
 				print_info_scrapper_monoprix();
+			break;
+		case $GLOBALS['programs'][6]:
+				print_info_scrapper_systemeu();
 			break;
 		default: 
 			print_info_local();

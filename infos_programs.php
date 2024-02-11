@@ -150,7 +150,24 @@ function print_info_scrapper_lidl() {
 */
 function print_info_scrapper_systemeU() {
 	echo "[**SYSTEME_U SCRAPPER INFORMATIONS**]\n";
+	$prog = "scrapper_systemeu.php";
+	echo "\t[BRIEF]	 
+		It's use for scrap the data in the js array/json
+		For scrap this set of data we use \033[01;37m puppeteer-extra-plugin-stealth\033[0m		
 
+		This js/array contain many data per product but we extract many of
+		these for our tool (the most useful (price,brand) for the moment
+		(The all items is on the same URL (not necessary to go to another url)
+
+		The result is an array of all products we are in the URL target
+	
+	[MAIN]
+		php $prog [url] [research_product_type] [town] --with-openssl
+
+	[PARAMETERS]
+		[URL] -> \033[01;37m https://www.coursesu.com/drive/home \033[0m
+		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
+		[town] -> the research area \033[01;37mParis/Lyon\033[0m\n\n";	
 
 	echo "[**END SYSTEME_U SCRAPPER INFORMATIONS**]\n";
 }
@@ -179,7 +196,7 @@ function print_info_scrapper_monoprix() {
 		php $prog [url] [research_product_type] --with-openssl
 
 	[PARAMETERS]
-		[URL] -> \033[01;37m https://https://courses.monoprix.fr/products/search?q=\033[0m
+		[URL] -> \033[01;37m https://courses.monoprix.fr/products/search?q=\033[0m
 		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";			
 
 	echo "[**END MONOPRIX SCRAPPER INFORMATIONS**]\n";

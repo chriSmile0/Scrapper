@@ -322,56 +322,6 @@ function main($argc, $argv) : bool {
 	return 1;
 }
 main($argc,$argv);
-
-// AUCHAN : 
-
-$url_auchan_step1 = "https://www.auchan.fr/charcuterie-traiteur-pain/charcuterie/lardons-des-eminces/lardons-allumettes-poitrine/ca-n12010401?redirect_keywords=lardons";
-$url_home = "http://localhost/projet_pw2";
-$driver = generate_driver();
-// Go to URL
-$driver->get($url_auchan_step1);
-//$elems = $driver->findElement(WebDriverBy::className('product-thumbnail__see-prices-button btn btn--small btn--white productItemAvailabilityTrigger')); // find search input element
-$elems = $driver->findElement(WebDriverBy::className('product-thumbnail__see-prices-button')); // on trouve le premier on clique dessus
-$elems->click();
-/*$driver->wait()->until(
-    WebDriverExpectedCondition::titleContains('https://www.auchan.fr/charcuterie-traiteur-pain/charcuterie/lardons-des-eminces/lardons-allumettes-poitrine/ca-n12010401')
-);*/
-sleep(1);
-$layer = $driver->findElement(WebDriverBy::id('journey-update-modal_title'));
-var_dump($layer->getText());
-$input = $driver->findElement(WebDriverBy::tagName('input'));
-var_dump($input->getText());
-$driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input'))->sendKeys('Villefranche-sur-Saône 69400'); // fill the search box
-var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input'))->getAttribute('value'));
-
-/*sleep(1);
-
-var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button'))->getAttribute('aria-label'));*/
-
-//var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[2]'))->getText());
-//var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input')));
-//$driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input'))->submit();
-//var_dump($driver->findElement(WebDriverBy::tagName('input'))->getText());
-
-//var_dump($driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section'))->getText());
-
-/*$source = $driver->pageSource;
-$driver->quit();
-var_dump($source);*/
-//var_dump($driver->getTitle());
-
-// find element with class id : 
-// -> product-thumbnail__see-prices-button btn btn--small btn--white productItemAvailabilityTrigger
-// Read text of the element and print it to output
-/*echo 'About to click to a button with text: ' . $historyButton->getText();
-
-// Click the element to navigate to revision history page
-$historyButton->click();*/
-
-// Make sure to always call quit() at the end to terminate the browser session
-$driver->quit();
-
-
 /**
  * [BRIEF]	
  * @param	
