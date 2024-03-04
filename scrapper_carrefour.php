@@ -2,7 +2,7 @@
 ## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
 
 // [DEBUT->]https://github.com/adonistividad/web-scraping/blob/master/scrape_carrefour.py
-
+// UPDATE OF 13/02 
 // For document file 
 /**
  * Short description for file
@@ -60,7 +60,7 @@ function generate_driver() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->addArguments(['-headless']);
+	//$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 
 	return RemoteWebDriver::create($host, $capabilities);
@@ -71,13 +71,40 @@ function generate_driver() {
  * 			[THIS TECHNIC IS USE FOR BYPASS CLOUDFLARE]
  * @param	string	$url	the url to get in the browser
  * @param 	/		$driver	the driver instance
+ * @param	string	$city	the city of the research store
+ * @param 	string 	$target	product target
  * @example	extract_source_carrefour((@see URL1),$driver)
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
-function extract_source_carrefour(string $url,$driver) : string {
+function extract_source_carrefour(string $url,$driver,string $city, string $target) : string {
 	$driver->get($url);
+	//disable cookie 
+	sleep(1);
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[3]/div[2]/button'))->click();
+	// end disable cookie 
+	// click on drive 
+	// - /html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button'))->click();
+
+	// path area: //*[@id="c-input-marcel-uid-ltctua80zaekq"]
+	// /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div/div[1]/label/input
+	// the IP CHANGE (xpath necessary)
+	sleep(1);
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div/div[1]/input'))->sendKeys("$city");
+	sleep(2);
+	// path area++ /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button/span/span/span
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button'))->click();
+	sleep(3);
+	// path to store list : /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button/span/span
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button'))->click();
+	sleep(2);
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[1]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input'))->sendKeys($target)->submit();
+	sleep(1);
+	//$driver->get($url."?q=".$target);
 	$src = $driver->getPageSource();
+	
+	$driver->quit();
 	return $src;
 }
 
@@ -267,14 +294,15 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url			the url to scrap
  * @param	string 	$target_product	the target product
+ * @param 	string 	$city 			the city to target
  * @example content_scrap_carrefour((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_carrefour(string $url, string $target_product) : array {
+function content_scrap_carrefour(string $url, string $target_product, string $city) : array {
 	$rtn = array();
 	$driver = generate_driver();
-	$file_content = extract_source_carrefour($url,$driver);
+	$file_content = extract_source_carrefour($url,$driver,$city,$target_product);
 	$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
 	if(empty($sp_res)) {
 		$driver->quit();
@@ -287,7 +315,7 @@ function content_scrap_carrefour(string $url, string $target_product) : array {
 	$next_page = $current_page+1;
 	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
 		$url_ = $url."&noRedirect=1&page=".$i;
-		$file_content = extract_source_carrefour($url_,$driver);
+		$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
 		$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
 		if(empty($sp_res)) {
 			$driver->quit();
@@ -309,20 +337,25 @@ function content_scrap_carrefour(string $url, string $target_product) : array {
  * 					test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_carrefour($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_carrefour($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [city] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
 main($argc,$argv);
+/*$url = "https://www.carrefour.fr/courses";
+$search = "lardons";
+$city = "Paris";
+//var_dump(content_scrap_carrefour($url,$search,$city));
+var_dump(content_scrap_carrefour($url,$search,$city));*/
 /**
  * [BRIEF]	
  * @param	

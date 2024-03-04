@@ -1,7 +1,7 @@
 <?php 
 // URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
-
+// UPDATE OF 13/02 
 // For document file 
 /**
  * Short description for file
