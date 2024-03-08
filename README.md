@@ -55,8 +55,8 @@ Or API :
     - [Leclerc](https://leclerc.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of https of [basic version](scrapper.php) : 
-      - [x] NoBot Solutions -> **DataDome** Solution
-      - [x] Bypass DataDome with possibility to known all stores   
+      - [x] NoBot Solutions **DataDome** Solution
+      - [x] Bypass NoBot Solutions with knownledge of all stores (`libJSON/leclercs.json`)
     - [Carrefour](https://www.carrefour.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of `php-webdriver` 
@@ -79,5 +79,9 @@ Or API :
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5155a7965df10ea4045401281f71895ca889e64b
 
 ## Features 
