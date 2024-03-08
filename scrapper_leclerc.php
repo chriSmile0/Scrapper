@@ -37,65 +37,26 @@
  * @return
  */
 
-namespace Facebook\WebDriver;
 
-use Facebook\WebDriver\Firefox\FirefoxOptions;
-use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Facebook\WebDriver\Remote\RemoteWebDriver;
+ $test_product = [
+	"Lardons"
+];
 
-require_once('vendor/autoload.php');
+$list_of_product = [
+	"Lardons",
+	"Saucisse"
+];
 
-/**
- * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
- * 				(localhost:4444)
- * @example	generate_driver()
- * @author	chriSmile0
- * @return	/
-*/
-function generate_driver() {
-	$host = 'http://localhost:4444/';
-
-	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->addArguments(['-headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-
-	return RemoteWebDriver::create($host, $capabilities);
-}
-
-/**
- * [BRIEF]	simulate the url get in the browser and return the display content
- * 			[THIS TECHNIC IS USE FOR BYPASS CLOUDFLARE]
- * @param	string	$url	the url to get in the browser
- * @param 	/		$driver	the driver instance
- * @param	string	$city	the city of the research store
- * @param 	string 	$target	product target
- * @example	extract_source_leclerc((@see URL1),$driver)
- * @author	chriSmile0
- * @return	string	the display content of the url renderer
-*/
-function extract_source_leclerc(string $url,$driver,string $city, string $target) : string {
-	$driver->get($url);
-	//*[@id="txtWPAD344_RechercheDrive"]
-	sleep(1);
-	//$driver->findElement(WebDriverBy::id('txtWPAD344_RechercheDrive'))->sendKeys($city);
-
-	sleep(1);
-	//$driver->findElement(WebDriverBy::xpath('//*[@id="divWPAD025_ResultatVilles"]/div/dl/dd/ul/li[1]/a'))->click();
-	//$driver->findElement(WebDriverBy::id('input-searchbox'))->sendKeys($city);
-	//*[@id="input-searchbox"]
-	//$driver->findElement(WebDriverBy::xpath('/html/body/app-root/ng-sidebar-container/div/div/app-navbar/div[1]/app-header-shop/div/app-select-shop/div/div/div[1]/div/div/div[1]/app-woosmap-search-autocomplete/div/ul/li[1]'))->click();
-	sleep(1);
-	
-	$src = $driver->getPageSource();
-	
-	$driver->quit();
-	return $src;
-}
-
-
-
-
+$extract_list_item = [
+	"sLibelleLigne1",
+	"sLibelleLigne2",
+	"sPrixUnitaire",
+	"nrPVUnitaireTTC",
+	"sPrixPromo",
+	"sPrixParUniteDeMesure",
+	"nrPVParUniteDeMesureTTC",
+	"sUrlPageProduit"
+];
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
  * @param	string 	$url	The number of paramter in the command line execution
@@ -231,7 +192,7 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
  * @return	array 	array of all product with specific information that we needed
 */
 function content_scrap_leclerc(string $url, string $target_product) : array {
-	$file_content = extract_data_script_leclerc($url);
+	$file_content = extract_data_script_leclerc($url.$target_product);
 	$s_p_res = search_product($file_content,$target_product,$GLOBALS['list_of_product']);
 	if(empty($s_p_res))
 		return array();
@@ -273,9 +234,9 @@ var_dump(extract_source_leclerc($url,generate_driver(),$city,$search));*/
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
 
 
-$url2 =  "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche="; //deprecated ?? 
-$search = "lardons";
-var_dump(extract_data_script_leclerc($url2));
+$url2 =  "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche="; //deprecated ?? -> NO !! 
+$search = "Lardons";
+//var_dump(content_scrap_leclerc($url2,$search)); -> UnComment for test :-)
 
 /**
  * [BRIEF]	
