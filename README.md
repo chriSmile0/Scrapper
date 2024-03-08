@@ -52,11 +52,12 @@ Or API :
 
 - Specific version for specific website : 
   - The french supermarket compagny : 
-    - [Leclerc](https://leclerc.fr) `NOT_FINISH`: 
+    - [Leclerc](https://leclerc.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of https of [basic version](scrapper.php) : 
-      - [ ] NoBot Solutions
-    - [Carrefour](https://www.carrefour.fr) `ǸOT_FINISH` : 
+      - [x] NoBot Solutions **DataDome** Solution
+      - [x] Bypass NoBot Solutions with knownledge of all stores (`libJSON/leclercs.json`)
+    - [Carrefour](https://www.carrefour.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of `php-webdriver` 
       - [x] NoBot Solutions -> **Cloudflare**
