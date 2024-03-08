@@ -131,7 +131,7 @@ function nb_tag_in_same_level(DOMNodeList $nodesList, string $tag) : int  {
  * @param	string 	$str	the string to extract the alphanumericals content
  * @example	alphanumericals_of_str("\n HERE "\n")
  * @author	chriSmile0
- * @return	string the number of similar tag of $tag (include this tag)
+ * @return	string "HERE" in example 
 */
 function alphanumericals_of_str(string $str) : string {
 	$i = 0;
@@ -331,7 +331,6 @@ function all_datas_with_paths_v2($child_path, string $origin_node) {
 		else {
 			$save .= "/" . $origin_node;
 			$save .=  "[:" . $child_path["data"] . ":]\n";
-			$paths .= $save;
 		}
 	}
 	else {
@@ -459,13 +458,13 @@ function content_scrap_html(DOMXPath $doc_xpath = NULL, string $query = "",
 			return 0;
 
 	$true_query = "/".$query; // CHECK IF THE QUERY IS A GOOD QUERY -> SOON 
-	$doc_row = $doc_xpath->query($true_query);
+	$doc_row = $doc_xpath->query($true_query);		
 	$all_childs = childs_path($doc_row[0]->childNodes,$query);
 	$retour = choice_printable_infos($adds,$all_childs,$query);
 
 	if(!strcmp($retour,""))
 		return array();
-	return explode("\n",$retour);
+	return explode("//html",$retour);
 }
 
 function search_specific_information(DOMXPath $doc_xpath = NULL, string $query, 
@@ -797,7 +796,7 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
 //sub_main_search($urls_array[3],$queries_array[3],"AUCHAN SOLIDAIRES","cmp",true);
 //print_help("scrapper.php");
 

@@ -1,7 +1,7 @@
 <?php 
 // URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
-
+// UPDATE OF 13/02 
 // For document file 
 /**
  * Short description for file
@@ -37,7 +37,8 @@
  * @return
  */
 
-$test_product = [
+
+ $test_product = [
 	"Lardons"
 ];
 
@@ -57,14 +58,43 @@ $extract_list_item = [
 	"sUrlPageProduit"
 ];
 
+$universal_URL = "https://fd7-courses.leclercdrive.fr/magasin-";
+$universal_URL_END = "/recherche.aspx?TexteRecherche=";
+
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
  * @param	string 	$url	The number of paramter in the command line execution
- * @example	extract_data_script_leclerc((@see URL1))
+ * @param 	string 	$city	The store to target
+ * @example	research_city_json("libJSON/leclercs.json","Paris")
+ * @author	chriSmile0
+ * @return	string 	the url 
+*/
+function research_city_in_JSON(string $file_path, string $city) : string  {
+	$file_content = file_get_contents($file_path);
+	//DECODE
+	$arr = json_decode($file_content,true);
+	$found = array();
+	foreach($arr as $k => $v) {
+		if($v['NameCity'] === $city) {
+			$found = $v;
+			break;
+		}
+	}
+	if(empty($found))
+		return "";
+	$c = $found['LeclercCode'];
+	return $GLOBALS['universal_URL']."$c-$c-_".$GLOBALS['universal_URL_END'];
+}
+
+/**
+ * [BRIEF]	A function for extract the html content of the leclerc website
+ * @param	string 	$url	The number of paramter in the command line execution
+ * @param 	string 	$city	The store to target
+ * @example	extract_data_script_leclerc((@see URL1),"Paris")
  * @author	chriSmile0
  * @return	string 	the content of the file
 */
-function extract_data_script_leclerc(string $url) : string {
+function extract_data_script_leclerc(string $target, string $city) : string {
 	$options = [
 		'ssl' => [
 		'verify_peer' => false,
@@ -81,7 +111,10 @@ function extract_data_script_leclerc(string $url) : string {
 		],
 	];
 	$context = stream_context_create($options);
-	$output = file_get_contents($url, false,$context);
+	$found = research_city_in_JSON("libJSON/leclercs.json",$city);
+	if($found === "")
+		return "";
+	$output = file_get_contents($found.$target, false, $context);
 	return $output;
 }
 
@@ -187,12 +220,13 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url			the url to scrap
  * @param	string 	$target_product	the target product
- * @example content_scrap_leclerc((@see URL1),"lardons")
+ * @param 	string 	$city			the store to target
+ * @example content_scrap_leclerc((@see URL1),"lardons","Paris")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_leclerc(string $url, string $target_product) : array {
-	$file_content = extract_data_script_leclerc($url);
+function content_scrap_leclerc(string $target_product, string $city) : array {
+	$file_content = extract_data_script_leclerc($target_product,$city);
 	$s_p_res = search_product($file_content,$target_product,$GLOBALS['list_of_product']);
 	if(empty($s_p_res))
 		return array();
@@ -210,20 +244,37 @@ function content_scrap_leclerc(string $url, string $target_product) : array {
  * 					test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 4) {
+	if($argc == 5) {
 		if(empty(content_scrap_leclerc($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [research_product_type] [city] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
+/*$url = "https://www.leclercdrive.fr/";
+$city = "Paris";
+$search = "lardons";
+var_dump(extract_source_leclerc($url,generate_driver(),$city,$search));*/
+//var_dump(content_scrap_leclerc())
+
+/// URL = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
+// URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
+
+
+$url2 =  "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche="; //deprecated ?? -> NO !! 
+$universal_URL = "https://fd7-courses.leclercdrive.fr/magasin-";
+$universal_URL_END = "/recherche.aspx?TexteRecherche=";
+$search = "Lardons";
+$city_choice = "";//ARGV2;
+//var_dump(content_scrap_leclerc($search,"Voglans"));// -> UnComment for test :-)
+
 /**
  * [BRIEF]	
  * @param	
