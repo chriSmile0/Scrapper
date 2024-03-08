@@ -1,6 +1,6 @@
 <?php  
 require_once('infos_programs.php');
-$version = "0.9";
+$version = "1.0";
 $programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
 				"scrapper_intermarche.php","scrapper_auchan.php",
 				"scrapper_monoprix.php","scrapper_systemeu.php"
