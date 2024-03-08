@@ -37,25 +37,64 @@
  * @return
  */
 
-$test_product = [
-	"Lardons"
-];
+namespace Facebook\WebDriver;
 
-$list_of_product = [
-	"Lardons",
-	"Saucisse"
-];
+use Facebook\WebDriver\Firefox\FirefoxOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
 
-$extract_list_item = [
-	"sLibelleLigne1",
-	"sLibelleLigne2",
-	"sPrixUnitaire",
-	"nrPVUnitaireTTC",
-	"sPrixPromo",
-	"sPrixParUniteDeMesure",
-	"nrPVParUniteDeMesureTTC",
-	"sUrlPageProduit"
-];
+require_once('vendor/autoload.php');
+
+/**
+ * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
+ * 				(localhost:4444)
+ * @example	generate_driver()
+ * @author	chriSmile0
+ * @return	/
+*/
+function generate_driver() {
+	$host = 'http://localhost:4444/';
+
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+
+	return RemoteWebDriver::create($host, $capabilities);
+}
+
+/**
+ * [BRIEF]	simulate the url get in the browser and return the display content
+ * 			[THIS TECHNIC IS USE FOR BYPASS CLOUDFLARE]
+ * @param	string	$url	the url to get in the browser
+ * @param 	/		$driver	the driver instance
+ * @param	string	$city	the city of the research store
+ * @param 	string 	$target	product target
+ * @example	extract_source_leclerc((@see URL1),$driver)
+ * @author	chriSmile0
+ * @return	string	the display content of the url renderer
+*/
+function extract_source_leclerc(string $url,$driver,string $city, string $target) : string {
+	$driver->get($url);
+	//*[@id="txtWPAD344_RechercheDrive"]
+	sleep(1);
+	//$driver->findElement(WebDriverBy::id('txtWPAD344_RechercheDrive'))->sendKeys($city);
+
+	sleep(1);
+	//$driver->findElement(WebDriverBy::xpath('//*[@id="divWPAD025_ResultatVilles"]/div/dl/dd/ul/li[1]/a'))->click();
+	//$driver->findElement(WebDriverBy::id('input-searchbox'))->sendKeys($city);
+	//*[@id="input-searchbox"]
+	//$driver->findElement(WebDriverBy::xpath('/html/body/app-root/ng-sidebar-container/div/div/app-navbar/div[1]/app-header-shop/div/app-select-shop/div/div/div[1]/div/div/div[1]/app-woosmap-search-autocomplete/div/ul/li[1]'))->click();
+	sleep(1);
+	
+	$src = $driver->getPageSource();
+	
+	$driver->quit();
+	return $src;
+}
+
+
+
 
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
@@ -223,7 +262,97 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
+/*$url = "https://www.leclercdrive.fr/";
+$city = "Paris";
+$search = "lardons";
+var_dump(extract_source_leclerc($url,generate_driver(),$city,$search));*/
+//var_dump(content_scrap_leclerc())
+
+/// URL = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
+// URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
+
+
+$url2 =  "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche="; //deprecated ?? 
+$search = "lardons";
+//var_dump(content_scrap_leclerc($url2,$search));
+var_dump(extract_data_script_leclerc($url2));
+
+//magasin-0x{dept_ID}
+//dept_ID=7301 not 73100
+//6 dans la régions de Chambéry : Liste : 
+
+//!!!!!!!!!!!!!!!!!IMPORTANT LE FDx est complétement outrepassable on peut mettre n'importe quoi dedans cela trouvera le magasin automatiquement
+//!!!!!!!!!!!!!!!!!à condition que notre magasin soit avec le bon ID 
+/** fd7
+ * Sur la recherche Voglans voilà le résultat : 
+ * On cherche maintenant à comprendre comment ils font leurs IDS 
+ * on sait que le 0 ne bouge pas ainsi que le département toujours
+ * au milieu wx{DEPT{2}}yz
+ * On cherche donc à comprendre le x et le y d'où cela viens
+ * 
+ * Quand on est au nord de notre recherche qui est '037301' 
+	 * On augmente de 1 le digit tout à droite (jsp encore pourquoi comment ++)
+ * Quand on est au sud de notre recherche qui est '037301'
+ 	* On diminue le digit à gauche de 1 minimum 
+ * 
+ * 037301 = Voglans 		(73420) place id = r0JVT6E10KZh/aibgO1VJ13DAbE=
+ * 027301 = Chambéry 		(73000)
+ * 037303 = Aix-les-Bains 	(73100)
+ * 027303 = Relais Chambéry (73100)
+ * 027302 = La Ravoire		(73490)
+ * 037302 = Grésy-sur-Aix 	(73100)
+*/
+
+/// voglans on click = 
+<a 	href="javascript:void(0);" 
+	data-type="prediction"  // o 
+	data-type-resultat="locality" // s 
+	data-place-id="r0JVT6E10KZh/aibgO1VJ13DAbE=" // c  
+	data-latitude="0"  // i 
+	data-longitude="0" // u 
+	data-description="Voglans, Savoie" // h 
+	data-ville="" data-arrondissement="">Voglans, Savoie</a>
+// i, u, h, o, s, c, l, a, e, v dans InformationResultatRecherche
+// qui a pour proto : InformationResultatRecherche()
+/*
+<div class="ctrlMapLAD__cartouches" id="liDrive_037301" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 146, null, null, null)">
+<div class="ctrlMapLAD__cartouches" id="liDrive_027301" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 84, null, null, null)">
+<div class="ctrlMapLAD__cartouches" id="liDrive_037303" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 1265, null, null, null)">
+<div class="ctrlMapLAD__cartouches" id="liDrive_027303" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 1155, null, null, null)">
+<div class="ctrlMapLAD__cartouches" id="liDrive_027302" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 85, null, null, null)">
+<div class="ctrlMapLAD__cartouches" id="liDrive_037302" onclick="window['WPAD338'].AfficherPointsRetrait(&quot;SELECTION&quot;, null, null, 147, null, null, null)">
+*/
+
+/** fd16
+ * 057301 = Alberville
+*/
+
+ /** fd2
+  * 017402 = Annecy Cran-Gervier (74...)
+  * 017403 = Annecy Relais pringy 
+*/
+
+/**
+ * 011002 = Nogent sur seine (10400)
+ * 011001 = Romily sur seine (10100)
+ */
+
+/** Paris 
+ * Logique ?
+ * 
+ * 
+ * 
+ * 099401 = Kremlin Bicêtre (94270)
+ * 069401 = Vitry-sur-Seine (94400)
+ * 159302 = La courneuve (93120)
+ * 159201 = Colombes Michelet (92700)
+ * 099311 = Epinay (93800)
+ * 159301 = Blanc Mesnil (93150)
+ * 129401 = Bonneuil-sur-Marne (94380)
+ * 089301 = Aulnay-sous-Bois (93600)
+*/
+
 /**
  * [BRIEF]	
  * @param	
