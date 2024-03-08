@@ -57,8 +57,8 @@ function print_info_scrapper_leclerc() {
 		php $prog [url] [research_product_type] --with-openssl
 
 	[PARAMETERS]
-		[URL] -> \033[01;37m https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons\033[0m
-		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";			
+		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
+		[city] -> \033[01;37m Paris/Lyon \033[0m\n\n";		
 	echo "[**END LECLERC BASIC SCRAPPER INFORMATIONS**]\n";
 }
 

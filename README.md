@@ -42,7 +42,7 @@ Or API :
 
 ## Version 
 
-### V0.9 
+### V1.0 
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -52,11 +52,12 @@ Or API :
 
 - Specific version for specific website : 
   - The french supermarket compagny : 
-    - [Leclerc](https://leclerc.fr) `NOT_FINISH`: 
+    - [Leclerc](https://leclerc.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of https of [basic version](scrapper.php) : 
-      - [ ] NoBot Solutions
-    - [Carrefour](https://www.carrefour.fr) `ǸOT_FINISH` : 
+      - [x] NoBot Solutions -> **DataDome** Solution
+      - [x] Bypass DataDome with possibility to known all stores   
+    - [Carrefour](https://www.carrefour.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of `php-webdriver` 
       - [x] NoBot Solutions -> **Cloudflare**
@@ -78,9 +79,5 @@ Or API :
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
-  
-### V1.0 -> Cleaning and finish details release (next!!)  
-- Final first version 
-
 
 ## Features 
