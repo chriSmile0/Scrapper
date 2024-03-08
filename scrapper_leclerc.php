@@ -244,7 +244,7 @@ function content_scrap_leclerc(string $target_product, string $city) : array {
  * 					test or if the scrapping failed 
 */
 function main($argc, $argv) : bool {
-	if($argc == 4) {
+	if($argc == 5) {
 		if(empty(content_scrap_leclerc($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
