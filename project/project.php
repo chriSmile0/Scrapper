@@ -3,7 +3,7 @@ require_once('infos_programs.php');
 $version = "1.0";
 $programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
 				"scrapper_intermarche.php","scrapper_auchan.php",
-				"scrapper_monoprix.php","scrapper_systemeu.php"
+				"scrapper_monoprix.php", "scrapper_systemeu.php"
 			];
 
 /**
@@ -115,5 +115,5 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//main($argc,$argv);
 ?>

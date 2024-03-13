@@ -1,7 +1,17 @@
 {
 	"description": "scrapping of http(s) file",
 	"license": "proprietary",
-	"name": "no/name",
+	"name": "chrismile0/scrapper",
+	"autoload": {
+        "psr-4": {
+            "chrismile0\\scrapper\\": "src/"
+        },
+        "files": ["src/scrapper.php" , "src/scrapper_leclerc.php"
+					, "src/scrapper_carrefour.php", "src/scrapper_intermarche.php"
+					, "src/scrapper_auchan.php", "src/scrapper_monoprix.php"
+					, "src/scrapper_systemeu.php"
+				]
+    },
 	"authors": [
 		{
 			"name": "Chris",
@@ -10,8 +20,6 @@
 	],
 	"require": {
 		"php-webdriver/webdriver": "^1.13"
-	},
-	"config": {
-		"disable-tls": false
 	}
+
 }

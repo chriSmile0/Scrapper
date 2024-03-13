@@ -36,27 +36,31 @@
  */
 
 // URL1 = https://www.auchan.fr/
-
 namespace Facebook\WebDriver;
+namespace ChriSmile0\Scrapper;
+use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
+use Facebook\WebDriver\WebDriverBy as WebDriverBy;
+use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
+use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
+require('../vendor/autoload.php');
 
-use Facebook\WebDriver\Firefox\FirefoxOptions;
-use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Facebook\WebDriver\Remote\RemoteWebDriver;
 
-require_once('vendor/autoload.php');
+
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @example	generate_driver()
+ * @example	generate_driver_a()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver() {
+function generate_driver_a() {
 	$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 
@@ -109,7 +113,7 @@ function text_to_associative_array(string $get_text, array $associative_list,
  * @return	array	array with the data with want to store/share/print for all 
  * 					products
 */
-function extract_info_for_all_products($prods) : array {
+function extract_info_for_all_products_a($prods) : array {
 	$rtn = array();
 
 	$associative_list = [
@@ -175,7 +179,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 
 	$prods = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
 	$src = $driver->getPageSource();
-	return [$driver,$src,extract_info_for_all_products($prods)];
+	return [$driver,$src,extract_info_for_all_products_a($prods)];
 }
 
 /**
@@ -188,7 +192,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
  * @return	array 	array of all product with specific information that we needed
 */
 function content_scrap_auchan(string $url, string $target_product, string $town) : array {
-	$driver = generate_driver();
+	$driver = generate_driver_a();
 	$file_content_and_prods = extract_source_auchan($url,$driver,$town,$target_product);
 	$driver = $file_content_and_prods[0];
 	$file_content = $file_content_and_prods[1];
@@ -207,7 +211,7 @@ function content_scrap_auchan(string $url, string $target_product, string $town)
 	for($i = $cur_page+1 ; $i < $nb_page+1; $i++) {
 		$driver->get($new_url.$i);
 		$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-		$prods = array_merge($prods,extract_info_for_all_products($produits));
+		$prods = array_merge($prods,extract_info_for_all_products_a($produits));
 	}
 	$driver->manage()->deleteAllCookies();
 	$driver->quit();
@@ -223,7 +227,7 @@ function content_scrap_auchan(string $url, string $target_product, string $town)
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
 */
-function main($argc, $argv) : bool {
+function main_a($argc, $argv) : bool {
 	if($argc == 5) {
 		if(empty(content_scrap_auchan($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
@@ -238,7 +242,9 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+
+//main_a($argc,$argv);
+//var_dump(content_scrap_auchan("https://www.auchan.fr/","Lardons","Paris"));
 /**
  * [BRIEF]	
  * @param	

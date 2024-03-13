@@ -1,4 +1,5 @@
 <?php 
+
 // URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
 // UPDATE OF 13/02 
@@ -35,8 +36,9 @@
  * @example 
  * @author 	-> chriSmile0
  * @return
- */
+*/
 
+namespace ChriSmile0\Scrapper;
 
  $test_product = [
 	"Lardons"
@@ -61,6 +63,10 @@ $extract_list_item = [
 $universal_URL = "https://fd7-courses.leclercdrive.fr/magasin-";
 $universal_URL_END = "/recherche.aspx?TexteRecherche=";
 
+function get_global(string $choice) {
+	return $GLOBALS[$choice];
+}
+
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
  * @param	string 	$url	The number of paramter in the command line execution
@@ -83,7 +89,9 @@ function research_city_in_JSON(string $file_path, string $city) : string  {
 	if(empty($found))
 		return "";
 	$c = $found['LeclercCode'];
-	return $GLOBALS['universal_URL']."$c-$c-_".$GLOBALS['universal_URL_END'];
+	$universal_URL = "https://fd7-courses.leclercdrive.fr/magasin-";
+	$universal_URL_END = "/recherche.aspx?TexteRecherche=";
+	return $universal_URL."$c-$c-_".$universal_URL_END;
 }
 
 /**
@@ -111,7 +119,7 @@ function extract_data_script_leclerc(string $target, string $city) : string {
 		],
 	];
 	$context = stream_context_create($options);
-	$found = research_city_in_JSON("libJSON/leclercs.json",$city);
+	$found = research_city_in_JSON(__DIR__."/libJSON/leclercs.json",$city);
 	if($found === "")
 		return "";
 	$output = file_get_contents($found.$target, false, $context);
@@ -227,10 +235,25 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
 */
 function content_scrap_leclerc(string $target_product, string $city) : array {
 	$file_content = extract_data_script_leclerc($target_product,$city);
-	$s_p_res = search_product($file_content,$target_product,$GLOBALS['list_of_product']);
+	$list_of_product = [
+		"Lardons",
+		"Saucisse"
+	];
+	
+	$extract_list_item = [
+		"sLibelleLigne1",
+		"sLibelleLigne2",
+		"sPrixUnitaire",
+		"nrPVUnitaireTTC",
+		"sPrixPromo",
+		"sPrixParUniteDeMesure",
+		"nrPVParUniteDeMesureTTC",
+		"sUrlPageProduit"
+	];
+	$s_p_res = search_product($file_content,$target_product,$list_of_product);
 	if(empty($s_p_res))
 		return array();
-	$all_products_find = extract_needed_information_of_all_product($s_p_res,$GLOBALS['extract_list_item']);
+	$all_products_find = extract_needed_information_of_all_product($s_p_res,$extract_list_item);
 	return $all_products_find;
 }
 
@@ -243,7 +266,7 @@ function content_scrap_leclerc(string $target_product, string $city) : array {
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
 */
-function main($argc, $argv) : bool {
+function main_e($argc, $argv) : bool {
 	if($argc == 4) {
 		if(empty(content_scrap_leclerc($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
@@ -257,7 +280,7 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
+//main_e($argc,$argv);
 /*$url = "https://www.leclercdrive.fr/";
 $city = "Paris";
 $search = "lardons";

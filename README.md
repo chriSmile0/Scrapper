@@ -31,14 +31,52 @@ Or API :
 - For my project **PriceComparator**
 - Developpement of your own tools is important to understand and learn many things.
 
+## Paths 
+<details open>
+<summary>Paths</summary>
+<pre>
+dev
+├── copy_all_leclerc.html
+└── JSON_updates.php
+project
+├── infos_programs.php
+└── project.php
+src
+├── libJSON
+│   └── leclercs.json
+├── scrape.js
+├── scrape_su.js
+├── scrapper_auchan.php
+├── scrapper_carrefour.php
+├── scrapper_intermarche.php
+├── scrapper_leclerc.php
+├── scrapper_monoprix.php
+├── scrapper.php
+├── scrapper_systemeu.php
+└── test_extra_puppeteer.js
+your_project
+├── example.php
+└── README.md
+composer.json
+package.json
+README.md
+</pre>
+</details>
+
 ## Usage 
+### LIKE A PACKAGE : 
+  - `composer require php-webdriver/php-webdriver`
+  - in each exec file in [YOUR_PROJECT] folder `namespace ChriSmile0\Scrapper`
+  - `use ChriSmile0\Scrapper\FILE_WO_PHP_EXT`
+### LIKE A PROJECT : 
+- `composer require php-webdriver/php-webdriver`
 - `project.php` for known how the different tools works
-- `scrapper*.php` the differents files for scraping mission
-- `vendor` add lib for php 
+- `src/scrapper*.php` the differents files for scraping mission
+- `vendor` add lib for php-webdriver 
 - `node_modules(hide with .gitignore)` for node.js module 
 - `*.json/*.txt` for different test to build program to efficient scraping 
 
-`php project.php --info` it's a good start
+`php project/project.php --info` it's a good start
 
 ## Version 
 
@@ -79,9 +117,6 @@ Or API :
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
-<<<<<<< HEAD
-=======
 
->>>>>>> 5155a7965df10ea4045401281f71895ca889e64b
 
 ## Features 

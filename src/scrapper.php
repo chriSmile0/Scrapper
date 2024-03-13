@@ -48,6 +48,13 @@
  * #define KCYN  "\x1B[36m"
  * #define KWHT  "\x1B[37m"
 */ 
+
+namespace ChriSmile0\Scrapper;
+use DOMElement;
+use DOMNodeList;
+use DOMXPath;
+use DOMDocument;
+
 $white_color = "0m";
 $red_color = "31m";
 $green_color = "32m"; 
@@ -497,7 +504,7 @@ function scrap_https(string $url, bool $with_js) : string  {
 	$output = "";
 	if($with_js) {
 		$url = escapeshellarg($url); // Replace with the target URL
-		$nodeScriptPath = 'scrape.js';
+		$nodeScriptPath = __DIR__.'/scrape.js';
 		$output = shell_exec("node $nodeScriptPath $url");
 	}
 	else {
@@ -535,7 +542,7 @@ function scrap_http(string $url, bool $with_js) : string {
 	$output = "";
 	if($with_js) {
 		$url = escapeshellarg($url); // Replace with the target URL
-		$nodeScriptPath = 'scrape.js';
+		$nodeScriptPath = __DIR__.'/scrape.js';
 		$output = shell_exec("node $nodeScriptPath $url");
 	}
 	else {

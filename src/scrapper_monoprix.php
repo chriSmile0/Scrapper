@@ -1,4 +1,4 @@
-<?php
+<?php 
 ## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
 // For document file 
 /**
@@ -10,16 +10,15 @@
  *
  * LICENSE: --
  *
- * @package    scrapper_systemeu.php
+ * @package    scrapper_monoprix.php
  * @author     chrisSmile0
  * @copyright  2024 -> @author
  * @license    [NO_LICENSE]
  * @version    1.0
- * @link       https://github.com/chriSmile0/Scrapper/scrapper_systemeu.php
+ * @link       https://github.com/chriSmile0/Scrapper/scrapper_monoprix.php
  * @since      File available since Release 0.0
  * @deprecated NO_DECPRECATED
 */
-
 
 // For document classe 
 /**
@@ -34,24 +33,78 @@
  * @example 
  * @author 	-> chriSmile0
  * @return
-*/
+ */
 
-// URL1 = https://www.coursesu.com/drive/home
+// URL1 = https://courses.monoprix.fr/products/search?q=
+
+namespace Facebook\WebDriver;
+namespace ChriSmile0\Scrapper;
+use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
+
+require_once('../vendor/autoload.php');
+
+/**
+ * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
+ * 				(localhost:4444)
+ * @param 	void
+ * @example	generate_driver_m()
+ * @author	chriSmile0
+ * @return	/
+*/
+function generate_driver_m() {
+	$host = 'http://localhost:4444/';
+
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+
+	return RemoteWebDriver::create($host, $capabilities);
+}
 
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
- * @param	string	$url	the url to get in the browser
- * @param 	string	$town 	the city in the research area
- * @param	string	$target	the product we want to research
- * @example	extract_source_systemu((@see URL1),$driver,"Paris","lardons")
+ * 			with the first products and the $driver with the change state
+ * @param	string	$url			the url to get in the browser
+ * @param 	int		$js_or_selenium	0 for js 1 for sele
+ * @example	extract_source_monoprix((@see URL1),1)
  * @author	chriSmile0
- * @return	string	the display content of the url renderer
+ * @return	string	the source code
 */
-function extract_source_systemeu(string $url, string $town, string $target) : string {
-	$town_ = escapeshellarg($town);
-	$src = shell_exec("node scrape_su.js $town_ $target");
-	return $src;
+function extract_source_monoprix(string $url, int $js_or_selenium) : string {
+	if($js_or_selenium == 1) {
+		$driver = generate_driver_m();
+		$driver->get($url);
+		//COOKIE 
+		
+		/*$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[4]/div[2]/div/div/div[3]/button')));
+		$driver->findElement(WebDriverBy::xpath('/html/body/div[4]/div[2]/div/div/div[3]/button'))->click();*/
+		//COOKIE DISABLE
+		/*$driver->findElement(WebDriverBy::id('search'))->sendKeys($target);
+		$driver->findElement(WebDriverBy::id('search'))->sendKeys(WebDriverKeys::ENTER);*/
+		$src = $driver->getPageSource();
+		//ON PEUT GREP car chaque recherche fait toujours la même taille 
+		//shell_exec("echo '$src' > TMP2");
+		$rtn = substr($src,strpos($src,"\"totalProducts\""));
+		$rtn = substr($rtn,0,strpos($rtn,"}}},\"retailer\"")) . "}}}";
+		$driver->quit();
+		return $rtn;
+	}
+
+	//*************44K Octet difference in favor of JS on 914-960K octets************* */
+	/**	PRO SELE = faster
+	 * 	PRO JS = lighter 
+	 * 	CONS JS = slower
+	 * 	CONS SELE = need geckodriver
+	*/
+
+	$url = escapeshellarg($url); // Replace with the target URL
+	$nodeScriptPath = __DIR__.'/scrape.js';
+	$output = shell_exec("node $nodeScriptPath $url");
+	return $output;
 }
 
 /**
@@ -68,7 +121,7 @@ function extract_source_systemeu(string $url, string $town, string $target) : st
  * 						the $offset of the $trunk is detected] // USAGE $trunk = "" -> V1.0
  * @version	1.0
 */
-function util_subcontent_trunk(string $output,string $trunk = "", array $end_content) : array {
+function util_subcontent_trunk_m(string $output,string $trunk = "", array $end_content) : array {
 	$min_offset = strlen($output);
 	$min_index = 0;
 	$len_end_content = sizeof($end_content);
@@ -95,7 +148,7 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
 }
 
 /**
- * [BRIEF]	That's a new version of the same name function in 'scrapper_intermarche.php'
+ * [BRIEF]	That's a new version of the same name function in 'scrapper_leclerc.php'
  * 			If the trunk is empty and end_content not empty then 
  * 				the substr begin in the offset '0' of the str and the end is in the of 
  * 				the end_content trunk
@@ -108,15 +161,16 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
  * @param	array			$end_content	the end(s) delimiter
  * @param 	bool 			$with_end		if we want add end delimiter or not in the substring
  * @param	int<-len_end,0> $size_end		0 complete end, -len_end = false on $with_end
- * @example	all_subcontent_with_trunk("Hello world it's me","world",["me"],true,0)
+ * @param 	string			$adds			add in end of each subcontent
+ * @example	all_subcontent_with_trunk_v21("Hello world it's me","world",["me"],true,0,"}")
  * @author	chriSmile0
  * @return	array	array with the trunk without the end content in 
  * 					in tabs for each instance of trunk in str
- * @version	2.5	-> NEW VERSION -> deprecated [INTERMARCHE/AUCHAN] version 
+ * @version	2.2	-> NEW VERSION, $adds version 
 */
-function all_subcontent_with_trunk_v21(string $str, string $trunk = "", 
-										array $end_content, bool $with_end, 
-										int $size_end = 0) : array {
+function all_subcontent_with_trunk_v21_m(string $str, string $trunk = "", 
+										array $end_content, bool $with_end = false, 
+										int $size_end = 0, string $adds = "") : array {
 	$res = array();
 	$copy_str = $str;
 	$original_trunk = $trunk;
@@ -124,13 +178,11 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 	$next = "";
 	if($original_trunk != "") {
 		if($original_end != "") {
-			while(!empty($res_util = util_subcontent_trunk($copy_str,$trunk,$end_content))) {
-				$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
-				$s_str = substr($copy_str,$res_util[2]);
-				if($res_util[1] === 0) 
-					break;
-				$offset_next=$res_util[1];
-				$res[] = substr($s_str,0,$offset_next+$with_end_trunk);//+$with_end_trunk));
+			while(($pos = strpos($copy_str,$trunk)) !== FALSE) {
+				//USE util_subcontent_trunk(...) here if it"s necessary !!
+				$s_str = substr($copy_str,$pos);
+				$offset_next = 0;
+				$res[] = substr($s_str,0,$offset_next=strpos($s_str,$original_end)).$adds;
 				$next = substr($s_str,$offset_next);
 				$copy_str = $next;
 			}
@@ -145,18 +197,18 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 					break;
 				}
 				$extra_next = substr($extra_next_b,strpos($extra_next_b,$trunk));
-				$res[] = substr($s_str,0,strpos($extra_next_b,$trunk));
+				$res[] = substr($s_str,0,strpos($extra_next_b,$trunk)).$adds;
 				$next = $extra_next;
 				$copy_str = $next;
 			}
 		}
 	}
 	else {
-		while(!empty($res_util = util_subcontent_trunk($copy_str,"",$end_content))) {
+		while(!empty($res_util = util_subcontent_trunk_m($copy_str,"",$end_content))) {
 			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
 			$s_str = $copy_str;
 			$offset_next = 0;
-			$res[] = substr($s_str,0,($offset_next=$res_util[1])+$with_end_trunk);
+			$res[] = substr($s_str,0,($offset_next=$res_util[1])+$with_end_trunk).$adds;
 			$next = substr($s_str,$offset_next+strlen($res_util[0]));
 			$copy_str = $next;
 		}
@@ -166,35 +218,16 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 	return $res;
 }
 
-/**
- * [BRIEF]	Split the data by product if the target product is in a predefined 
- * 			list 
- * 									
- * @param	string	$output				datas
- * @param	string	$product			product to research in datas
- * @example	search_product_in_script_json("search:{"data:[....]","lardons")
- * @author	chriSmile0
- * @return	array	split the data by product or empty array if product is not
- * 						in the list
- * @version SPECIFIC_VERSION 'scrape_su.js' make the first part of the oldest version
-*/
-function search_product_in_script_json(string $output, string $product) : array  {
-	$end_product = ["},{","}],"];
-	return all_subcontent_with_trunk_v21($output,"{\"promotion\"",$end_product,true,-2);
-}
-
-
 $product_needed_key = [ // On ATTRIBUTES
-	"promotion" => [],
-	"id" => "",
-	"notation" => "",
-	"EAN" => "",
-	"brand" => "",
-	"price" => "",
-	"product_cat1" => "",
-	"product_cat2" => "",
-	"product_cat3" => ""
+	"productId" => [],
+	"retailerProductId" => [],
+	"name" => [],
+	"available" => [], // MAYBE
+	"alternatives" => [], // MAYBE
+	"price" => [],
+	"brand" => []
 ];
+
 /**
  * [BRIEF]	(@see extract_needed_information_pro) but for all products
  * @param	array	$tab_json	all products we have store		
@@ -204,10 +237,10 @@ $product_needed_key = [ // On ATTRIBUTES
  * @return	array	array with the data with want to store/share/print for all 
  * 					products
 */
-function extract_info_for_all_products(array $tab_json, array $needed_key) : array {
+function extract_info_for_all_products_m(array $tab_json, array $needed_key) : array {
 	$rtn = array();
 	foreach($tab_json as $json) {
-		array_push($rtn,extract_needed_information_pro(
+		array_push($rtn,extract_needed_information_pro_m(
 									json_decode($json,true),$needed_key));
 	}
 	
@@ -223,7 +256,7 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print
 */
-function extract_needed_information_pro(array $json, array $needed_key) : array {
+function extract_needed_information_pro_m(array $json, array $needed_key) : array {
 	$rtn = array();
 	foreach($needed_key as $k=>$value) 
 		$rtn = array_merge($rtn,[$k=>$json[$k]]);
@@ -235,51 +268,62 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
  * [BRIEF]	The main procedure -> for include in other path 
  * @param	string	$url			the url to scrap
  * @param	string 	$target_product	the target product
- * @param 	string 	$town			the research area
- * @example content_scrap_systemeu((@see URL1),"lardons","75001, Paris")
+ * @example content_scrap_monoprix((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_systemeu(string $url, string $target_product, string $town) : array {
+function content_scrap_monoprix(string $url, string $target_product) : array {
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
-	$products_lines = extract_source_systemeu($url,$town,$target_product);
-	$sp_res = search_product_in_script_json($products_lines,$target_product);
-	if(empty($sp_res))
+	$script = extract_source_monoprix($url.$target_product,1);
+	if(empty($prods = all_subcontent_with_trunk_v21_m($script,"{\"productId\":",[",\"retailerFinancingPlanIds\""],false,0,"}")))
 		return $rtn;
-	$res = extract_info_for_all_products($sp_res,$GLOBALS['product_needed_key']);
-	return $res;
+	
+	$product_needed_key = [ // On ATTRIBUTES
+		"productId" => [],
+		"retailerProductId" => [],
+		"name" => [],
+		"available" => [], // MAYBE
+		"alternatives" => [], // MAYBE
+		"price" => [],
+		"brand" => []
+	];
+	$rtn = array_merge($rtn,extract_info_for_all_products_m($prods,$product_needed_key));
+	return $rtn;
 }
 
 /**
  * [BRIEF]	[MAIN_PROGRAM] -> for manuel execution
  * @param	$argc	The number of parameter in the command line execution
  * @param	$argv	The parameters of the command line execution
- * @example	main($argc,"php7.2 scrapper_systemeu.php (@see URL1) lardons '75001, Paris'")
+ * @example	main($argc,"php7.2 scrapper_monoprix.php (@see URL1) lardons ")
  * @author	chriSmile0
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
 */
-function main($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_systemeu($argv[1],$argv[2],$argv[3]))) {
+function main_m($argc, $argv) : bool {
+	if($argc == 4) {
+		if(empty(content_scrap_monoprix($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type]  --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
-/**
- * [BRIEF]	
- * @param	
- * @example	
- * @author	chriSmile0
- * @return	
-*/
+//main_m($argc,$argv);
+//var_dump(content_scrap_monoprix("https://courses.monoprix.fr/products/search?q=","lardons"));
+/*$host = 'http://localhost:4444/';
+
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+
+	$driver = RemoteWebDriver::create($host, $capabilities);*/
+
 ?>

@@ -46,11 +46,15 @@
 */
 
 namespace Facebook\WebDriver;
-use Facebook\WebDriver\Firefox\FirefoxOptions;
-use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Facebook\WebDriver\Remote\RemoteWebDriver;
+namespace ChriSmile0\Scrapper;
+use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
+use Facebook\WebDriver\WebDriverBy as WebDriverBy;
+use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
+use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 
-require_once('vendor/autoload.php');
+require_once('../vendor/autoload.php');
 
 
 
@@ -58,11 +62,12 @@ require_once('vendor/autoload.php');
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
  * @param 	void 
- * @example	generate_driver()
+ * @example	generate_driver_i()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver() {
+function generate_driver_i() {
+	echo "spe\n";
 	$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
@@ -112,8 +117,8 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 	$driver->wait()->until(WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(WebDriverBy::className('selectAddressForStore__suggestion')));
 	$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
 	
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button')));
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/button'))->click();
+	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button')));
+	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button'))->click();
 	
 	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className('search-input__input')));
 	$research_box = $driver->findElement(WebDriverBy::className('search-input__input'));
@@ -141,7 +146,7 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
  * 						the $offset of the $trunk is detected] // USAGE $trunk = "" -> V1.0
  * @version	1.0
 */
-function util_subcontent_trunk(string $output,string $trunk = "", array $end_content) : array {
+function util_subcontent_trunk_i(string $output,string $trunk = "", array $end_content) : array {
 	$min_offset = strlen($output);
 	$min_index = 0;
 	$len_end_content = sizeof($end_content);
@@ -187,7 +192,7 @@ function util_subcontent_trunk(string $output,string $trunk = "", array $end_con
  * 					in tabs for each instance of trunk in str
  * @version	2.1	-> NEW VERSION -> deprecated [CARREFOUR] and [LECLERC] version 
 */
-function all_subcontent_with_trunk_v21(string $str, string $trunk = "", 
+function all_subcontent_with_trunk_v21_i(string $str, string $trunk = "", 
 										array $end_content, bool $with_end, 
 										int $size_end = 0) : array {
 	$res = array();
@@ -223,7 +228,7 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
 		}
 	}
 	else {
-		while(!empty($res_util = util_subcontent_trunk($copy_str,"",$end_content))) {
+		while(!empty($res_util = util_subcontent_trunk_i($copy_str,"",$end_content))) {
 			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
 			$s_str = $copy_str;
 			$offset_next = 0;
@@ -249,15 +254,15 @@ function all_subcontent_with_trunk_v21(string $str, string $trunk = "",
  * 						in the list
  * @version CARREFOUR_VERSION -> to generalize with $first,$end, and $possible_end -> NEXT_VERSION
 */
-function search_product_in_script_json(string $output, string $product) : array  {
+function search_product_in_script_json_i(string $output, string $product) : array  {
 	$first = "\"list\":{\"products\":[";
 	$end = "e},\"filters\":"; // e because true or false on hasNextPage has same end (e)
 	$possible_end = [",\"hasReduction\":false},",",\"hasReduction\":true},"];
-	$subcontent = all_subcontent_with_trunk_v21($output,$first,[$end],false);
+	$subcontent = all_subcontent_with_trunk_v21_i($output,$first,[$end],false);
 	$subcontent[0] .= $end; // "close meta" -> the end of meta is not interesting
 	$subcontent[0] = substr($subcontent[0],strlen($first));
-	$all_products = all_subcontent_with_trunk_v21($subcontent[0],"",$possible_end,true,-1);
-	$all_informations = all_subcontent_with_trunk_v21(array_pop($all_products),"\"meta\":{\"",[$end],false);
+	$all_products = all_subcontent_with_trunk_v21_i($subcontent[0],"",$possible_end,true,-1);
+	$all_informations = all_subcontent_with_trunk_v21_i(array_pop($all_products),"\"meta\":{\"",[$end],false);
 	$subcontent = array("products"=>$all_products,"informations"=>"{".$all_informations[0]."e}}");
 	return $subcontent;
 }
@@ -270,7 +275,7 @@ function search_product_in_script_json(string $output, string $product) : array 
  * @return	array	json -> array 
  * @version CARREFOUR_VERSION -> to generalize
 */
-function parse_json_product(string $output_json) : array {
+function parse_json_product_i(string $output_json) : array {
 	return json_decode($output_json,true);
 }
 
@@ -314,7 +319,7 @@ $page_needed_key = [ // On META
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print
 */
-function extract_needed_information(array $json, array $needed_key) : array {
+function extract_needed_information_i(array $json, array $needed_key) : array {
 	$rtn = array();
 	$sub_json_needed = $json["meta"];
 	foreach($needed_key as $val) 
@@ -332,11 +337,11 @@ function extract_needed_information(array $json, array $needed_key) : array {
  * @return	array	array with the data with want to store/share/print for all 
  * 					products
 */
-function extract_info_for_all_products(array $tab_json, array $needed_key) : array {
+function extract_info_for_all_products_i(array $tab_json, array $needed_key) : array {
 	$rtn = array();
 	foreach($tab_json as $json) {
-		array_push($rtn,extract_needed_information_pro(
-									parse_json_product($json),$needed_key));
+		array_push($rtn,extract_needed_information_pro_i(
+									parse_json_product_i($json),$needed_key));
 	}
 	
 	return $rtn;
@@ -351,7 +356,7 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print
 */
-function extract_needed_information_pro(array $json, array $needed_key) : array {
+function extract_needed_information_pro_i(array $json, array $needed_key) : array {
 	$rtn = array();
 	foreach($needed_key as $k=>$value) {
 		if((strcmp($k,"prices")==0) || (strcmp($k,"informations")==0))
@@ -377,15 +382,46 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
 */
 function content_scrap_intermarche(string $url, string $target_product, string $town) : array {
 	$rtn = array();
-	$driver = generate_driver();
+	$driver = generate_driver_i();
+	$list_of_product = [
+		"lardons",
+		"oeufs"
+	];
+	
+	
+	$product_needed_key = [ // On ATTRIBUTES
+		"type" => [],
+		"offers" => [],
+		"promotions" => [],
+		"prices" => [
+			"productPrice"
+		],
+		"id" => [],
+		"ean" => [],
+		"informations" => [
+			"title",
+			"packaging",
+			"brand",
+		],
+		"url" => [],
+		"hasReduction" => []
+	];
+	
+	$page_needed_key = [ // On META 
+		"total",
+		"page",
+		"perPage",
+		"hasPreviousPage",
+		"hasNextPage",
+	];
 	$file_content = extract_source_intermarche($url,$driver,$town,$target_product);
-	$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
+	$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
 	if(empty($sp_res)) {
 		$driver->quit();
 		return array();
 	}
-	$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
-	$infos = extract_needed_information(parse_json_product($sp_res["informations"]),$GLOBALS['page_needed_key']);
+	$rtn = array_merge($rtn,extract_info_for_all_products_i($sp_res["products"],$product_needed_key));
+	$infos = extract_needed_information_i(parse_json_product_i($sp_res["informations"]),$page_needed_key);
 	
 	$nb_page = $infos['total'] / $infos['perPage'];
 
@@ -395,12 +431,12 @@ function content_scrap_intermarche(string $url, string $target_product, string $
 	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
 		$url_ = $new_url."?page=".$i;
 		$file_content = extract_source($url_,$driver);
-		$sp_res = search_product_in_script_json($file_content,$target_product,$GLOBALS['list_of_product']);
+		$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
 		if(empty($sp_res)) {
 			$driver->quit();
 			return $rtn;
 		}
-		$rtn = array_merge($rtn,extract_info_for_all_products($sp_res["products"],$GLOBALS['product_needed_key']));
+		$rtn = array_merge($rtn,extract_info_for_all_products_i($sp_res["products"],$product_needed_key));
 	}
 	$driver->quit();
 	return $rtn;
@@ -415,7 +451,7 @@ function content_scrap_intermarche(string $url, string $target_product, string $
  * @return	bool 	1 if all is good, 0 if error in the command line or in the phase
  * 					test or if the scrapping failed 
 */
-function main($argc, $argv) : bool {
+function main_i($argc, $argv) : bool {
 	if($argc == 5) {
 		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
@@ -429,7 +465,9 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-main($argc,$argv);
+//var_dump(content_scrap_intermarche("https://www.intermarche.com/","lardons","Paris"));
+//main_i($argc,$argv);
+//var_dump(content_scrap_intermarche("https://www.intermarche.com/","Lardons","Paris"));
 /**
  * [BRIEF]	
  * @param	
