@@ -65,9 +65,11 @@ README.md
 
 ## Usage 
 ### LIKE A PACKAGE : 
-  - `composer require php-webdriver/php-webdriver`
-  - in each exec file in [YOUR_PROJECT] folder `namespace ChriSmile0\Scrapper`
-  - `use ChriSmile0\Scrapper\FILE_WO_PHP_EXT`
+- `curl -sS https://getcomposer.org/installer | php7.2` OR **#2**: 
+  - `php7.2 composer.phar update`
+- **#2 ->** `composer install` : 
+  - `composer update`
+- In `your_project` folder create file like `example.php`
 ### LIKE A PROJECT : 
 - `composer require php-webdriver/php-webdriver`
 - `project.php` for known how the different tools works
@@ -117,13 +119,6 @@ README.md
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
-
-### V1.1 Instructions 
-- `curl -sS https://getcomposer.org/installer | php7.2` OR **#2**: 
-  - `php7.2 composer.phar update`
-- **#2 ->** `composer install` : 
-  - `composer update`
-- In `your_project` folder create file like `example.php`
  
 
 ## Features 
