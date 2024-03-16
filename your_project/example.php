@@ -48,5 +48,5 @@ function use_content_scrapper_systemeu(string $product, string $city) {
 //var_dump(use_content_scrapper_monoprix("Lardons")); 			// OK 
 //var_dump(use_content_scrapper_auchan("Lardons","Paris")); 	// OK
 //var_dump(use_content_scrapper_intermarche("lardons","Paris"));// OK 
-var_dump(use_content_scrapper_systemeu("Lardons","Voglans")); 	// WAIT
+//var_dump(use_content_scrapper_systemeu("Lardons","Voglans")); // WAIT
 ?>

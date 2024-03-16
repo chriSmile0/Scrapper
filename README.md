@@ -80,7 +80,7 @@ README.md
 
 ## Version 
 
-### V1.0 
+### V1.1
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -112,11 +112,18 @@ README.md
       - [x] parse specific JS -> json 
       - [x] usage of `php-webdriver`
       - [ ] NoBot Solutions 
-    - [Systeme_U](https://www.magasins-u.com) : 
+    - [Systeme_U](https://www.magasins-u.com) [**DISABLE**] -> **V1.2 for update (soon)**: 
       - [x] parse specific JS -> json (products only on the display page)
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
 
+### V1.1 Instructions 
+- `curl -sS https://getcomposer.org/installer | php7.2` OR **#2**: 
+  - `php7.2 composer.phar update`
+- **#2 ->** `composer install` : 
+  - `composer update`
+- In `your_project` folder create file like `example.php`
+ 
 
 ## Features 
