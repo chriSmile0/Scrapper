@@ -5,3 +5,4 @@ test*.js
 *.phar
 *.lock
 *-lock.json
+vendor
