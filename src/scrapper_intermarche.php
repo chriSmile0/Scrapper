@@ -54,7 +54,7 @@ use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 
-require_once('../vendor/autoload.php');
+require __DIR__ . '/../../../autoload.php';
 
 
 

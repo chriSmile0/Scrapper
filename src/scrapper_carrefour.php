@@ -46,7 +46,7 @@ use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
-require_once('../vendor/autoload.php');
+require __DIR__ . '/../../../autoload.php';
 
 
 /**

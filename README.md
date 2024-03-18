@@ -69,7 +69,7 @@ README.md
   - `php7.2 composer.phar update`
 - **#2 ->** `composer install` : 
   - `composer update`
-- In `your_project` folder create file like `example.php`
+- In move `your_project` folder in the root of your project for test the functions
 ### LIKE A PROJECT : 
 - `composer require php-webdriver/php-webdriver`
 - `project.php` for known how the different tools works
@@ -82,7 +82,7 @@ README.md
 
 ## Version 
 
-### V1.1
+### V1.1.1
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  

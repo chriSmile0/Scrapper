@@ -43,7 +43,7 @@ use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 
-require_once('../vendor/autoload.php');
+require __DIR__ . '/../../../autoload.php';
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
