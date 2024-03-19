@@ -44,7 +44,7 @@ function use_content_scrapper_systemeu(string $product, string $city) {
 
 //var_dump(use_scrapper("https://Wikipedia.com",true)); 		// OK 
 //var_dump(use_content_scrapper_leclerc("Lardons","Voglans")); 	// OK
-//var_dump(use_content_scrapper_carrefour("lardons","Paris")); 	// OK 
+var_dump(use_content_scrapper_carrefour("lardons","Paris")); 	// OK 
 //var_dump(use_content_scrapper_monoprix("Lardons")); 			// OK 
 //var_dump(use_content_scrapper_auchan("Lardons","Paris")); 	// OK
 //var_dump(use_content_scrapper_intermarche("lardons","Paris"));// OK 

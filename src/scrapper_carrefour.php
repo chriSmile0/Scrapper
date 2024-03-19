@@ -42,11 +42,19 @@
 
 namespace Facebook\WebDriver;
 namespace ChriSmile0\Scrapper;
+
+use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
-use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
+use Facebook\WebDriver\Remote\ExecuteMethod;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
-require __DIR__ . '/../../../autoload.php';
+use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
+
+//require __DIR__ . '/../../../autoload.php'; // 	EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; //	 DEV
 
 
 /**
@@ -58,14 +66,85 @@ require __DIR__ . '/../../../autoload.php';
  * @return	/
 */
 function generate_driver_c() {
+	//-----------------Remote with geckodriver in terminal--------------------// 
 	$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return RemoteWebDriver::create($host,$capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		return NULL;
+	}
 
-	return RemoteWebDriver::create($host, $capabilities);
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	/*$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return FirefoxDriver::start($capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR : ".$e->getMessage()."\n";
+		return NULL;
+	}*/
+}
+
+function findElement($driver, string $type, string $path, string $error) : array {
+	$elem = "";
+	sleep(1);
+	if($error === "") {
+		switch($type) {
+			case 'id':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::id($path)))); // this or sleep 
+					$elem = $driver->findElement(WebDriverBy::id($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'tag':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::tagName($path))));
+					$elem = $driver->findElement(WebDriverBy::tagName($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'class':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::className($path))));
+					$elem = $driver->findElement(WebDriverBy::className($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'xpath';
+				try { 
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::xpath($path))));
+					$elem = $driver->findElement(WebDriverBy::xpath($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			default:
+				$elem = NULL;
+				$error = "id/tag/class/xpath";
+				break;
+		}
+	}
+	var_dump($error);
+	return [$elem,$error];
 }
 
 /**
@@ -80,38 +159,42 @@ function generate_driver_c() {
  * @return	string	the display content of the url renderer
 */
 function extract_source_carrefour(string $url,$driver,string $city, string $target) : string {
-	$driver->get($url);
-	//disable cookie 
-	sleep(1);
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[3]/div[2]/button'))->click();
-	// end disable cookie 
-	// click on drive 
-	// - old =  /html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
-	sleep(1);
-	// - new = /html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button'))->click();
-	
-
-	// path area: //*[@id="c-input-marcel-uid-ltctua80zaekq"]
-	// /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div/div[1]/label/input
-	// the IP CHANGE (xpath necessary)
-	sleep(1);
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div/div[1]/input'))->sendKeys("$city");
-	sleep(2);
-	//$driver->getCookies()->deleteAll();
-	// path area++ /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button/span/span/span
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button'))->click();
-	sleep(3);
-	// path to store list : /html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button/span/span
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button'))->click();
-	sleep(2);
-	///html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input'))->sendKeys($target)->submit();
-	sleep(1);
-	//$driver->get($url."?q=".$target);*/
-	$src = $driver->getPageSource();
-	//$driver->manage()->deleteAllCookies();
-	$driver->quit();
+	$src = "";
+	$error = "";
+	if($driver !== NULL) {
+		try {
+			$driver->get($url);
+			$res_find = array("","");
+			$res_find = findElement($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement($driver,"xpath","/html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
+			if($res_find[0]!=="") $res_find[0]->sendKeys($city);
+			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
+			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
+			sleep(1);
+			if($res_find[1] === "") {
+				$src = $driver->getPageSource();
+				//$driver->manage()->deleteAllCookies();
+				$error = "NO";
+				return $src;
+			}
+			else {
+				$error = $res_find[1];
+				$driver->quit();
+			}
+			//var_dump($res_find[1]);
+		}
+		catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+	var_dump($error);
 	return $src;
 }
 
@@ -309,61 +392,65 @@ function extract_info_for_all_products_c(array $tab_json, array $needed_key) : a
 function content_scrap_carrefour(string $url, string $target_product, string $city) : array {
 	$rtn = array();
 	$driver = generate_driver_c();
-	$list_of_product = [
-		"lardons"
-	];
-	
-	$product_needed_key = [ // On ATTRIBUTES
-		"ean" => [],
-		"title" => [],
-		"brand" => [],
-		"slug" => [],
-		"offerServiceId" => [],
-		"offers" => [
-			"ean" => [
-				"offerServiceId" => [
-					"attributes" => [
-						"price",
-						"promotion",
-						"promotions"
+	if($driver !== NULL) {
+		$list_of_product = [
+			"lardons"
+		];
+		
+		$product_needed_key = [ // On ATTRIBUTES
+			"ean" => [],
+			"title" => [],
+			"brand" => [],
+			"slug" => [],
+			"offerServiceId" => [],
+			"offers" => [
+				"ean" => [
+					"offerServiceId" => [
+						"attributes" => [
+							"price",
+							"promotion",
+							"promotions"
+						],
 					],
 				],
 			],
-		],
-		"packaging" => [],
-		"nutriscore" => [],
-	];
-	
-	$page_needed_key = [ // On META 
-		"total",
-		"itemsPerPage",
-		"totalPage",
-		"currentPage",
-		"keyword",
-	];
-	
-	$file_content = extract_source_carrefour($url,$driver,$city,$target_product);
-	$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
-	if(empty($sp_res)) {
-		$driver->quit();
-		return array();
-	}
-	$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
-	$infos = extract_needed_information_c(parse_json_product($sp_res["informations"]),$page_needed_key);
-	$nb_page = $infos['totalPage'];
-	$current_page = $infos['currentPage'];
-	$next_page = $current_page+1;
-	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
-		$url_ = $url."&noRedirect=1&page=".$i;
-		$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
-		$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
-		if(empty($sp_res)) {
+			"packaging" => [],
+			"nutriscore" => [],
+		];
+		
+		$page_needed_key = [ // On META 
+			"total",
+			"itemsPerPage",
+			"totalPage",
+			"currentPage",
+			"keyword",
+		];
+		
+		$file_content = extract_source_carrefour($url,$driver,$city,$target_product);
+		if($file_content !== "") {
+			$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
+			if(empty($sp_res)) {
+				$driver->quit();
+				return array();
+			}
+			$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
+			$infos = extract_needed_information_c(parse_json_product($sp_res["informations"]),$page_needed_key);
+			$nb_page = $infos['totalPage'];
+			$current_page = $infos['currentPage'];
+			$next_page = $current_page+1;
+			for($i = $next_page ; $i < $nb_page+1 ; $i++) {
+				$url_ = $url."&noRedirect=1&page=".$i;
+				$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
+				$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
+				if(empty($sp_res)) {
+					$driver->quit();
+					return $rtn;
+				}
+				$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
+			}
 			$driver->quit();
-			return $rtn;
 		}
-		$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
 	}
-	$driver->quit();
 	return $rtn;
 }
 
