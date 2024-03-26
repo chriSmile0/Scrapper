@@ -39,11 +39,14 @@
 
 namespace Facebook\WebDriver;
 namespace ChriSmile0\Scrapper;
+use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
-
-require __DIR__ . '/../../../autoload.php';
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
@@ -54,16 +57,35 @@ require __DIR__ . '/../../../autoload.php';
  * @return	/
 */
 function generate_driver_m() {
-	$host = 'http://localhost:4444/';
+	//-----------------Remote with geckodriver in terminal--------------------// 
+	/*$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return RemoteWebDriver::create($host,$capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		return NULL;
+	}*/
 
-	return RemoteWebDriver::create($host, $capabilities);
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return FirefoxDriver::start($capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR : ".$e->getMessage()."\n";
+		return NULL;
+	}
 }
-
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content

@@ -38,14 +38,17 @@
 // URL1 = https://www.auchan.fr/
 namespace Facebook\WebDriver;
 namespace ChriSmile0\Scrapper;
+use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-require __DIR__ . '/../../../autoload.php';
-
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 
@@ -57,14 +60,111 @@ require __DIR__ . '/../../../autoload.php';
  * @return	/
 */
 function generate_driver_a() {
-	$host = 'http://localhost:4444/';
+	//-----------------Remote with geckodriver in terminal--------------------// 
+	/*$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return RemoteWebDriver::create($host,$capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		return NULL;
+	}*/
 
-	return RemoteWebDriver::create($host, $capabilities);
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return FirefoxDriver::start($capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR : ".$e->getMessage()."\n";
+		return NULL;
+	}
+}
+
+/**
+ * [BRIEF]	Find element function simplification
+ * 
+ * @param 			$driver	the driver create by WebDriver()
+ * @param	string	$type	id/tagname/classname/xpath
+ * @param	string	$path	the path or the id or the classname of the tagname
+ * @param	string	$error	the recently error in the call stack
+ * @param 	string 	$type_2	optional	presence/visibility
+ * @example	findElement($driver,"id","my_id","");
+ * @author	chriSmile0
+ * @return 	array 	[$elem(the element found),$error(the generate error)]
+*/
+function findElement_a($driver, string $type, string $path, string $error, string $type_2 = "presence") : array {
+	$elem = "";
+	sleep(1);
+	if($type_2 !== "presence" && $type_2 !== "visibility")
+		return [$elem,"'presence' or 'visibility' for type_2 argument"];
+	if($error === "") {
+		switch($type) {
+			case 'id':
+				try {
+					if($type_2 === "presence")
+						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($path))); // this or sleep 
+					else 
+						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id($path)));
+					$elem = $driver->findElement(WebDriverBy::id($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'tag':
+				try {
+					if($type_2 === "presence")
+						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::tagName($path))); // this or sleep 
+					else 
+						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName($path)));
+					$elem = $driver->findElement(WebDriverBy::tagName($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'class':
+				try {
+					if($type_2 === "presence")
+						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className($path))); // this or sleep 
+					else 
+						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className($path)));
+					$elem = $driver->findElement(WebDriverBy::className($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'xpath';
+				try { 
+					if($type_2 === "presence")
+						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($path))); // this or sleep 
+					else 
+						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath($path)));
+					$elem = $driver->findElement(WebDriverBy::xpath($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			default:
+				$elem = NULL;
+				$error = "id/tag/class/xpath";
+				break;
+		}
+	}
+	var_dump($error);
+	return [$elem,$error];
 }
 
 /**
@@ -147,38 +247,72 @@ function extract_info_for_all_products_a($prods) : array {
  * 						$firstProducts->array of the first product]
 */
 function extract_source_auchan(string $url,$driver, string $town, string $target) : array {
-	$driver->get($url);
+	$src = "";
+	$error = "";
+	$prods = "";
+	if($driver !== NULL) {
+		try {
+			$driver->get($url);
+			$res_find = array("","");
+			$res_find = findElement_a($driver,"id","onetrust-reject-all-handler",$res_find[1]); // click option
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement_a($driver,"class","header-search__input",$res_find[1]);
+			if($res_find[0]!=="") {
+				$res_find[0]->sendKeys($target);
+				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
+			}
+			
 
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::id('onetrust-reject-all-handler'))));
-	$driver->findElement(WebDriverBy::id('onetrust-reject-all-handler'))->click();
-
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className('header-search__input')));
-	$research_box = $driver->findElement(WebDriverBy::className('header-search__input'));
-	$research_box->sendKeys($target);
-	$research_box->sendKeys(WebDriverKeys::ENTER);
-
-	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className('product-thumbnail__see-prices-button')));
-	//click on the first 
-	sleep(1); // wait until ?
-	$driver->executeScript("document.getElementsByClassName('product-thumbnail__see-prices-button')[0].click();");
-	
-	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input')));
-	$select_town = $driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input'));
-	$select_town->sendKeys($town);
-
-	//suggests 
-	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className('journey__search-suggests-list')));
-	// $ul = $driver->findElement(WebDriverBy::className('journey__search-suggests-list')); 
-	// $lis = $ul->findElements(WebDriverBy::tagName('li')); direct child of $ul
-	$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()"); // OK 
-
-	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button')));
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button'))->submit();
-	sleep(1); // wait-until() better 
+			$res_find =  findElement_a($driver,"xpath","/html/body/div[3]/div[2]/div[2]/div[4]/article[1]/div[2]/footer/button",$res_find[1]); // click option
+			if($res_find[0]!=="") {
+				try {
+					sleep(1); // for the moment 
+					$driver->executeScript("document.getElementsByClassName('product-thumbnail__see-prices-button')[0].click();");
+				}
+				catch(Exception $e) {
+					$res_find[1] = $e->getMessage();
+				}
+			}
+			
+			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
 
 
-	$prods = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-	$src = $driver->getPageSource();
+			///suggests 
+			// /html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input = path
+			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option
+			if($res_find[0]!=="") {
+				try {
+					sleep(1); // for the moment 
+					$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()");
+				}
+				catch(Exception $e) {
+					$res_find[1] = $e->getMessage();
+				}
+			}
+			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->submit();
+
+			try {
+				sleep(1);
+				$prods = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
+			}
+			catch(Exception $e) {
+				$res_find[1] = $e->getMessage();
+			}
+			$error = $res_find[1];
+			$src = $driver->getPageSource();
+		}
+		catch (Exception $e) {
+			$error = $e->getMessage();
+		}
+	}
+	var_dump($error);
+	if($error !== "") {
+		$driver->quit();
+		return array();
+	}
+	//var_dump($prods);
 	return [$driver,$src,extract_info_for_all_products_a($prods)];
 }
 
@@ -193,29 +327,35 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 */
 function content_scrap_auchan(string $url, string $target_product, string $town) : array {
 	$driver = generate_driver_a();
-	$file_content_and_prods = extract_source_auchan($url,$driver,$town,$target_product);
-	$driver = $file_content_and_prods[0];
-	$file_content = $file_content_and_prods[1];
-	$prods = $file_content_and_prods[2];
-	$config_mark = "G.configuration.searchPages.trackingObject = ";
+	if($driver === NULL) 
+		return array();
 	
-	$sub = substr($file_content,strpos($file_content,$config_mark)+strlen($config_mark));
-	$end = strpos($sub,"};");
-	$infos = substr($sub,0,$end);
-	$infos_page = substr($infos,0,strpos($infos,"},")) . "}}";
-	$pages = json_decode($infos_page,true)["page"];
-	$nb_page = $pages["numberOfPages"];
-	$cur_page = $pages["currentPage"];
-	$new_url = $driver->getCurrentURL()."?redirect_keywords=$target_product&page=";
+	$file_content_and_prods = extract_source_auchan($url,$driver,$town,$target_product);
+	if(!empty($file_content_and_prods)) {
+		$driver = $file_content_and_prods[0];
+		$file_content = $file_content_and_prods[1];
+		$prods = $file_content_and_prods[2];
+		$config_mark = "G.configuration.searchPages.trackingObject = ";
+		
+		$sub = substr($file_content,strpos($file_content,$config_mark)+strlen($config_mark));
+		$end = strpos($sub,"};");
+		$infos = substr($sub,0,$end);
+		$infos_page = substr($infos,0,strpos($infos,"},")) . "}}";
+		$pages = json_decode($infos_page,true)["page"];
+		$nb_page = $pages["numberOfPages"];
+		$cur_page = $pages["currentPage"];
+		$new_url = $driver->getCurrentURL()."?redirect_keywords=$target_product&page=";
 
-	for($i = $cur_page+1 ; $i < $nb_page+1; $i++) {
-		$driver->get($new_url.$i);
-		$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-		$prods = array_merge($prods,extract_info_for_all_products_a($produits));
+		for($i = $cur_page+1 ; $i < $nb_page+1; $i++) {
+			$driver->get($new_url.$i);
+			$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
+			$prods = array_merge($prods,extract_info_for_all_products_a($produits));
+		}
+		$driver->manage()->deleteAllCookies();
+		$driver->quit();
+		return $prods;
 	}
-	$driver->manage()->deleteAllCookies();
-	$driver->quit();
-	return $prods;
+	return array();
 }
 
 /**

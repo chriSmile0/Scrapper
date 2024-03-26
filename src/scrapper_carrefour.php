@@ -48,13 +48,11 @@ use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-use Facebook\WebDriver\Remote\ExecuteMethod;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
-
-//require __DIR__ . '/../../../autoload.php'; // 	EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; //	 DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 /**
@@ -67,7 +65,7 @@ require __DIR__ . '/../vendor/autoload.php'; //	 DEV
 */
 function generate_driver_c() {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	$host = 'http://localhost:4444/';
+	/*$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -79,10 +77,10 @@ function generate_driver_c() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}
+	}*/
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
-	/*$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions->addArguments(['-headless']);
@@ -93,10 +91,20 @@ function generate_driver_c() {
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
+	}
 }
-
-function findElement($driver, string $type, string $path, string $error) : array {
+/**
+ * [BRIEF]	Find element function simplification
+ * 
+ * @param 			$driver	the driver create by WebDriver()
+ * @param	string	$type	id/tagname/classname/xpath
+ * @param	string	$path	the path or the id or the classname of the tagname
+ * @param	string	$error	the recently error in the call stack
+ * @example	findElement($driver,"id","my_id","");
+ * @author	chriSmile0
+ * @return 	array 	[$elem(the element found),$error(the generate error)]
+*/
+function findElement_c($driver, string $type, string $path, string $error) : array {
 	$elem = "";
 	sleep(1);
 	if($error === "") {
@@ -165,17 +173,17 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 		try {
 			$driver->get($url);
 			$res_find = array("","");
-			$res_find = findElement($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
+			$res_find = findElement_c($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement($driver,"xpath","/html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
+			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
+			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
 			if($res_find[0]!=="") $res_find[0]->sendKeys($city);
-			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
+			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
+			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
+			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
 			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
 			sleep(1);
 			if($res_find[1] === "") {
