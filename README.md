@@ -36,27 +36,36 @@ Or API :
 <summary>Paths</summary>
 <pre>
 dev
-├── copy_all_leclerc.html
-└── JSON_updates.php
+├── JSON_updates.php
+└── copy_all_leclerc.html
 project
-├── infos_programs.php
-└── project.php
+├── project.php
+└── infos_programs.php
 src
+├── test_rq_submod.js
+├── test_extra_puppeteer.js
+├── scrapper_systemeu.php
+├── scrapper.php
+├── scrapper_monoprix.php
+├── scrapper_leclerc.php
+├── scrapper_intermarche.php
+├── scrapper_carrefour.php
+├── scrapper_auchan.php
+├── scrape_su.js
+├── scrape.js
+├── products_su.txt
 ├── libJSON
 │   └── leclercs.json
-├── scrape.js
-├── scrape_su.js
-├── scrapper_auchan.php
-├── scrapper_carrefour.php
-├── scrapper_intermarche.php
-├── scrapper_leclerc.php
-├── scrapper_monoprix.php
-├── scrapper.php
-├── scrapper_systemeu.php
-└── test_extra_puppeteer.js
+└── DatadomeBreaker
+    ├── screen_deps
+    ├── README.md
+    ├── package.json
+    ├── outs
+    ├── canvas_lib
+    └── break.js
 your_project
-├── example.php
-└── README.md
+├── README.md
+└── example.php
 composer.json
 package.json
 README.md
@@ -82,7 +91,7 @@ README.md
 
 ## Version 
 
-### V1.1.1
+### V1.2
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -114,7 +123,7 @@ README.md
       - [x] parse specific JS -> json 
       - [x] usage of `php-webdriver`
       - [ ] NoBot Solutions 
-    - [Systeme_U](https://www.magasins-u.com) [**DISABLE**] -> **V1.2 for update (soon)**: 
+    - [Systeme_U](https://www.magasins-u.com) :  
       - [x] parse specific JS -> json (products only on the display page)
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
       - [x] NoBot Solutions -> **DataDome** Solution
