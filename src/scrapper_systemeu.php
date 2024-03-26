@@ -41,17 +41,20 @@ namespace ChriSmile0\Scrapper;
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
- * @param	string	$url	the url to get in the browser
+ * 
  * @param 	string	$town 	the city in the research area
  * @param	string	$target	the product we want to research
  * @example	extract_source_systemu((@see URL1),$driver,"Paris","lardons")
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
-function extract_source_systemeu(string $url, string $town, string $target) : string {
+function extract_source_systemeu(string $town, string $target) : string {
 	$town_ = escapeshellarg($town);
 	$nodeScriptPath = __DIR__.'/scrape_su.js';
-	$src = shell_exec("node $nodeScriptPath $town_ $target");
+	//$src = shell_exec("node $nodeScriptPath $town_ $target");
+	$src = shell_exec("node $nodeScriptPath Voglans Lardons");
+	var_dump($src);
+	//$src = file_get_contents(__DIR__. "/products_su.txt"); // OK 
 	return $src;
 }
 
@@ -234,17 +237,17 @@ function extract_needed_information_pro(array $json, array $needed_key) : array 
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
- * @param	string	$url			the url to scrap
+ * 
  * @param	string 	$target_product	the target product
  * @param 	string 	$town			the research area
  * @example content_scrap_systemeu((@see URL1),"lardons","75001, Paris")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_systemeu(string $url, string $target_product, string $town) : array {
+function content_scrap_systemeu(string $target_product, string $town) : array {
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
-	$products_lines = extract_source_systemeu($url,$town,$target_product);
+	$products_lines = extract_source_systemeu($town,$target_product);
 	$sp_res = search_product_in_script_json($products_lines,$target_product);
 	if(empty($sp_res))
 		return $rtn;
@@ -273,14 +276,14 @@ function content_scrap_systemeu(string $url, string $target_product, string $tow
  * 					test or if the scrapping failed 
 */
 function main_s($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_systemeu($argv[1],$argv[2],$argv[3]))) {
+	if($argc == 4) {
+		if(empty(content_scrap_systemeu($argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [research_product_type] [town] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

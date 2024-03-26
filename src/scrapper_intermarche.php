@@ -47,14 +47,17 @@
 
 namespace Facebook\WebDriver;
 namespace ChriSmile0\Scrapper;
+use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-
-require __DIR__ . '/../../../autoload.php';
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 
@@ -67,15 +70,105 @@ require __DIR__ . '/../../../autoload.php';
  * @return	/
 */
 function generate_driver_i() {
-	echo "spe\n";
-	$host = 'http://localhost:4444/';
+	//-----------------Remote with geckodriver in terminal--------------------// 
+	/*$host = 'http://localhost:4444/';
 
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['-headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return RemoteWebDriver::create($host,$capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		return NULL;
+	}*/
 
-	return RemoteWebDriver::create($host, $capabilities);
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
+	$capabilities = DesiredCapabilities::firefox();
+	$firefoxOptions->addArguments(['-headless']);
+	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+	try {
+		return FirefoxDriver::start($capabilities);
+	}
+	catch (Exception $e) {
+		echo "ERRRRRR : ".$e->getMessage()."\n";
+		return NULL;
+	}
+}
+
+/**
+ * [BRIEF]	Find element function simplification
+ * 
+ * @param 			$driver	the driver create by WebDriver()
+ * @param	string	$type	id/tagname/classname/classnames/xpath
+ * @param	string	$path	the path or the id or the classname of the tagname
+ * @param	string	$error	the recently error in the call stack
+ * @example	findElement($driver,"id","my_id","");
+ * @author	chriSmile0
+ * @return 	array 	[$elem(the element found),$error(the generate error)]
+*/
+function findElement_i($driver, string $type, string $path, string $error) : array {
+	$elem = "";
+	sleep(1);
+	if($error === "") {
+		switch($type) {
+			case 'id':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::id($path)))); // this or sleep 
+					$elem = $driver->findElement(WebDriverBy::id($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'tag':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::tagName($path))));
+					$elem = $driver->findElement(WebDriverBy::tagName($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'class':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::className($path))));
+					$elem = $driver->findElement(WebDriverBy::className($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'classes':
+				try {
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfAllElementsLocatedBy((WebDriverBy::className($path))));
+					$elem = $driver->findElement(WebDriverBy::className($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			case 'xpath';
+				try { 
+					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::xpath($path))));
+					$elem = $driver->findElement(WebDriverBy::xpath($path));
+				}
+				catch (Exception $e) {
+					$error = $e->getMessage();
+				}
+				break;
+			default:
+				$elem = NULL;
+				$error = "id/tag/class/xpath";
+				break;
+		}
+	}
+	var_dump($error);
+	return [$elem,$error];
 }
 
 /**
@@ -103,32 +196,53 @@ function extract_source(string $url, $driver) {
  * @return	string	the display content of the url renderer
 */
 function extract_source_intermarche(string $url,$driver, string $town, string $target) : string {
-	$driver->get($url);
-	$choice_by_class = "selectAddressForStore__search";
+	$src = "";
+	$error = "";
+	if($driver !== NULL) {
+		try {
+			$driver->get($url);
+			$res_find = array("","");
 
-	//COOKIE
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))));
-	$driver->findElement(WebDriverBy::xpath('//*[@id="didomi-popup"]/div/div/div/span'))->click();
-	//COOKIE DISABLE -> use js for click on the button 
+			//COOKIE
+			$res_find = findElement_i($driver,"xpath","//*[@id=\"didomi-popup\"]/div/div/div/span",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->click();
+			//COOKIE DISABLE -> use js for click on the button 
 
-	$choice = $driver->findElement(WebDriverBy::className($choice_by_class));
-	$choice->findElement(WebDriverBy::tagName('input'))->sendKeys($town);
-	
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(WebDriverBy::className('selectAddressForStore__suggestion')));
-	$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
-	
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button')));
-	$driver->findElement(WebDriverBy::xpath('/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button'))->click();
-	
-	$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className('search-input__input')));
-	$research_box = $driver->findElement(WebDriverBy::className('search-input__input'));
-	
-	$research_box->sendKeys($target);
-	$research_box->sendKeys(WebDriverKeys::ENTER);
-	
-	// - /html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div = PRODUCT
-	$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath('/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div')));
-	$src = $driver->getPageSource();
+
+			$res_find = findElement_i($driver,"class","selectAddressForStore__search",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->findElement(WebDriverBy::tagName('input'))->sendKeys($town);			
+			
+			$res_find = findElement_i($driver,"classes","selectAddressForStore__suggestion",$res_find[1]);
+			if($res_find[0]!=="") {
+				try {
+					$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
+				}
+				catch (Exception $e) {
+					$res_find[1] = $e->getMessage();
+				}
+			}
+		
+			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button",$res_find[1]);	
+			if($res_find[0]!=="") $res_find[0]->click();
+
+
+			$res_find = findElement_i($driver,"class","search-input__input",$res_find[1]);
+			if($res_find[0]!=="") {
+				$res_find[0]->sendKeys($target);
+				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
+			}
+			
+			// - /html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div = PRODUCT
+			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div",$res_find[1]);
+			if($res_find[1]==="")
+				$src = $driver->getPageSource();
+			$error = $res_find[1];
+		}
+		catch (Exception $e) {
+			$error = $e->getMessage();
+		}
+	}
+	var_dump($error);
 	return $src;
 }
 
