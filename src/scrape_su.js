@@ -44,79 +44,39 @@ async function scrape(url,town,product) {
   await page.goto(url);
   const url_ = await page.url();
   console.log(url_);
-  /*console.log(town);
-  console.log(product);*/
+  console.log(town);
+  console.log(product);
   const dD = url_.indexOf("on/demand"); 
   console.log(dD);
   if(dD != -1) {
     console.log("DataDome activate");
     break_js.loadedBrk(page,url,'#captcha__puzzle','.slider',"canva_rd.png","screen_su.png");
-    // -- TEST IN NEXT COMMIT -- //
   }
   else {
     console.log("No DataDome");
   }
-  //await page.screenshot({ path: 'screen_t.png', fullPage: true });
   // -----------------------NO DETECTION BOT USAGE (15 hit OK) ----------------------------// 
   await page.waitForTimeout(2000);
   await page.waitForSelector('#popin_tc_privacy_button_2');
   await page.click('#popin_tc_privacy_button_2');
   // -----------------------NO DETECTION BOT USAGE (15 hit OK)----------------------------// 
-
   await page.waitForSelector('#store-search');
   await page.type('#store-search',town,{delay: 100});
 
   // -----------------------NO DETECTION BOT USAGE (15 hit OK)----------------------------//   
-  // -- WAITED ISSUE (1/2 try is waited issue)-- //
-  await page.waitForTimeout(3000);
-  //await page.screenshot({ path: 'screen_ab_prehome.png', fullPage: true });
+  await page.waitForTimeout(3000); //-> necessary ?  delay ?
   await page.waitForSelector('.ab-prehome-search-suggestion');
   await page.click('.ab-prehome-search-suggestion');
 
   // -----------------------NO DETECTION BOT USAGE(12 hit OK)----------------------------//  
-
   // PRECISE RESEARCH WITH ONE ELEMENT RESULT, MAYBE MORE IN THE FUTURE
-  await page.waitForTimeout(5000);
-  //await page.screenshot({ path: 'screen_store_delivery_mode_arrow.png', fullPage: true });
   await page.waitForSelector('.store-delivery-mode-arrow'); // click on the store
   //CHECK FOR HAVE ALL ARROW WITH THE TEXT TO SELECT THE STORE !!!!
   await page.click('.store-delivery-mode-arrow');
-
-  // -----------------------NO DETECTION BOT USAGE(15 hit OK)----------------------------// 
-
-  await page.waitForTimeout(3000);
-  await page.screenshot({ path: 'screen_new_client_alert.png', fullPage: true }); // necessary Idk why
-  const wq = await page.$('xpath//html/body/div[7]/div[1]/button');
-  //console.log(wq);
-  //const wq_pos = await wq.boundingBox();
-  //console.log(wq_pos);
-  if(wq === null) { // - NO Question
-    console.log("no wq"); // OK 
-  }
-  else {
-    //await page.waitForSelector('#q'); // click on the store
-    //await page.click('#q');
-    const wq_pos = await wq.boundingBox();
-    console.log(wq_pos);
-    console.log("message to quit");
-    if(wq_pos !== null)
-      wq.click();
-  }
-
-  // -----------------------NO DETECTION BOT USAGE(15 hit OK)----------------------------//
-  // -- TEXT ITERABLE ISSUE -- // 
-
-  /*const cookie2 = await page.$('#popin_tc_privacy_button_2');
-  if(cookie2 === null)
-    console.log("no cookie");
-  else 
-    await page.click('#popin_tc_privacy_button_2');*/
-
-  await page.waitForTimeout(2000);
-  await page.screenshot({ path: 'screen_search2_.png', fullPage: true });
-  const wq2 = await page.$('xpath//html/body/div[7]/div[1]/button');
- // console.log(wq2);
-  if(wq2 === null) { // - NO Question
+  await page.waitForSelector('.ui-button');
+  const wq2 = await page.$('.ui-button');
+  wq2.click();
+  /*if(wq2 === null) { // - NO Question
     console.log("no wq2"); // OK 
   }
   else {
@@ -127,11 +87,9 @@ async function scrape(url,town,product) {
     console.log("message to quit2");
     if(wq2_pos !== null)
       wq2.click();
-  }
-  await page.waitForTimeout(2000);
+  }*/
+  await page.waitForTimeout(1000);
   await page.type('#q',product,{delay: 100});
-  //await page.keyboard.press('Enter'); -> error detection bot activate with that 
-  // test first suggestions 
   await page.waitForTimeout(1000);
   const suggets1 = await page.$('xpath//html/body/div[3]/main/div[1]/header/div[4]/div[2]/div/div[1]/div[1]/div[1]/a');
   if(suggets1 !== null) {
@@ -139,7 +97,7 @@ async function scrape(url,town,product) {
     console.log(suggets1_bouding);
     suggets1.click();
   }
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(5000);
 
   // -----------------------NO DETECTION BOT USAGE(n hit OK ?) ----------------------------//
 
@@ -168,8 +126,6 @@ async function scrape(url,town,product) {
     retour += sub_line.substring(0,sub_line.indexOf("page_filter")) + "\n";
   }
   console.log(retour);
-  await page.waitForTimeout(7000);
-  await page.screenshot({ path: 'screen_f.png', fullPage: true });
   await browser.close();
 }
 url = "https://www.coursesu.com/drive/home";

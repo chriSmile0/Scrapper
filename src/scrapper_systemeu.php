@@ -51,10 +51,10 @@ namespace ChriSmile0\Scrapper;
 function extract_source_systemeu(string $town, string $target) : string {
 	$town_ = escapeshellarg($town);
 	$nodeScriptPath = __DIR__.'/scrape_su.js';
-	//$src = shell_exec("node $nodeScriptPath $town_ $target");
-	$src = shell_exec("node $nodeScriptPath Voglans Lardons");
-	var_dump($src);
+	// while $src.indexOF('products') == -1) ?? because not 100% regular for the moment 
+	$src = shell_exec("node $nodeScriptPath $town_ $target");
 	//$src = file_get_contents(__DIR__. "/products_su.txt"); // OK 
+	//shell_exec("rm -r screen")
 	return $src;
 }
 
@@ -290,6 +290,8 @@ function main_s($argc, $argv) : bool {
 	return 1;
 }
 //main_s($argc,$argv);
+//var_dump(content_scrap_systemeu("Lardons","Voglans"));
+//var_dump(extract_source_systemeu("Voglans","Lardons"));
 /**
  * [BRIEF]	
  * @param	

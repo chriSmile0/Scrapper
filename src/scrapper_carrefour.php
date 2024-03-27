@@ -69,7 +69,7 @@ function generate_driver_c() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return RemoteWebDriver::create($host,$capabilities);
@@ -80,10 +80,12 @@ function generate_driver_c() {
 	}*/
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
+	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return FirefoxDriver::start($capabilities);
@@ -100,18 +102,24 @@ function generate_driver_c() {
  * @param	string	$type	id/tagname/classname/xpath
  * @param	string	$path	the path or the id or the classname of the tagname
  * @param	string	$error	the recently error in the call stack
+ * @param 	string 	$type_2	optional	presence/visibility
  * @example	findElement($driver,"id","my_id","");
  * @author	chriSmile0
  * @return 	array 	[$elem(the element found),$error(the generate error)]
 */
-function findElement_c($driver, string $type, string $path, string $error) : array {
+function findElement_c($driver, string $type, string $path, string $error, string $type_2 = "presence") : array {
 	$elem = "";
 	sleep(1);
+	if($type_2 !== "presence" && $type_2 !== "visibility")
+		return [$elem,"'presence' or 'visibility' for type_2 argument"];
 	if($error === "") {
 		switch($type) {
 			case 'id':
 				try {
-					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::id($path)))); // this or sleep 
+					if($type_2 === "presence")
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($path))); // this or sleep 
+					else 
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id($path)));
 					$elem = $driver->findElement(WebDriverBy::id($path));
 				}
 				catch (Exception $e) {
@@ -120,7 +128,10 @@ function findElement_c($driver, string $type, string $path, string $error) : arr
 				break;
 			case 'tag':
 				try {
-					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::tagName($path))));
+					if($type_2 === "presence")
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::tagName($path))); // this or sleep 
+					else 
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName($path)));
 					$elem = $driver->findElement(WebDriverBy::tagName($path));
 				}
 				catch (Exception $e) {
@@ -129,7 +140,10 @@ function findElement_c($driver, string $type, string $path, string $error) : arr
 				break;
 			case 'class':
 				try {
-					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::className($path))));
+					if($type_2 === "presence")
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className($path))); // this or sleep 
+					else 
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className($path)));
 					$elem = $driver->findElement(WebDriverBy::className($path));
 				}
 				catch (Exception $e) {
@@ -138,7 +152,10 @@ function findElement_c($driver, string $type, string $path, string $error) : arr
 				break;
 			case 'xpath';
 				try { 
-					$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated((WebDriverBy::xpath($path))));
+					if($type_2 === "presence")
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($path))); // this or sleep 
+					else 
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath($path)));
 					$elem = $driver->findElement(WebDriverBy::xpath($path));
 				}
 				catch (Exception $e) {
@@ -151,7 +168,7 @@ function findElement_c($driver, string $type, string $path, string $error) : arr
 				break;
 		}
 	}
-	var_dump($error);
+	//var_dump($error);
 	return [$elem,$error];
 }
 
@@ -175,17 +192,20 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 			$res_find = array("","");
 			$res_find = findElement_c($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
+			///html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
 			if($res_find[0]!=="") $res_find[0]->sendKeys($city);
-			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
+			sleep(2);
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
-			if($res_find[0]!=="") $res_find[0]->click();
-			$res_find = findElement_c($driver,"xpath","/html/body/div[2]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
-			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
 			sleep(1);
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
+			if($res_find[0]!=="") $res_find[0]->click();
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
+			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
+			sleep(2);
 			if($res_find[1] === "") {
 				$src = $driver->getPageSource();
 				//$driver->manage()->deleteAllCookies();
@@ -197,6 +217,7 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 				$driver->quit();
 			}
 			//var_dump($res_find[1]);
+			//$driver->quit();
 		}
 		catch (Exception $e) {
 			echo $e->getMessage();
@@ -390,14 +411,15 @@ function extract_info_for_all_products_c(array $tab_json, array $needed_key) : a
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
- * @param	string	$url			the url to scrap
+ * 
  * @param	string 	$target_product	the target product
  * @param 	string 	$city 			the city to target
  * @example content_scrap_carrefour((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_carrefour(string $url, string $target_product, string $city) : array {
+function content_scrap_carrefour(string $target_product, string $city) : array {
+	$url = "https://www.carrefour.fr/courses";
 	$rtn = array();
 	$driver = generate_driver_c();
 	if($driver !== NULL) {
@@ -472,14 +494,14 @@ function content_scrap_carrefour(string $url, string $target_product, string $ci
  * 					test or if the scrapping failed 
 */
 function main_c($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_carrefour($argv[1],$argv[2],$argv[3]))) {
+	if($argc == 4) {
+		if(empty(content_scrap_carrefour($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [city] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [research_product_type] [city] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

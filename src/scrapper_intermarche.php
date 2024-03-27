@@ -75,7 +75,7 @@ function generate_driver_i() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return RemoteWebDriver::create($host,$capabilities);
@@ -86,17 +86,20 @@ function generate_driver_i() {
 	}*/
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
+	// in `` the command to launch in kill -s kill command !!
+	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['-headless']);
+	//$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return FirefoxDriver::start($capabilities);
 	}
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;
+		return NULL;//FirefoxDriver::start($capabilities);
 	}
 }
 
@@ -204,9 +207,12 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 			$res_find = array("","");
 
 			//COOKIE
+			sleep(1);
 			$res_find = findElement_i($driver,"xpath","//*[@id=\"didomi-popup\"]/div/div/div/span",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->click();
 			//COOKIE DISABLE -> use js for click on the button 
+			$res_find = findElement_i($driver,"class","headerInteractiveV3__btn",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->click();
 
 
 			$res_find = findElement_i($driver,"class","selectAddressForStore__search",$res_find[1]);
@@ -215,16 +221,15 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 			$res_find = findElement_i($driver,"classes","selectAddressForStore__suggestion",$res_find[1]);
 			if($res_find[0]!=="") {
 				try {
-					$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[1].click();");
+					$driver->executeScript("document.getElementsByClassName('selectAddressForStore__suggestion')[0].click();");
 				}
 				catch (Exception $e) {
 					$res_find[1] = $e->getMessage();
 				}
 			}
-		
-			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[2]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button",$res_find[1]);	
+			sleep(1);
+			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[3]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button",$res_find[1]);	
 			if($res_find[0]!=="") $res_find[0]->click();
-
 
 			$res_find = findElement_i($driver,"class","search-input__input",$res_find[1]);
 			if($res_find[0]!=="") {
@@ -232,7 +237,6 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
 			
-			// - /html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div = PRODUCT
 			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div",$res_find[1]);
 			if($res_find[1]==="")
 				$src = $driver->getPageSource();
@@ -488,71 +492,74 @@ function extract_needed_information_pro_i(array $json, array $needed_key) : arra
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
- * @param	string	$url			the url to scrap
+ * 
  * @param	string 	$target_product	the target product
  * @example content_scrap_intermarche((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_intermarche(string $url, string $target_product, string $town) : array {
+function content_scrap_intermarche(string $target_product, string $town) : array {
+	$url = "https://www.intermarche.com/";
 	$rtn = array();
 	$driver = generate_driver_i();
-	$list_of_product = [
-		"lardons",
-		"oeufs"
-	];
-	
-	
-	$product_needed_key = [ // On ATTRIBUTES
-		"type" => [],
-		"offers" => [],
-		"promotions" => [],
-		"prices" => [
-			"productPrice"
-		],
-		"id" => [],
-		"ean" => [],
-		"informations" => [
-			"title",
-			"packaging",
-			"brand",
-		],
-		"url" => [],
-		"hasReduction" => []
-	];
-	
-	$page_needed_key = [ // On META 
-		"total",
-		"page",
-		"perPage",
-		"hasPreviousPage",
-		"hasNextPage",
-	];
-	$file_content = extract_source_intermarche($url,$driver,$town,$target_product);
-	$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
-	if(empty($sp_res)) {
-		$driver->quit();
-		return array();
-	}
-	$rtn = array_merge($rtn,extract_info_for_all_products_i($sp_res["products"],$product_needed_key));
-	$infos = extract_needed_information_i(parse_json_product_i($sp_res["informations"]),$page_needed_key);
-	
-	$nb_page = $infos['total'] / $infos['perPage'];
-
-	$current_page = $infos['page'];
-	$new_url = $driver->getCurrentURL();
-	$next_page = $current_page+1;
-	for($i = $next_page ; $i < $nb_page+1 ; $i++) {
-		$url_ = $new_url."?page=".$i;
-		$file_content = extract_source($url_,$driver);
+	if($driver !== NULL) {
+		$list_of_product = [
+			"lardons",
+			"oeufs"
+		];
+		
+		
+		$product_needed_key = [ // On ATTRIBUTES
+			"type" => [],
+			"offers" => [],
+			"promotions" => [],
+			"prices" => [
+				"productPrice"
+			],
+			"id" => [],
+			"ean" => [],
+			"informations" => [
+				"title",
+				"packaging",
+				"brand",
+			],
+			"url" => [],
+			"hasReduction" => []
+		];
+		
+		$page_needed_key = [ // On META 
+			"total",
+			"page",
+			"perPage",
+			"hasPreviousPage",
+			"hasNextPage",
+		];
+		$file_content = extract_source_intermarche($url,$driver,$town,$target_product);
 		$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
 		if(empty($sp_res)) {
 			$driver->quit();
-			return $rtn;
+			return array();
 		}
 		$rtn = array_merge($rtn,extract_info_for_all_products_i($sp_res["products"],$product_needed_key));
+		$infos = extract_needed_information_i(parse_json_product_i($sp_res["informations"]),$page_needed_key);
+		
+		$nb_page = $infos['total'] / $infos['perPage'];
+
+		$current_page = $infos['page'];
+		$new_url = $driver->getCurrentURL();
+		$next_page = $current_page+1;
+		for($i = $next_page ; $i < $nb_page+1 ; $i++) {
+			$url_ = $new_url."?page=".$i;
+			$file_content = extract_source($url_,$driver);
+			$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
+			if(empty($sp_res)) {
+				$driver->quit();
+				return $rtn;
+			}
+			$rtn = array_merge($rtn,extract_info_for_all_products_i($sp_res["products"],$product_needed_key));
+		}
+		$driver->quit();
 	}
-	$driver->quit();
 	return $rtn;
 }
 
@@ -566,14 +573,14 @@ function content_scrap_intermarche(string $url, string $target_product, string $
  * 					test or if the scrapping failed 
 */
 function main_i($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3]))) {
+	if($argc == 4) {
+		if(empty(content_scrap_intermarche($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

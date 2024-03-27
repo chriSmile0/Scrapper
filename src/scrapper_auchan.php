@@ -65,7 +65,7 @@ function generate_driver_a() {
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return RemoteWebDriver::create($host,$capabilities);
@@ -76,10 +76,12 @@ function generate_driver_a() {
 	}*/
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
+	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return FirefoxDriver::start($capabilities);
@@ -112,9 +114,9 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 			case 'id':
 				try {
 					if($type_2 === "presence")
-						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($path))); // this or sleep 
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($path))); // this or sleep 
 					else 
-						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id($path)));
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id($path)));
 					$elem = $driver->findElement(WebDriverBy::id($path));
 				}
 				catch (Exception $e) {
@@ -124,9 +126,9 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 			case 'tag':
 				try {
 					if($type_2 === "presence")
-						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::tagName($path))); // this or sleep 
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::tagName($path))); // this or sleep 
 					else 
-						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName($path)));
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName($path)));
 					$elem = $driver->findElement(WebDriverBy::tagName($path));
 				}
 				catch (Exception $e) {
@@ -136,9 +138,9 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 			case 'class':
 				try {
 					if($type_2 === "presence")
-						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className($path))); // this or sleep 
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::className($path))); // this or sleep 
 					else 
-						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className($path)));
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::className($path)));
 					$elem = $driver->findElement(WebDriverBy::className($path));
 				}
 				catch (Exception $e) {
@@ -148,9 +150,9 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 			case 'xpath';
 				try { 
 					if($type_2 === "presence")
-						$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($path))); // this or sleep 
+						$driver->wait(1)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($path))); // this or sleep 
 					else 
-						$driver->wait()->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath($path)));
+						$driver->wait(1)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::xpath($path)));
 					$elem = $driver->findElement(WebDriverBy::xpath($path));
 				}
 				catch (Exception $e) {
@@ -163,7 +165,7 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 				break;
 		}
 	}
-	var_dump($error);
+	//var_dump($error);
 	return [$elem,$error];
 }
 
@@ -292,10 +294,13 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 			}
 			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
+			
+			echo "submit form\n";
 
 			try {
-				sleep(1);
+				sleep(4); // necessary for load all products
 				$prods = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
+				sleep(1);
 			}
 			catch(Exception $e) {
 				$res_find[1] = $e->getMessage();
@@ -318,14 +323,15 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
- * @param	string	$url			the url to scrap
+ * 
  * @param	string 	$target_product	the target product
  * @param	string 	$town 			the research area
  * @example content_scrap_auchan((@see URL1),"lardons","Paris")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_auchan(string $url, string $target_product, string $town) : array {
+function content_scrap_auchan(string $target_product, string $town) : array {
+	$url = "https://www.auchan.fr/";
 	$driver = generate_driver_a();
 	if($driver === NULL) 
 		return array();
@@ -368,15 +374,15 @@ function content_scrap_auchan(string $url, string $target_product, string $town)
  * 					test or if the scrapping failed 
 */
 function main_a($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_auchan($argv[1],$argv[2],$argv[3]))) {
+	if($argc == 4) {
+		if(empty(content_scrap_auchan($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 		return 1;
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

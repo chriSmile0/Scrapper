@@ -73,10 +73,12 @@ function generate_driver_m() {
 	}*/
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
+	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
 		return FirefoxDriver::start($capabilities);
@@ -288,13 +290,14 @@ function extract_needed_information_pro_m(array $json, array $needed_key) : arra
 
 /**
  * [BRIEF]	The main procedure -> for include in other path 
- * @param	string	$url			the url to scrap
+ * 
  * @param	string 	$target_product	the target product
  * @example content_scrap_monoprix((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_monoprix(string $url, string $target_product) : array {
+function content_scrap_monoprix(string $target_product) : array {
+	$url = "https://courses.monoprix.fr/products/search?q=";
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
 	$script = extract_source_monoprix($url.$target_product,1);
@@ -324,14 +327,14 @@ function content_scrap_monoprix(string $url, string $target_product) : array {
  * 					test or if the scrapping failed 
 */
 function main_m($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_monoprix($argv[1],$argv[2]))) {
+	if($argc == 3) {
+		if(empty(content_scrap_monoprix($argv[1]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [url] [research_product_type]  --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type]  --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
