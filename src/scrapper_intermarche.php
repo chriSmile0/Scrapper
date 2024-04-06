@@ -56,22 +56,22 @@ use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @param 	void 
+ * @param 	int	$p	port
  * @example	generate_driver_i()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_i() {
+function generate_driver_i(int $p) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	/*$host = 'http://localhost:4444/';
+	$host = 'http://localhost:'.$p.'/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -83,11 +83,11 @@ function generate_driver_i() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
+	}
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
 	// in `` the command to launch in kill -s kill command !!
-	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
 	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
@@ -100,7 +100,7 @@ function generate_driver_i() {
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;//FirefoxDriver::start($capabilities);
-	}
+	}*/
 }
 
 /**
@@ -494,14 +494,16 @@ function extract_needed_information_pro_i(array $json, array $needed_key) : arra
  * [BRIEF]	The main procedure -> for include in other path 
  * 
  * @param	string 	$target_product	the target product
+ * @param 	string 	$town			the town
+ * @param 	int		$p				port
  * @example content_scrap_intermarche((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_intermarche(string $target_product, string $town) : array {
+function content_scrap_intermarche(string $target_product, string $town, int $p) : array {
 	$url = "https://www.intermarche.com/";
 	$rtn = array();
-	$driver = generate_driver_i();
+	$driver = generate_driver_i($p);
 	if($driver !== NULL) {
 		$list_of_product = [
 			"lardons",
@@ -573,14 +575,14 @@ function content_scrap_intermarche(string $target_product, string $town) : array
  * 					test or if the scrapping failed 
 */
 function main_i($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_intermarche($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] [port] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

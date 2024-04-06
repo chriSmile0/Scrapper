@@ -51,21 +51,21 @@ use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @param 	void 
+ * @param 	int	$p	port 
  * @example	generate_driver_c()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_c() {
+function generate_driver_c(int $p) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	/*$host = 'http://localhost:4444/';
+	$host = 'http://localhost:'.$p.'/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -77,12 +77,12 @@ function generate_driver_c() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
+	}
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
-	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);
-	$firefoxOptions = new FirefoxOptions();
+	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	sleep(1);*/
+	/*$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions->addArguments(['--headless']);
@@ -93,7 +93,7 @@ function generate_driver_c() {
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
-	}
+	}*/
 }
 /**
  * [BRIEF]	Find element function simplification
@@ -188,34 +188,54 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 	$error = "";
 	if($driver !== NULL) {
 		try {
-			$driver->get($url);
+			$cpt = 1;
+			$driver->get($url); //OOKKKKKKKKK//
+			while(count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) != 0) {
+				echo $driver->getCurrentURL();
+				$driver->takeScreenshot('image1'.$cpt.'.png');
+				//$driver->wai
+				echo "The title is '" . $driver->getTitle() . "'\n";
+				$cpt++;
+				sleep(1); // NO DDOS HERE :-)
+				$driver->get($url);
+			}
 			$res_find = array("","");
+			//while(count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) == 0);
+			//var_dump($v);
 			$res_find = findElement_c($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
 			///html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
+			//$driver->takeScreenshot('image2.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
 			if($res_find[0]!=="") $res_find[0]->click();
+			//$driver->takeScreenshot('image3.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
 			if($res_find[0]!=="") $res_find[0]->sendKeys($city);
 			sleep(2);
+			//$driver->takeScreenshot('image4.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
 			sleep(1);
+			//$driver->takeScreenshot('image5.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
+			//$driver->takeScreenshot('image6.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
 			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
 			sleep(2);
+			//$driver->takeScreenshot('image7.png');
 			if($res_find[1] === "") {
 				$src = $driver->getPageSource();
 				//$driver->manage()->deleteAllCookies();
 				$error = "NO";
+				//echo "src: $src\n";
 				return $src;
 			}
 			else {
 				$error = $res_find[1];
 				$driver->quit();
 			}
+			echo "error : $error \n";
 			//var_dump($res_find[1]);
 			//$driver->quit();
 		}
@@ -414,14 +434,15 @@ function extract_info_for_all_products_c(array $tab_json, array $needed_key) : a
  * 
  * @param	string 	$target_product	the target product
  * @param 	string 	$city 			the city to target
+ * @param 	int 	$p				port
  * @example content_scrap_carrefour((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_carrefour(string $target_product, string $city) : array {
+function content_scrap_carrefour(string $target_product, string $city, int $p) : array {
 	$url = "https://www.carrefour.fr/courses";
 	$rtn = array();
-	$driver = generate_driver_c();
+	$driver = generate_driver_c($p);
 	if($driver !== NULL) {
 		$list_of_product = [
 			"lardons"
@@ -494,25 +515,25 @@ function content_scrap_carrefour(string $target_product, string $city) : array {
  * 					test or if the scrapping failed 
 */
 function main_c($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_carrefour($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_carrefour($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . " [research_product_type] [city] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . " [research_product_type] [city] [port] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
 //main($argc,$argv);
-/*$url = "https://www.carrefour.fr/courses";
-$search = "lardons";
-$city = "Paris";
+//$url = "https://www.carrefour.fr/courses";
+//$search = "lardons";
+//$city = "Paris";
 //var_dump(content_scrap_carrefour($url,$search,$city));
-//var_dump(content_scrap_carrefour($url,$search,$city));*/
+//var_dump(content_scrap_carrefour($search,$city));
 /**
  * [BRIEF]	
  * @param	

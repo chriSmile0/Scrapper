@@ -52,9 +52,10 @@ function extract_source_systemeu(string $town, string $target) : string {
 	$town_ = escapeshellarg($town);
 	$nodeScriptPath = __DIR__.'/scrape_su.js';
 	// while $src.indexOF('products') == -1) ?? because not 100% regular for the moment 
-	$src = shell_exec("node $nodeScriptPath $town_ $target");
-	//$src = file_get_contents(__DIR__. "/products_su.txt"); // OK 
-	//shell_exec("rm -r screen")
+	$dest = __DIR__.'/products.txt';
+	shell_exec("`node $nodeScriptPath $town_ $target > $dest`");
+	$src = file_get_contents(__DIR__. "/products.txt"); // OK 
+	shell_exec("rm $dest");
 	return $src;
 }
 

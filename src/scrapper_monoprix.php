@@ -45,20 +45,20 @@ use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @param 	void
+ * @param 	int	$o	port
  * @example	generate_driver_m()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_m() {
+function generate_driver_m(int $p) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	/*$host = 'http://localhost:4444/';
+	$host = 'http://localhost:'.$p.'/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -70,10 +70,10 @@ function generate_driver_m() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
+	}
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
-	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
 	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
@@ -86,7 +86,7 @@ function generate_driver_m() {
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
-	}
+	}*/
 }
 
 /**
@@ -94,24 +94,18 @@ function generate_driver_m() {
  * 			with the first products and the $driver with the change state
  * @param	string	$url			the url to get in the browser
  * @param 	int		$js_or_selenium	0 for js 1 for sele
+ * @param 	int 	$p				port
  * @example	extract_source_monoprix((@see URL1),1)
  * @author	chriSmile0
  * @return	string	the source code
 */
-function extract_source_monoprix(string $url, int $js_or_selenium) : string {
+function extract_source_monoprix(string $url, int $js_or_selenium, int $p) : string {
 	if($js_or_selenium == 1) {
-		$driver = generate_driver_m();
+		$driver = generate_driver_m($p);
+		if($driver == NULL)
+			return "";
 		$driver->get($url);
-		//COOKIE 
-		
-		/*$driver->wait()->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('/html/body/div[4]/div[2]/div/div/div[3]/button')));
-		$driver->findElement(WebDriverBy::xpath('/html/body/div[4]/div[2]/div/div/div[3]/button'))->click();*/
-		//COOKIE DISABLE
-		/*$driver->findElement(WebDriverBy::id('search'))->sendKeys($target);
-		$driver->findElement(WebDriverBy::id('search'))->sendKeys(WebDriverKeys::ENTER);*/
 		$src = $driver->getPageSource();
-		//ON PEUT GREP car chaque recherche fait toujours la même taille 
-		//shell_exec("echo '$src' > TMP2");
 		$rtn = substr($src,strpos($src,"\"totalProducts\""));
 		$rtn = substr($rtn,0,strpos($rtn,"}}},\"retailer\"")) . "}}}";
 		$driver->quit();
@@ -292,15 +286,16 @@ function extract_needed_information_pro_m(array $json, array $needed_key) : arra
  * [BRIEF]	The main procedure -> for include in other path 
  * 
  * @param	string 	$target_product	the target product
+ * @param	int		$p				port
  * @example content_scrap_monoprix((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_monoprix(string $target_product) : array {
+function content_scrap_monoprix(string $target_product, int $p) : array {
 	$url = "https://courses.monoprix.fr/products/search?q=";
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
-	$script = extract_source_monoprix($url.$target_product,1);
+	$script = extract_source_monoprix($url.$target_product,1,$p);
 	if(empty($prods = all_subcontent_with_trunk_v21_m($script,"{\"productId\":",[",\"retailerFinancingPlanIds\""],false,0,"}")))
 		return $rtn;
 	
@@ -327,14 +322,14 @@ function content_scrap_monoprix(string $target_product) : array {
  * 					test or if the scrapping failed 
 */
 function main_m($argc, $argv) : bool {
-	if($argc == 3) {
-		if(empty(content_scrap_monoprix($argv[1]))) {
+	if($argc == 4) {
+		if(empty(content_scrap_monoprix($argv[1],$argv[2]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type]  --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [port]  --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

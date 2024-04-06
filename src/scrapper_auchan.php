@@ -47,21 +47,22 @@ use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
+ * @param 	int $p	port
  * @example	generate_driver_a()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_a() {
+function generate_driver_a(int $p) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	/*$host = 'http://localhost:4444/';
+	$host = 'http://localhost:'.$p.'/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -73,10 +74,10 @@ function generate_driver_a() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
+	}
 
 	//------------FirefoxDriver, geckodriver directly on this process--------//
-	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
+	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
 	sleep(1);
 	$firefoxOptions = new FirefoxOptions();
 	$firefoxOptions->setProfile(new FirefoxProfile());
@@ -89,7 +90,7 @@ function generate_driver_a() {
 	catch (Exception $e) {
 		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
-	}
+	}*/
 }
 
 /**
@@ -182,6 +183,8 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 function text_to_associative_array(string $get_text, array $associative_list, 
 									string $separator) : array {
 	$rtn = array();
+	if($get_text === "") 
+		return $rtn;
 	$text_to_explode = explode($separator,$get_text);
 	if(($size = sizeof($text_to_explode)) > 1) {
 		if(($size_list = sizeof($associative_list)) > $size) 
@@ -202,7 +205,7 @@ function text_to_associative_array(string $get_text, array $associative_list,
 				$rtn = array_merge($rtn,[$associative_list[$i-1]=>$text_to_explode[$i]]);
 
 		
-	}	
+	}
 	return $rtn;
 }
 
@@ -210,12 +213,13 @@ function text_to_associative_array(string $get_text, array $associative_list,
 /**
  * [BRIEF]	(@see extract_needed_information_pro) but for all products	
  * @param	/	$prods	The html element which contain all products	
+ * @param 	int $nb_prods (yes not all ;-)
  * @example extract_info_for_all_products($tab_json, [totalPage,currentPage])
  * @author	chriSmile0
  * @return	array	array with the data with want to store/share/print for all 
  * 					products
 */
-function extract_info_for_all_products_a($prods) : array {
+function extract_info_for_all_products_a($prods,int $nb_prods) : array {
 	$rtn = array();
 
 	$associative_list = [
@@ -228,8 +232,8 @@ function extract_info_for_all_products_a($prods) : array {
 		"dealMode",
 		"price"
 	];
-	foreach($prods as $prod) 
-		if(!empty($res = text_to_associative_array($prod->getText(),$associative_list,"\n")))
+	for($i = 0; $i < $nb_prods ; $i++) 
+		if(!empty($res = text_to_associative_array(($prods[$i]!=NULL) ? $prods[$i]->getText() : "",$associative_list,"\n")))
 			$rtn[] = $res;
 	
 
@@ -251,20 +255,24 @@ function extract_info_for_all_products_a($prods) : array {
 function extract_source_auchan(string $url,$driver, string $town, string $target) : array {
 	$src = "";
 	$error = "";
-	$prods = "";
 	if($driver !== NULL) {
 		try {
-			$driver->get($url);
+			$cpt = 1;
+			$driver->get($url); //OOKKKKKKKKK//
+			while(count($driver->findElements(WebDriverBy::className('editorial__block-title'))) != 0) {
+				$cpt++;
+				sleep(1); // NO DDOS HERE :-)
+				$driver->get($url);
+			}
 			$res_find = array("","");
 			$res_find = findElement_a($driver,"id","onetrust-reject-all-handler",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
+
 			$res_find = findElement_a($driver,"class","header-search__input",$res_find[1]);
 			if($res_find[0]!=="") {
 				$res_find[0]->sendKeys($target);
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
-			
-
 			$res_find =  findElement_a($driver,"xpath","/html/body/div[3]/div[2]/div[2]/div[4]/article[1]/div[2]/footer/button",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -275,13 +283,9 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
-			
 			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
 
-
-			///suggests 
-			// /html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input = path
 			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -295,16 +299,8 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
-			echo "submit form\n";
-
-			try {
-				sleep(4); // necessary for load all products
-				$prods = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-				sleep(1);
-			}
-			catch(Exception $e) {
-				$res_find[1] = $e->getMessage();
-			}
+			sleep(4);
+			$driver->executeScript('window.scrollTo(0,200);');
 			$error = $res_find[1];
 			$src = $driver->getPageSource();
 		}
@@ -317,8 +313,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 		$driver->quit();
 		return array();
 	}
-	//var_dump($prods);
-	return [$driver,$src,extract_info_for_all_products_a($prods)];
+	return [$driver,$src];
 }
 
 /**
@@ -326,13 +321,14 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
  * 
  * @param	string 	$target_product	the target product
  * @param	string 	$town 			the research area
+ * @param 	int 	$p				port
  * @example content_scrap_auchan((@see URL1),"lardons","Paris")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_auchan(string $target_product, string $town) : array {
+function content_scrap_auchan(string $target_product, string $town, int $p) : array {
 	$url = "https://www.auchan.fr/";
-	$driver = generate_driver_a();
+	$driver = generate_driver_a($p);
 	if($driver === NULL) 
 		return array();
 	
@@ -340,22 +336,40 @@ function content_scrap_auchan(string $target_product, string $town) : array {
 	if(!empty($file_content_and_prods)) {
 		$driver = $file_content_and_prods[0];
 		$file_content = $file_content_and_prods[1];
-		$prods = $file_content_and_prods[2];
+		$prods = array();
 		$config_mark = "G.configuration.searchPages.trackingObject = ";
 		
 		$sub = substr($file_content,strpos($file_content,$config_mark)+strlen($config_mark));
 		$end = strpos($sub,"};");
 		$infos = substr($sub,0,$end);
+		var_dump($infos);
 		$infos_page = substr($infos,0,strpos($infos,"},")) . "}}";
 		$pages = json_decode($infos_page,true)["page"];
 		$nb_page = $pages["numberOfPages"];
 		$cur_page = $pages["currentPage"];
-		$new_url = $driver->getCurrentURL()."?redirect_keywords=$target_product&page=";
+		for($i = $cur_page ; $i < $nb_page+1; $i++) {
+			$src_ = $driver->getPageSource();
+			//var_dump(extract_source_auchan($new_url.$i,$driver,$town,$target_product));
+			$config_mark_2 = "G.configuration.searchPages.trackingObject = ";
+			$sub_ = substr($src_,strpos($src_,$config_mark_2)+strlen($config_mark_2));
+			$end_ = strpos($sub_,"};");
+			$infos_ = substr($sub_,0,$end_);
+			$infos_page = substr($infos_,0,strpos($infos_,"},")) . "}}";
+			$pages_ = json_decode($infos_page,true)["page"];
 
-		for($i = $cur_page+1 ; $i < $nb_page+1; $i++) {
-			$driver->get($new_url.$i);
+			$off_total = $pages_["total"]-$pages_["offset"];
+			$nb_prod = 0;
+			if($off_total <= $pages_["limit"])
+				$nb_prod = $off_total;
+			else 
+				$nb_prod = $pages_["limit"];
 			$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-			$prods = array_merge($prods,extract_info_for_all_products_a($produits));
+			//var_dump(extract_info_for_all_products_a($produits,$nb_prod));
+			$prods = array_merge($prods,extract_info_for_all_products_a($produits,$nb_prod));
+			if($i < $nb_page) {
+				$driver->findElements(WebDriverBy::className('next'))[0]->click();
+				sleep(1);
+			}
 		}
 		$driver->manage()->deleteAllCookies();
 		$driver->quit();
@@ -374,15 +388,15 @@ function content_scrap_auchan(string $target_product, string $town) : array {
  * 					test or if the scrapping failed 
 */
 function main_a($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_auchan($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_auchan($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 		return 1;
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] [port] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
