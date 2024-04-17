@@ -55,6 +55,56 @@ use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
+function change_quantity_c($libelle)  { 
+	if($libelle === NULL)
+		return NULL;
+	//echo $libelle;
+	$idx_t = strpos($libelle," - ");
+	preg_match_all('!\d+(?:\.\d{1,2})?!',$libelle,$matches);
+	//var_dump($matches[0]);
+	$unity = (strpos($libelle," kg"));
+	if($unity === FALSE)
+		$unity = "g";
+	else 
+		$unity = "kg";
+	$size_m = sizeof($matches[0]);
+
+	if($idx_t !== FALSE) {
+		$total = substr($libelle,0,$idx_t);
+		preg_match_all('!\d+(?:\.\d{1,2})?!', $total, $matches2);
+		$size_t = sizeof($matches2[0]);
+		if($size_t == 1) {
+			$unity_div = $unity;
+			$div = intval($matches[0][1]/$matches2[0][0]);
+			if(($unity == "kg") && ($div *= 1000)) {
+				if($div < 1000) {
+					$unity_div = "g";
+				}
+			}
+			return $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
+		}
+		else if($size_t == 2) {
+			//echo $libelle;
+			//var_dump($matches2);
+			return $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches[0][2].$unity;
+		}
+	}
+	$size_m = sizeof($matches[0]);
+
+	if($size_m == 1) 
+		return $matches[0][0].$unity;
+	else if($size_m == 2) {
+		$unity_u = $unity;
+		if(($unity == "kg") && ($matches[0][1] < 1)) {
+			$unity_u = "g";
+			$matches[0][1] *= 1000;
+		}
+		return $matches[0][0]."x".$matches[0][1].$unity_u."-".($matches[0][0]*$matches[0][1]).$unity_u;
+	}
+	return $libelle;
+
+}
+
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
@@ -183,14 +233,14 @@ function findElement_c($driver, string $type, string $path, string $error, strin
  * @author	chriSmile0
  * @return	string	the display content of the url renderer
 */
-function extract_source_carrefour(string $url,$driver,string $city, string $target) : string {
+function extract_source_carrefour(string $url,$driver,string $city, string $target) : string { // ***************NEEDED AFFINAGE GESTION***//
 	$src = "";
 	$error = "";
 	if($driver !== NULL) {
 		try {
 			$cpt = 1;
 			$driver->get($url); //OOKKKKKKKKK//
-			while(count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) != 0) {
+			while((count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) != 0) && ($cpt < 5)) {
 				echo $driver->getCurrentURL();
 				$driver->takeScreenshot('image1'.$cpt.'.png');
 				//$driver->wai
@@ -199,6 +249,10 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 				sleep(1); // NO DDOS HERE :-)
 				$driver->get($url);
 			}
+			if($cpt >= 5) {
+				$driver->quit();
+				return "";
+			}
 			$res_find = array("","");
 			//while(count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) == 0);
 			//var_dump($v);
@@ -206,24 +260,29 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 			if($res_find[0]!=="") $res_find[0]->click();
 			///html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
 			//$driver->takeScreenshot('image2.png');
+			echo "CARREFOU1:".$res_find[1]."\n";
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button",$res_find[1]); // click
 			if($res_find[0]!=="") $res_find[0]->click();
 			//$driver->takeScreenshot('image3.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/div/div[1]/div[2]/input",$res_find[1]); // sendKeys
 			if($res_find[0]!=="") $res_find[0]->sendKeys($city);
+			echo "CARREFOU2:".$res_find[1]."\n";
 			sleep(2);
 			//$driver->takeScreenshot('image4.png');
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[1]/div/section/div/ul/li[2]/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
 			sleep(1);
+			echo "CARREFOU3:".$res_find[1]."\n";
 			//$driver->takeScreenshot('image5.png');
-			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[3]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
+			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[2]/div/div/div/div[2]/div/div/span/div/section/div[1]/div[4]/div/ul/li[1]/div/div[2]/ul/li/div/button",$res_find[1]); // click 
 			if($res_find[0]!=="") $res_find[0]->click();
 			//$driver->takeScreenshot('image6.png');
+			echo "CARREFOU4:".$res_find[1]."\n";
 			$res_find = findElement_c($driver,"xpath","/html/body/div[1]/header/div/div[2]/div[1]/div[3]/div/form/div/div[1]/div/input",$res_find[1]); // sendKeys + Submit
 			if($res_find[0]!=="") $res_find[0]->sendKeys($target)->submit();
 			sleep(2);
 			//$driver->takeScreenshot('image7.png');
+			echo "CARREFOU5:".$res_find[1]."\n";
 			if($res_find[1] === "") {
 				$src = $driver->getPageSource();
 				//$driver->manage()->deleteAllCookies();
@@ -379,6 +438,7 @@ $page_needed_key = [ // On META
 function extract_needed_information_pro_c(array $json, array $needed_key) : array {
 	$rtn = array();
 	$sub_json_needed = $json["attributes"];
+	$sub_json_needed["packaging"] = change_quantity_c($sub_json_needed["packaging"]);
 	foreach($needed_key as $k=>$value) {
 		if(strcmp($k,"offers")==0)
 			continue;
@@ -444,9 +504,6 @@ function content_scrap_carrefour(string $target_product, string $city, int $p) :
 	$rtn = array();
 	$driver = generate_driver_c($p);
 	if($driver !== NULL) {
-		$list_of_product = [
-			"lardons"
-		];
 		
 		$product_needed_key = [ // On ATTRIBUTES
 			"ean" => [],
@@ -479,7 +536,7 @@ function content_scrap_carrefour(string $target_product, string $city, int $p) :
 		
 		$file_content = extract_source_carrefour($url,$driver,$city,$target_product);
 		if($file_content !== "") {
-			$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
+			$sp_res = search_product_in_script_json_c($file_content,$target_product);
 			if(empty($sp_res)) {
 				$driver->quit();
 				return array();
@@ -492,12 +549,14 @@ function content_scrap_carrefour(string $target_product, string $city, int $p) :
 			for($i = $next_page ; $i < $nb_page+1 ; $i++) {
 				$url_ = $url."&noRedirect=1&page=".$i;
 				$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
-				$sp_res = search_product_in_script_json_c($file_content,$target_product,$list_of_product);
-				if(empty($sp_res)) {
-					$driver->quit();
-					return $rtn;
+				if($file_content !== "") {
+					$sp_res = search_product_in_script_json_c($file_content,$target_product);
+					if(empty($sp_res)) {
+						$driver->quit();
+						return $rtn;
+					}
+					$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
 				}
-				$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
 			}
 			$driver->quit();
 		}
@@ -533,7 +592,7 @@ function main_c($argc, $argv) : bool {
 //$search = "lardons";
 //$city = "Paris";
 //var_dump(content_scrap_carrefour($url,$search,$city));
-//var_dump(content_scrap_carrefour($search,$city));
+//var_dump(content_scrap_carrefour($search,$city,4444));
 /**
  * [BRIEF]	
  * @param	

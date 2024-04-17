@@ -67,6 +67,149 @@ function get_global(string $choice) {
 	return $GLOBALS[$choice];
 }
 
+function change_quantity_l(string $libelle) : string  {
+	echo $libelle;
+	$libelle = strtolower($libelle);
+	/*$pos_g = strpos($str,"g");
+	if($pos_g > 0) {
+		if(!is_numeric($str[$pos_g-1]))
+			return $str;
+		$i = $pos_g-1;
+		$gramms = "";
+		$x_f = false;
+		$res = "";
+		echo $i;
+		while(($i >= 0) && (($x_f=($str[$i]!="x")) && $str[$i]!=" ")) {
+			$gramms = $str[$i] . $gramms;
+			echo $str[$i];
+			$i--;
+		}
+		if($x_f == false) {
+			$i--;
+			$mu = "";
+			while($i >= 0 && ($str[$i]>="0" && ($str[$i]<="9"))) {
+				$mu = $str[$i].$mu;
+				$i--;
+			}
+			$mul = intval($mu);
+			$q = intval($gramms);
+			$res = $mu."x".$q."g"."-".($mul*$q)."g";
+		}
+		else {
+			$res = $gramms."g";
+		}
+		$rt = substr($str,0,$i+1).$res;
+		return $rt;
+	}*/
+	/*$idx_t = strpos($libelle," - ");
+	preg_match_all('!\d+(?:\.\d{1,2})?!',$libelle,$matches);
+	//var_dump($matches[0]);
+	$unity = (strpos($libelle," kg"));
+	if($unity === FALSE)
+		$unity = "g";
+	else 
+		$unity = "kg";
+	$size_m = sizeof($matches[0]);
+
+	if($idx_t !== FALSE) {
+		$total = substr($libelle,$idx_t);
+		echo "total : $total \n";
+		preg_match_all('!\d+(?:\.\d{1,2})?!', $total, $matches2);
+		$size_t = sizeof($matches2[0]);
+		var_dump($matches2[0]);
+		var_dump($matches[0]);
+		$rt = substr($libelle,0,$idx_t)." ";
+		if($size_t == 1) {
+			//$unity_div = $unity;
+			//$div = intval($matches[0][1]/$matches2[0][0]);
+			//if(($unity == "kg") && ($div *= 1000)) {
+			//	if($div < 1000) {
+			//		$unity_div = "g";
+			//	}
+			//}
+			//return $rt . $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
+			echo "hore \n";
+			return $rt . $matches2[0][0].$unity;
+		}
+		if($size_t == 2) {
+			//echo $libelle;
+			//var_dump($matches2);
+			echo "here \n";
+			return $rt . $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches2[0][0]*$matches2[0][1].$unity;
+		}
+	}
+	$size_m = sizeof($matches[0]);
+	if($size_m == 0)
+		return $libelle;
+	$rt = substr($libelle,0,strpos($libelle,$matches[0][0]));
+	if($size_m == 1) {
+		return $rt . $matches[0][0].$unity;
+	}
+	else if($size_m == 2) {
+		$unity_u = $unity;
+		if(($unity == "kg") && ($matches[0][1] < 1)) {
+			$unity_u = "g";
+			$matches[0][1] *= 1000;
+		}
+		return $rt . $matches[0][0]."x".$matches[0][1].$unity_u."-".($matches[0][0]*$matches[0][1]).$unity_u;
+	}
+	//return $libelle;*/
+	$libelle = strtolower($libelle);
+	$i = 0;
+	$s_l = strlen($libelle);
+	if(!is_numeric($libelle[$i])) {
+		while($i+1 < $s_l) {
+			if((($libelle[$i]==' ')) && (is_numeric($libelle[$i+1])))
+				break;
+			$i++;
+		}
+	}
+
+
+	$wanted = substr($libelle,$i);
+	preg_match_all("/[x|^-]*[0-9]+[x|g|t| |,]{1}/",$libelle,$matches);
+	$str = implode(" ",$matches[0]);
+	preg_match_all("/[0-9]+/",$str,$matches2);
+	$siz = sizeof($matches2[0]);
+	if($siz < 2) 
+		return $libelle;
+	else {
+		if(($matches[0][0][0]=="x"))
+			return substr($libelle,0,strpos($libelle,"x")) . " ".($matches2[0][0])."x".($matches2[0][1]/$matches2[0][0])."g-".($matches2[0][1])."g";
+		if((strpos($matches[0][0],"x")===FALSE) && (strpos($matches[0][0],"g")===FALSE))
+			return $libelle;
+	
+	}
+
+	$j = 0;
+	$i_u = -1;
+	$i_m = -1;
+	$mul = "";
+	foreach($matches[0] as $elem) {
+		if(strpos($elem,"g")!==FALSE) {
+			$i_u = $j;
+
+		}
+		else if(strpos($elem,"x")!==FALSE) {
+			$i_m = $j;
+			$mul = "x";
+		}
+
+		$j++;
+	}
+
+	if(($j > 1) && ($mul == ""))
+		$i_m = $j-1;
+	
+	if($i_m != -1) {
+		$rtn = $matches2[0][$i_m]."x".$matches2[0][$i_u]."g-".(intval($matches2[0][$i_m])*intval($matches2[0][$i_u]))."g";
+		$len_wanted = strlen($wanted);
+		$t = substr($libelle,0,$i) . ($i!=0? " ": "") .$rtn . substr($libelle,$i+$len_wanted);
+		return $t;
+	}	
+	return $libelle;
+}
+
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
  * @param	string 	$url	The number of paramter in the command line execution
@@ -160,16 +303,14 @@ function all_subcontent_with_trunk(string $str, string $trunk, string $end_conte
  * @param	string	$output				datas
  * @param	string	$product			product to research in datas
  * @param	array	$list_of_product	the list of searchable product
- * @example	search_product("CDATA..sLibelleLigne1,price ...//]","lardons",["lardons"])
+ * @example	search_product("CDATA..sLibelleLigne1,price ...//]","lardons")
  * @author	chriSmile0
  * @return	array	split the data by product or empty array if product is not
  * 						in the list
 */
-function search_product(string $output, string $product, array $list_of_product) : array {
+function search_product(string $output, string $product) : array {
 	$subcontent = all_subcontent_with_trunk($output,"CDATA","//]]");
 	$last_cdata_content = array_pop($subcontent);
-	if(!in_array($product,$list_of_product))
-		return array();
 	$array_lardons = explode("sLibelleLigne1",$last_cdata_content);
 	$size = sizeof($array_lardons);
 	$index = 1;
@@ -201,7 +342,9 @@ function search_product(string $output, string $product, array $list_of_product)
 */
 function extract_needed_information(array $product_sheet, array $extract_list) : array  {
 	$rtn = array();
-	foreach($extract_list as $e_l)
+	$product_sheet["sLibelleLigne2"] = change_quantity_l($product_sheet["sLibelleLigne2"]);
+	$product_sheet["sLibelleLigne1"] = change_quantity_l($product_sheet["sLibelleLigne1"]);
+	foreach($extract_list as $e_l) 
 		$rtn = array_merge($rtn,[$e_l=>$product_sheet[$e_l]]);
 
 	return $rtn;
@@ -235,14 +378,10 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
 */
 function content_scrap_leclerc(string $target_product, string $city) : array {
 	$file_content = extract_data_script_leclerc($target_product,$city);
-	$list_of_product = [
-		"Lardons",
-		"Saucisse"
-	];
 	
 	$extract_list_item = [
 		"sLibelleLigne1",
-		"sLibelleLigne2",
+		"sLibelleLigne2", // quantity
 		"sPrixUnitaire",
 		"nrPVUnitaireTTC",
 		"sPrixPromo",
@@ -250,7 +389,7 @@ function content_scrap_leclerc(string $target_product, string $city) : array {
 		"nrPVParUniteDeMesureTTC",
 		"sUrlPageProduit"
 	];
-	$s_p_res = search_product($file_content,$target_product,$list_of_product);
+	$s_p_res = search_product($file_content,$target_product);
 	if(empty($s_p_res))
 		return array();
 	$all_products_find = extract_needed_information_of_all_product($s_p_res,$extract_list_item);
@@ -298,6 +437,8 @@ $search = "Lardons";
 $city_choice = "";//ARGV2;
 //var_dump(content_scrap_leclerc($search,"Voglans"));// -> UnComment for test :-)
 
+//echo change_quantity_l("Lardons supérieurs Tradilège");
+//echo change_quantity_l("Lardons supérieurs 200g");
 /**
  * [BRIEF]	
  * @param	

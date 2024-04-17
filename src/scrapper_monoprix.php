@@ -48,6 +48,55 @@ use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 //require __DIR__ . '/../../../autoload.php'; // EXPORT 
 require __DIR__ . '/../vendor/autoload.php'; // DEV
 
+function change_quantity_m(string $libelle) : string  { 
+	$libelle = strtolower($libelle);
+	$i = 0;
+	$s_l = strlen($libelle);
+	while($i+1 < $s_l) {
+		if((($libelle[$i]==' ')) && (is_numeric($libelle[$i+1])))
+			break;
+		$i++;
+	}
+	$wanted = substr($libelle,$i);
+	preg_match_all("/[x|^-]*[0-9]+[x|g|| |,]+/",$libelle,$matches);
+	$str = implode(" ",$matches[0]);
+	preg_match_all("/[0-9]+/",$str,$matches2);
+	$siz = sizeof($matches2[0]);
+	if($siz < 2) 
+		return $libelle;
+	else {
+		if(($matches[0][0][0]=="x"))
+			return $libelle;
+		if((strpos($matches[0][0],"x")===FALSE) && (strpos($matches[0][0],"g")===FALSE))
+			return $libelle;
+	}
+
+	$j = 0;
+	$i_u = -1;
+	$i_m = -1;
+	$mul = "";
+	foreach($matches[0] as $elem) {
+		if(strpos($elem,"g")!==FALSE) {
+			$i_u = $j;
+		}
+		else if(strpos($elem,"x")!==FALSE) {
+			$i_m = $j;
+			$mul = "x";
+		}
+		$j++;
+	}
+	if(($j > 1) && ($mul == ""))
+		$i_m = $j-1;
+	
+	if($i_m != -1) {
+		$rtn = $matches2[0][$i_m]."x".$matches2[0][$i_u]."g-".(intval($matches2[0][$i_m])*intval($matches2[0][$i_u]))."g";
+		$len_wanted = strlen($wanted);
+		$t = substr($libelle,0,$i) . " - " .$rtn . substr($libelle,$i+$len_wanted);
+		return $t;
+	}	
+	return $libelle;
+}
+
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
@@ -276,6 +325,7 @@ function extract_info_for_all_products_m(array $tab_json, array $needed_key) : a
 */
 function extract_needed_information_pro_m(array $json, array $needed_key) : array {
 	$rtn = array();
+	$json["name"] = change_quantity_m($json["name"]);
 	foreach($needed_key as $k=>$value) 
 		$rtn = array_merge($rtn,[$k=>$json[$k]]);
 

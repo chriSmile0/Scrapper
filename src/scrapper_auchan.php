@@ -51,6 +51,17 @@ use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
+function change_quantity_a(string $libelle) : string  { 
+	preg_match_all('!\d+(?:\.\d{1,2})?!', $libelle, $matches);
+	$size_m = sizeof($matches[0]);
+	if($size_m == 1) 
+		return $matches[0][0]."g";
+	else if($size_m == 2)
+		return " - " . $matches[0][0]."x".$matches[0][1]."g"."-".($matches[0][0]*$matches[0][1])."g";
+	else 
+		return $libelle;
+
+}
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
@@ -186,26 +197,29 @@ function text_to_associative_array(string $get_text, array $associative_list,
 	if($get_text === "") 
 		return $rtn;
 	$text_to_explode = explode($separator,$get_text);
-	if(($size = sizeof($text_to_explode)) > 1) {
-		if(($size_list = sizeof($associative_list)) > $size) 
-			for($j=0, $i = 0; $i < $size_list ;$i++, $j++) {
-				if($i == 4)
-					$i += 2;
-				$rtn = array_merge($rtn,[$associative_list[$i]=>$text_to_explode[$j]]);
-			}
-		
-		else if($size_list == $size) 
-			for($i = 0; $i < $size_list ;$i++) 
-				$rtn = array_merge($rtn,[$associative_list[$i]=>$text_to_explode[$i]]);
-
-		
-		
-		else 
-			for($i = 1; $i < $size ;$i++) 
-				$rtn = array_merge($rtn,[$associative_list[$i-1]=>$text_to_explode[$i]]);
-
-		
+	$h = 0;
+	$dep = 0;
+	foreach($text_to_explode as $e) {
+		if((($s = strpos($e,"("))!==FALSE) && ($s == 0)) 
+			$dep = $h+1; // OR SEARCH BRAND IN LABEL ? 
+		if(strpos($e," / kg"))
+			break;
+		$h++;
 	}
+	//var_dump($text_to_explode[$h-3]."|".$text_to_explode[$h-2]."|".$text_to_explode[$h-1]);
+	$text_to_explode[$h-1] = change_quantity_a($text_to_explode[$h-1]);
+	if($dep == 0) 
+		if($text_to_explode[0]==="Nouveauté" || ($text_to_explode[0]=="Prix promo"))
+			$dep=1;
+	
+	
+	if((($size = sizeof($text_to_explode)) > 1) && ($size > 5)) {
+		$rtn = [$associative_list[2]=>$text_to_explode[$dep],
+					$associative_list[3]=>$text_to_explode[$h-1],
+					$associative_list[8]=>$text_to_explode[$size-1]
+		];
+		return $rtn;
+	} // $size == 5n 'Afficher le Prix' is present' -> products dont load correctly
 	return $rtn;
 }
 
@@ -223,6 +237,7 @@ function extract_info_for_all_products_a($prods,int $nb_prods) : array {
 	$rtn = array();
 
 	$associative_list = [
+		"info",
 		"reviewCount",
 		"label",
 		"quantity",
@@ -259,20 +274,26 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 		try {
 			$cpt = 1;
 			$driver->get($url); //OOKKKKKKKKK//
-			while(count($driver->findElements(WebDriverBy::className('editorial__block-title'))) != 0) {
+			while((count($driver->findElements(WebDriverBy::className('editorial__block-title'))) != 0) && ($cpt < 5)) {
 				$cpt++;
 				sleep(1); // NO DDOS HERE :-)
 				$driver->get($url);
+			}
+			if($cpt >= 5) {
+				$driver->quit();
+				return "";
 			}
 			$res_find = array("","");
 			$res_find = findElement_a($driver,"id","onetrust-reject-all-handler",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
 
+			echo "AUCHA1:".$res_find[1]."\n";
 			$res_find = findElement_a($driver,"class","header-search__input",$res_find[1]);
 			if($res_find[0]!=="") {
 				$res_find[0]->sendKeys($target);
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
+			echo "AUCHA2:".$res_find[1]."\n";
 			$res_find =  findElement_a($driver,"xpath","/html/body/div[3]/div[2]/div[2]/div[4]/article[1]/div[2]/footer/button",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -283,9 +304,12 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
+			echo "AUCHA3:".$res_find[1]."\n";
 			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
 
+			echo "AUCHA4:".$res_find[1]."\n";
+			sleep(2);
 			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -296,10 +320,12 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
+			echo "AUCHA5:".$res_find[1]."\n";
 			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
 			sleep(4);
+			echo "AUCHA6:".$res_find[1]."\n";
 			$driver->executeScript('window.scrollTo(0,200);');
 			$error = $res_find[1];
 			$src = $driver->getPageSource();
@@ -342,7 +368,6 @@ function content_scrap_auchan(string $target_product, string $town, int $p) : ar
 		$sub = substr($file_content,strpos($file_content,$config_mark)+strlen($config_mark));
 		$end = strpos($sub,"};");
 		$infos = substr($sub,0,$end);
-		var_dump($infos);
 		$infos_page = substr($infos,0,strpos($infos,"},")) . "}}";
 		$pages = json_decode($infos_page,true)["page"];
 		$nb_page = $pages["numberOfPages"];
@@ -365,6 +390,7 @@ function content_scrap_auchan(string $target_product, string $town, int $p) : ar
 				$nb_prod = $pages_["limit"];
 			$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
 			//var_dump(extract_info_for_all_products_a($produits,$nb_prod));
+			//echo "nb_prod : $nb_prod";
 			$prods = array_merge($prods,extract_info_for_all_products_a($produits,$nb_prod));
 			if($i < $nb_page) {
 				$driver->findElements(WebDriverBy::className('next'))[0]->click();
