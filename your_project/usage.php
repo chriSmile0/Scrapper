@@ -196,8 +196,11 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 	else if($ens === "L") { // NO GECKODRIVER
 		$content = content_scrap_leclerc($scrapper_usage[0],$scrapper_usage[1]);
 	}
-	else {	// PUPPETEER
+	else if($ens === "S") {	// PUPPETEER
 		$content = content_scrap_systemeu($scrapper_usage[0],$scrapper_usage[1]);
+	}
+	else { // UNKNOWN 
+		$content = "";
 	}
 	$rtn = (check_scrapper_return($content)==-1) ? "" : json_encode($content);
 	if($rtn !== "")
@@ -299,8 +302,9 @@ function main_u($argc, $argv) {
 main_u($argc,$argv);
 //var_dump(globals_execs($scrappers_usages_min_l));
 //var_dump(use_content_scrapper_auchan("Saumon","Paris",4444));
-//var_dump(use_content_scrapper_leclerc("Lardons","Voglans"));
+//var_dump(use_content_scrapper_leclerc("Saumon","Voglans"));
 //var_dump(use_content_scrapper_carrefour("Saumon fume","Paris",4444));
 //var_dump(use_content_scrapper_intermarche("Saumon","Paris",4444));
-//var_dump(use_content_scrapper_monoprix("Lardons",4444));
+//var_dump(use_content_scrapper_monoprix("Saumon",4444));
+//var_dump(use_content_scrapper_systemeu("Lardons","Toulouse"));
 ?>
