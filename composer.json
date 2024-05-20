@@ -1,6 +1,6 @@
 {
 	"description": "Scrapping French 'Drive' Supermarket wWbsite",
-	"license": "",
+	"license": "MIT",
 	"name": "chrismile0/scrapper",
 	"autoload": {
         "psr-4": {
