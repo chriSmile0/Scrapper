@@ -9,6 +9,7 @@ use function ChriSmile0\Scrapper\content_scrap_leclerc;
 use function ChriSmile0\Scrapper\content_scrap_intermarche;
 use function ChriSmile0\Scrapper\content_scrap_monoprix;
 use function ChriSmile0\Scrapper\content_scrap_systemeu;
+use function ChriSmile0\Scrapper\new_version;
 require_once('../vendor/autoload.php');
 
 function use_scrapper(string $url, bool $with_js) { // OK 
@@ -301,10 +302,10 @@ function main_u($argc, $argv) {
 //echo json_encode(globals_execs($scrappers_usages_min_ca));
 main_u($argc,$argv);
 //var_dump(globals_execs($scrappers_usages_min_l));
-//var_dump(use_content_scrapper_auchan("Saumon","Paris",4444));
-//var_dump(use_content_scrapper_leclerc("Saumon","Voglans"));
-//var_dump(use_content_scrapper_carrefour("Saumon fume","Paris",4444));
-//var_dump(use_content_scrapper_intermarche("Saumon","Paris",4444));
+//var_dump(use_content_scrapper_auchan("Lardons","Paris",4444));
+//var_dump(use_content_scrapper_leclerc("Saumon","Annecy"));
+//var_dump(use_content_scrapper_carrefour("Lardons fume","Paris",4444));
+//var_dump(use_content_scrapper_intermarche("Lardons","Paris",4444));
 //var_dump(use_content_scrapper_monoprix("Saumon",4444));
-//var_dump(use_content_scrapper_systemeu("Lardons","Toulouse"));
+//var_dump(use_content_scrapper_systemeu("Lardons","Paris"));
 ?>

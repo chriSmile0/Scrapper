@@ -2,7 +2,6 @@
 
 // URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
-// UPDATE OF 13/02 
 // For document file 
 /**
  * Short description for file
@@ -67,93 +66,20 @@ function get_global(string $choice) {
 	return $GLOBALS[$choice];
 }
 
-function change_quantity_l(string $libelle) : string  {
-	echo $libelle;
-	$libelle = strtolower($libelle);
-	/*$pos_g = strpos($str,"g");
-	if($pos_g > 0) {
-		if(!is_numeric($str[$pos_g-1]))
-			return $str;
-		$i = $pos_g-1;
-		$gramms = "";
-		$x_f = false;
-		$res = "";
-		echo $i;
-		while(($i >= 0) && (($x_f=($str[$i]!="x")) && $str[$i]!=" ")) {
-			$gramms = $str[$i] . $gramms;
-			echo $str[$i];
-			$i--;
+function extract_brand_l(string $label) : string {
+	preg_match('![A-Z][0-9a-zA-Z-]+.aspx!',$label,$matches);
+	$size = sizeof($matches);
+	if($size > 0) {
+		preg_match_all('/(?:[A-Z]\w+)/',$matches[0],$matches2);
+		$size2 = (sizeof($matches2)>0) ? sizeof($matches2[0]) : 0;
+		if($size2 > 1) {
+			return implode(" ",array_slice($matches2[0],1));
 		}
-		if($x_f == false) {
-			$i--;
-			$mu = "";
-			while($i >= 0 && ($str[$i]>="0" && ($str[$i]<="9"))) {
-				$mu = $str[$i].$mu;
-				$i--;
-			}
-			$mul = intval($mu);
-			$q = intval($gramms);
-			$res = $mu."x".$q."g"."-".($mul*$q)."g";
-		}
-		else {
-			$res = $gramms."g";
-		}
-		$rt = substr($str,0,$i+1).$res;
-		return $rt;
-	}*/
-	/*$idx_t = strpos($libelle," - ");
-	preg_match_all('!\d+(?:\.\d{1,2})?!',$libelle,$matches);
-	//var_dump($matches[0]);
-	$unity = (strpos($libelle," kg"));
-	if($unity === FALSE)
-		$unity = "g";
-	else 
-		$unity = "kg";
-	$size_m = sizeof($matches[0]);
+	}
+	return "";
+}
 
-	if($idx_t !== FALSE) {
-		$total = substr($libelle,$idx_t);
-		echo "total : $total \n";
-		preg_match_all('!\d+(?:\.\d{1,2})?!', $total, $matches2);
-		$size_t = sizeof($matches2[0]);
-		var_dump($matches2[0]);
-		var_dump($matches[0]);
-		$rt = substr($libelle,0,$idx_t)." ";
-		if($size_t == 1) {
-			//$unity_div = $unity;
-			//$div = intval($matches[0][1]/$matches2[0][0]);
-			//if(($unity == "kg") && ($div *= 1000)) {
-			//	if($div < 1000) {
-			//		$unity_div = "g";
-			//	}
-			//}
-			//return $rt . $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
-			echo "hore \n";
-			return $rt . $matches2[0][0].$unity;
-		}
-		if($size_t == 2) {
-			//echo $libelle;
-			//var_dump($matches2);
-			echo "here \n";
-			return $rt . $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches2[0][0]*$matches2[0][1].$unity;
-		}
-	}
-	$size_m = sizeof($matches[0]);
-	if($size_m == 0)
-		return $libelle;
-	$rt = substr($libelle,0,strpos($libelle,$matches[0][0]));
-	if($size_m == 1) {
-		return $rt . $matches[0][0].$unity;
-	}
-	else if($size_m == 2) {
-		$unity_u = $unity;
-		if(($unity == "kg") && ($matches[0][1] < 1)) {
-			$unity_u = "g";
-			$matches[0][1] *= 1000;
-		}
-		return $rt . $matches[0][0]."x".$matches[0][1].$unity_u."-".($matches[0][0]*$matches[0][1]).$unity_u;
-	}
-	//return $libelle;*/
+function change_quantity_l(string $libelle) : string  {
 	$libelle = strtolower($libelle);
 	$i = 0;
 	$s_l = strlen($libelle);
@@ -164,8 +90,7 @@ function change_quantity_l(string $libelle) : string  {
 			$i++;
 		}
 	}
-
-
+	
 	$wanted = substr($libelle,$i);
 	preg_match_all("/[x|^-]*[0-9]+[x|g|t| |,]{1}/",$libelle,$matches);
 	$str = implode(" ",$matches[0]);
@@ -220,7 +145,6 @@ function change_quantity_l(string $libelle) : string  {
 */
 function research_city_in_JSON(string $file_path, string $city) : string  {
 	$file_content = file_get_contents($file_path);
-	//DECODE
 	$arr = json_decode($file_content,true);
 	$found = array();
 	foreach($arr as $k => $v) {
@@ -346,7 +270,7 @@ function extract_needed_information(array $product_sheet, array $extract_list) :
 	$product_sheet["sLibelleLigne1"] = change_quantity_l($product_sheet["sLibelleLigne1"]);
 	foreach($extract_list as $e_l) 
 		$rtn = array_merge($rtn,[$e_l=>$product_sheet[$e_l]]);
-
+	$rtn = array_merge($rtn,["brand"=>extract_brand_l($product_sheet["sUrlPageProduit"])]);
 	return $rtn;
 }
 
@@ -436,9 +360,6 @@ $universal_URL_END = "/recherche.aspx?TexteRecherche=";
 $search = "Lardons";
 $city_choice = "";//ARGV2;
 //var_dump(content_scrap_leclerc($search,"Voglans"));// -> UnComment for test :-)
-
-//echo change_quantity_l("Lardons supérieurs Tradilège");
-//echo change_quantity_l("Lardons supérieurs 200g");
 /**
  * [BRIEF]	
  * @param	

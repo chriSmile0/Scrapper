@@ -1,4 +1,6 @@
 <?php 
+//********************************** DATADOME NOW ****************************//
+
 ## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
 // For document file 
 /**
@@ -50,14 +52,12 @@ namespace ChriSmile0\Scrapper;
 use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
-use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
-use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 function change_quantity_i(string $libelle, $kg_price, $price) : string  {
 	preg_match_all('!\d+(?:\.\d{1,2})?!', $libelle, $matches);
@@ -69,19 +69,15 @@ function change_quantity_i(string $libelle, $kg_price, $price) : string  {
 		$g_ = strpos($libelle," g");
 		$unity = "g";
 		if($g_ === FALSE) {
-			//echo "faux \n";
 			$s_lib = strlen($libelle);
 			while(($i+1 < $s_lib) && ($f=!(is_numeric($libelle[$i]) && ($libelle[$i+1]=='g'))))
 				$i++;
-			//var_dump($f);
 			$unity = ($f === FALSE) ? "g" : "";
 		}
 	}
 	else {
 		$unity = "kg";
 	}
-	//echo "lib : $libelle \n";
-	//echo "u :  $unity\n";
 	if($idx_t !== FALSE) {
 		$total = substr($libelle,0,$idx_t);
 		preg_match_all('!\d+(?:\.\d{1,2})?!', $total, $matches2);
@@ -97,8 +93,6 @@ function change_quantity_i(string $libelle, $kg_price, $price) : string  {
 			return $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
 		}
 		else if($size_t == 2) {
-			//echo $libelle;
-			//var_dump($matches2);
 			return $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches[0][2].$unity;
 		}
 	}
@@ -106,26 +100,12 @@ function change_quantity_i(string $libelle, $kg_price, $price) : string  {
 	if($size_m == 1) {
 		if($unity === "") {
 			$div = intval($kg_price/$price)*10;
-			//echo "prix : $price\n";
-			//var_dump($kg_price/$price);
 			$unity_d = ($div < 1) ? "g" : "kg";
 			return $matches[0][0]."x".(intval($div/$matches[0][0])).$unity_d."-".($div)."g";
 		}
 		return $matches[0][0].$unity;
 	}
-	/*else if($size_m == 2) {
-		return $matches[0][0]."x".($matches[0][1]).$unity."-".(intval($matches[0][0]*$matches[0][1]))."g";
-	}*/
 	return $libelle;
-	/*if($size_m == 1) 
-		return $matches[0][0].$unity;
-	else if($size_m == 2) {
-		//return $matches[0][0]."x".($matches[0]$matches[0][1].$unity."-".($matches[0][1]).$unity;
-	}
-	else if($size_m == 3)
-		return $matches[0][0]."x".$matches[0][1].$unity."-".$matches[0][2].$unity;
-	else 
-		return $libelle;*/
 }
 
 
@@ -152,23 +132,6 @@ function generate_driver_i(int $p) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
 	}
-
-	//------------FirefoxDriver, geckodriver directly on this process--------//
-	// in `` the command to launch in kill -s kill command !!
-	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->setProfile(new FirefoxProfile());
-	$capabilities = DesiredCapabilities::firefox();
-	//$firefoxOptions->addArguments(['--headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-	try {
-		return FirefoxDriver::start($capabilities);
-	}
-	catch (Exception $e) {
-		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;//FirefoxDriver::start($capabilities);
-	}*/
 }
 
 /**
@@ -285,7 +248,11 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 
 			echo "INTER2:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"class","selectAddressForStore__search",$res_find[1]);
-			if($res_find[0]!=="") $res_find[0]->findElement(WebDriverBy::tagName('input'))->sendKeys($town);			
+			if($res_find[0]!=="") $res_find[0]->findElement(WebDriverBy::tagName('input'))->sendKeys($town);
+			
+			sleep(3);
+			$res_find = findElement_i($driver,"xpath","//*[@id=\"didomi-popup\"]/div/div/div/span",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->click();
 			
 			echo "INTER3:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"classes","selectAddressForStore__suggestion",$res_find[1]);
@@ -655,6 +622,7 @@ function main_i($argc, $argv) : bool {
 //var_dump(content_scrap_intermarche("https://www.intermarche.com/","lardons","Paris"));
 //main_i($argc,$argv);
 //var_dump(content_scrap_intermarche("https://www.intermarche.com/","Lardons","Paris"));
+
 /**
  * [BRIEF]	
  * @param	

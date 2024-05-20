@@ -46,22 +46,22 @@ namespace ChriSmile0\Scrapper;
 use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
-use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
-use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
+function extract_brand_c(string $title) : string {
+	preg_match_all('/[A-Z][A-Z]+/',$title,$matches2);
+	return implode(" ",$matches2[0]);
+}
 
 function change_quantity_c($libelle)  { 
 	if($libelle === NULL)
 		return NULL;
-	//echo $libelle;
 	$idx_t = strpos($libelle," - ");
 	preg_match_all('!\d+(?:\.\d{1,2})?!',$libelle,$matches);
-	//var_dump($matches[0]);
 	$unity = (strpos($libelle," kg"));
 	if($unity === FALSE)
 		$unity = "g";
@@ -84,8 +84,6 @@ function change_quantity_c($libelle)  {
 			return $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
 		}
 		else if($size_t == 2) {
-			//echo $libelle;
-			//var_dump($matches2);
 			return $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches[0][2].$unity;
 		}
 	}
@@ -128,23 +126,8 @@ function generate_driver_c(int $p) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
 	}
-
-	//------------FirefoxDriver, geckodriver directly on this process--------//
-	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);*/
-	/*$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->setProfile(new FirefoxProfile());
-	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['--headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-	try {
-		return FirefoxDriver::start($capabilities);
-	}
-	catch (Exception $e) {
-		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;
-	}*/
 }
+
 /**
  * [BRIEF]	Find element function simplification
  * 
@@ -218,7 +201,6 @@ function findElement_c($driver, string $type, string $path, string $error, strin
 				break;
 		}
 	}
-	//var_dump($error);
 	return [$elem,$error];
 }
 
@@ -239,11 +221,10 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 	if($driver !== NULL) {
 		try {
 			$cpt = 1;
-			$driver->get($url); //OOKKKKKKKKK//
+			$driver->get($url);
 			while((count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) != 0) && ($cpt < 5)) {
 				echo $driver->getCurrentURL();
 				$driver->takeScreenshot('image1'.$cpt.'.png');
-				//$driver->wai
 				echo "The title is '" . $driver->getTitle() . "'\n";
 				$cpt++;
 				sleep(1); // NO DDOS HERE :-)
@@ -254,8 +235,7 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 				return "";
 			}
 			$res_find = array("","");
-			//while(count($driver->findElements(WebDriverBy::className('error-block--404__visual'))) == 0);
-			//var_dump($v);
+			sleep(4);
 			$res_find = findElement_c($driver,"xpath","//*[@id=\"onetrust-reject-all-handler\"]",$res_find[1]); // click option
 			if($res_find[0]!=="") $res_find[0]->click();
 			///html/body/div[1]/main/section/div/div[1]/div[2]/div/div/ul/li[1]/button
@@ -287,16 +267,12 @@ function extract_source_carrefour(string $url,$driver,string $city, string $targ
 				$src = $driver->getPageSource();
 				//$driver->manage()->deleteAllCookies();
 				$error = "NO";
-				//echo "src: $src\n";
 				return $src;
 			}
 			else {
 				$error = $res_find[1];
 				$driver->quit();
 			}
-			echo "error : $error \n";
-			//var_dump($res_find[1]);
-			//$driver->quit();
 		}
 		catch (Exception $e) {
 			echo $e->getMessage();
@@ -439,6 +415,7 @@ function extract_needed_information_pro_c(array $json, array $needed_key) : arra
 	$rtn = array();
 	$sub_json_needed = $json["attributes"];
 	$sub_json_needed["packaging"] = change_quantity_c($sub_json_needed["packaging"]);
+	$sub_json_needed["brand"] = extract_brand_c($sub_json_needed["title"]);
 	foreach($needed_key as $k=>$value) {
 		if(strcmp($k,"offers")==0)
 			continue;

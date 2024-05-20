@@ -41,15 +41,19 @@ namespace ChriSmile0\Scrapper;
 use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
-use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
-use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
+
+function extract_brand_a(string $label) : string {
+	preg_match('/[A-Z|&|,| ]+/',$label,$matches);
+	preg_match_all('/[A-Z][A-Z]+/',$matches[0],$matches2);
+	return implode(" ",$matches2[0]);
+}
 
 function change_quantity_a(string $libelle) : string  { 
 	preg_match_all('!\d+(?:\.\d{1,2})?!', $libelle, $matches);
@@ -86,22 +90,6 @@ function generate_driver_a(int $p) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
 	}
-
-	//------------FirefoxDriver, geckodriver directly on this process--------//
-	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->setProfile(new FirefoxProfile());
-	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['--headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-	try {
-		return FirefoxDriver::start($capabilities);
-	}
-	catch (Exception $e) {
-		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;
-	}*/
 }
 
 /**
@@ -177,7 +165,6 @@ function findElement_a($driver, string $type, string $path, string $error, strin
 				break;
 		}
 	}
-	//var_dump($error);
 	return [$elem,$error];
 }
 
@@ -206,17 +193,18 @@ function text_to_associative_array(string $get_text, array $associative_list,
 			break;
 		$h++;
 	}
-	//var_dump($text_to_explode[$h-3]."|".$text_to_explode[$h-2]."|".$text_to_explode[$h-1]);
 	$text_to_explode[$h-1] = change_quantity_a($text_to_explode[$h-1]);
 	if($dep == 0) 
-		if($text_to_explode[0]==="Nouveauté" || ($text_to_explode[0]=="Prix promo"))
+		if($text_to_explode[0]==="Nouveauté" || ($text_to_explode[0]=="Prix promo")
+			|| (str_contains($text_to_explode[0],"supp au panier")))
 			$dep=1;
 	
 	
 	if((($size = sizeof($text_to_explode)) > 1) && ($size > 5)) {
 		$rtn = [$associative_list[2]=>$text_to_explode[$dep],
-					$associative_list[3]=>$text_to_explode[$h-1],
-					$associative_list[8]=>$text_to_explode[$size-1]
+					$associative_list[3]=>extract_brand_a($text_to_explode[$dep]),
+					$associative_list[4]=>$text_to_explode[$h-1],
+					$associative_list[9]=>substr($text_to_explode[$size-1],0,strpos($text_to_explode[$size-1],"€"))
 		];
 		return $rtn;
 	} // $size == 5n 'Afficher le Prix' is present' -> products dont load correctly
@@ -240,6 +228,7 @@ function extract_info_for_all_products_a($prods,int $nb_prods) : array {
 		"info",
 		"reviewCount",
 		"label",
+		"brand",
 		"quantity",
 		"pricePerKg",
 		"promoOffer",
@@ -273,7 +262,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 	if($driver !== NULL) {
 		try {
 			$cpt = 1;
-			$driver->get($url); //OOKKKKKKKKK//
+			$driver->get($url); 
 			while((count($driver->findElements(WebDriverBy::className('editorial__block-title'))) != 0) && ($cpt < 5)) {
 				$cpt++;
 				sleep(1); // NO DDOS HERE :-)
@@ -294,6 +283,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
 			echo "AUCHA2:".$res_find[1]."\n";
+			sleep(5);
 			$res_find =  findElement_a($driver,"xpath","/html/body/div[3]/div[2]/div[2]/div[4]/article[1]/div[2]/footer/button",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -334,7 +324,6 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 			$error = $e->getMessage();
 		}
 	}
-	var_dump($error);
 	if($error !== "") {
 		$driver->quit();
 		return array();
@@ -374,7 +363,6 @@ function content_scrap_auchan(string $target_product, string $town, int $p) : ar
 		$cur_page = $pages["currentPage"];
 		for($i = $cur_page ; $i < $nb_page+1; $i++) {
 			$src_ = $driver->getPageSource();
-			//var_dump(extract_source_auchan($new_url.$i,$driver,$town,$target_product));
 			$config_mark_2 = "G.configuration.searchPages.trackingObject = ";
 			$sub_ = substr($src_,strpos($src_,$config_mark_2)+strlen($config_mark_2));
 			$end_ = strpos($sub_,"};");
@@ -389,8 +377,6 @@ function content_scrap_auchan(string $target_product, string $town, int $p) : ar
 			else 
 				$nb_prod = $pages_["limit"];
 			$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
-			//var_dump(extract_info_for_all_products_a($produits,$nb_prod));
-			//echo "nb_prod : $nb_prod";
 			$prods = array_merge($prods,extract_info_for_all_products_a($produits,$nb_prod));
 			if($i < $nb_page) {
 				$driver->findElements(WebDriverBy::className('next'))[0]->click();

@@ -43,12 +43,10 @@ use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
-use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
-use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
-function change_quantity_m(string $libelle) : string  { 
+function change_quantity_m(string $libelle) : string { 
 	$libelle = strtolower($libelle);
 	$i = 0;
 	$s_l = strlen($libelle);
@@ -89,6 +87,8 @@ function change_quantity_m(string $libelle) : string  {
 		$i_m = $j-1;
 	
 	if($i_m != -1) {
+		if($i_u == -1)
+			return $libelle;
 		$rtn = $matches2[0][$i_m]."x".$matches2[0][$i_u]."g-".(intval($matches2[0][$i_m])*intval($matches2[0][$i_u]))."g";
 		$len_wanted = strlen($wanted);
 		$t = substr($libelle,0,$i) . " - " .$rtn . substr($libelle,$i+$len_wanted);
@@ -120,22 +120,6 @@ function generate_driver_m(int $p) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
 	}
-
-	//------------FirefoxDriver, geckodriver directly on this process--------//
-	/*shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->setProfile(new FirefoxProfile());
-	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions->addArguments(['--headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-	try {
-		return FirefoxDriver::start($capabilities);
-	}
-	catch (Exception $e) {
-		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;
-	}*/
 }
 
 /**
@@ -387,13 +371,11 @@ function main_m($argc, $argv) : bool {
 }
 //main_m($argc,$argv);
 //var_dump(content_scrap_monoprix("https://courses.monoprix.fr/products/search?q=","lardons"));
-/*$host = 'http://localhost:4444/';
-
-	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->addArguments(['-headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-
-	$driver = RemoteWebDriver::create($host, $capabilities);*/
-
+/**
+ * [BRIEF]	
+ * @param	
+ * @example	
+ * @author	
+ * @return	
+*/
 ?>

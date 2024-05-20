@@ -1,6 +1,6 @@
 {
-	"description": "scrapping of http(s) file",
-	"license": "proprietary",
+	"description": "Scrapping French 'Drive' Supermarket wWbsite",
+	"license": "",
 	"name": "chrismile0/scrapper",
 	"autoload": {
         "psr-4": {
@@ -21,5 +21,4 @@
 	"require": {
 		"php-webdriver/webdriver": "^1.13"
 	}
-
 }

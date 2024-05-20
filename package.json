@@ -1,8 +1,15 @@
 {
   "dependencies": {
-    "puppeteer": "^21.7.0",
+    "chromedriver": "^123.0.4",
+    "puppeteer": "^22.6.5",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-adblocker": "^2.13.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "selenium-stealth": "^1.0.1",
+    "selenium-webdriver": "^4.20.0",
+    "geckodriver":"4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7"
   }
 }
