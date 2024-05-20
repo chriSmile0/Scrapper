@@ -39,7 +39,7 @@ puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
 
 async function scrape(url,town,product) {
   // -- ERROR BOT DETECTION AFTER MANY GOOD TRY WITH THIS SEQUENCE OF INSTRUCTIONS -- //
-  const browser = await puppeteer.launch({headless: true});
+  const browser = await puppeteer.launch({headless: 'new'});
   const page = await browser.newPage();
   await page.goto(url);
   const url_ = await page.url();
@@ -50,13 +50,14 @@ async function scrape(url,town,product) {
   console.log(dD);
   if(dD != -1) {
     console.log("DataDome activate");
-    break_js.loadedBrk(page,url,'#captcha__puzzle','.slider',"canva_rd.png","screen_su.png");
+    //break_js.loadedBrk(page,url,'#captcha__puzzle','.slider',"canva_rd.png","screen_su.png");
   }
   else {
     console.log("No DataDome");
   }
   // -----------------------NO DETECTION BOT USAGE (15 hit OK) ----------------------------// 
-  await page.waitForTimeout(2000);
+  //await page.waitForTimeout(2000);
+  await page.screenshot({path:'screen_home_su.png'});
   await page.waitForSelector('#popin_tc_privacy_button_2');
   await page.click('#popin_tc_privacy_button_2');
   // -----------------------NO DETECTION BOT USAGE (15 hit OK)----------------------------// 
@@ -129,7 +130,6 @@ async function scrape(url,town,product) {
   await browser.close();
 }
 url = "https://www.coursesu.com/drive/home";
-//url_t = "http://localhost/tests_htmls/sliders/slider.html";
 town = argv[2];
 product = argv[3];
 scrape(url,town,product);

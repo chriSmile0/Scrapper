@@ -1,5 +1,25 @@
 # Scrapper 
 
+## STATUS [PENDING]
+
+## UPDATE 05/20/2024
+**At this time `Intermarche`,`SystemeU` and `Leclerc` use `Datadome` protection**
+- `Intermarche` -> Impossible for me to bypass the new version of Datadome -> Target waiting 
+- `SystemeU` -> Bypass the old version of Datadome in this website
+- `Leclerc` -> Bypass OK
+
+## PRESHOT 2024 TARGET EVOLUTION 
+- `SystemeU` -> Update the version of the DataDome Solution
+- `Auchan` and `Carrefour` add DataDome Solution
+- `Monoprix` no protection
+- `Leclerc` need to rebuild the pathing of the website to use correctly the DataDome solution
+
+## PRESHOT 2024 TOOL EVOLUTION
+- `php-webdriver` -> Maybe Deprecated soon for WebScraping 
+- `puppeteer` -> need more update for hide the headless mode (waiting)
+- `playwright` -> microsoft tool (Ubuntu 20.* or newer)
+- `selenium` -> next test for scrapping target (Famous tool)
+
 ## Disclaimer 
 - **_This tool is not for collect personal information_**
 - Please respect the [RGPDs rules](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016R0679)
@@ -11,7 +31,7 @@ It's possible to look the content of a website pages with the browser with this 
 - `CRTL+MAJ+I` for web inspector -> Console, possibility to change the display conten
 
 Or with special library and framework like : 
-- Selenium (PHP)
+- Selenium (Python,...)
 - Goutte (Symfony)
 - Scrapy (Python)
 
@@ -25,8 +45,6 @@ Or API :
 - With [puppeteer](https://github.com/puppeteer/puppeteer)
 - With [puppeteer-extra](https://github.com/berstend/puppeteer-extra)
 
-
-
 ## Why 
 - For my project **PriceComparator**
 - Developpement of your own tools is important to understand and learn many things.
@@ -36,36 +54,31 @@ Or API :
 <summary>Paths</summary>
 <pre>
 dev
-├── JSON_updates.php
-└── copy_all_leclerc.html
+├── copy_all_leclerc.html
+└── JSON_updates.php
 project
-├── project.php
-└── infos_programs.php
+├── infos_programs.php
+└── project.php
 src
-├── test_rq_submod.js
-├── test_extra_puppeteer.js
-├── scrapper_systemeu.php
-├── scrapper.php
-├── scrapper_monoprix.php
-├── scrapper_leclerc.php
-├── scrapper_intermarche.php
-├── scrapper_carrefour.php
-├── scrapper_auchan.php
-├── scrape_su.js
+├── control_google_.js
+├── DatadomeBreaker/
+├── libJSON/
 ├── scrape.js
-├── products_su.txt
-├── libJSON
-│   └── leclercs.json
-└── DatadomeBreaker
-    ├── screen_deps
-    ├── README.md
-    ├── package.json
-    ├── outs
-    ├── canvas_lib
-    └── break.js
+├── scrape_su.js
+├── scrapper_auchan.php
+├── scrapper_carrefour.php
+├── scrapper_intermarche.php
+├── scrapper_leclerc.php
+├── scrapper_monoprix.php
+├── scrapper.php
+├── scrapper_systemeu.php
+├── test_extra_puppeteer.js
+└── test_rq_submod.js
 your_project
+├── process_p.php
+├── proofs/
 ├── README.md
-└── example.php
+└── usage.php
 composer.json
 package.json
 README.md
@@ -82,7 +95,7 @@ README.md
 ### LIKE A PROJECT : 
 - `composer require php-webdriver/php-webdriver`
 - `project.php` for known how the different tools works
-- `src/scrapper*.php` the differents files for scraping mission
+- `scrapper*.php` the differents files for scraping mission
 - `vendor` add lib for php-webdriver 
 - `node_modules(hide with .gitignore)` for node.js module 
 - `*.json/*.txt` for different test to build program to efficient scraping 
@@ -91,7 +104,7 @@ README.md
 
 ## Version 
 
-### V1.2
+### V1.4.1
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -119,14 +132,14 @@ README.md
       - [x] usage of `puppeteer` or `php-webdriver` is possible
       - [x] products for all stores in the target country
       - [ ] NoBot Solutions
-    - [Intermaché](https://www.intermarche.com) :
+    - [Intermaché](https://www.intermarche.com) [**BLOCKED**] :
       - [x] parse specific JS -> json 
       - [x] usage of `php-webdriver`
-      - [ ] NoBot Solutions 
-    - [Systeme_U](https://www.magasins-u.com) :  
+      - [x] NoBot Solutions -> **DataDome** Solution -> `NEW_VERSION`
+    - [SystemeU](https://www.magasins-u.com) [**UPDATE SOON FOR NEW PUPPETEER VERSION**]:  
       - [x] parse specific JS -> json (products only on the display page)
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
-      - [x] NoBot Solutions -> **DataDome** Solution
+      - [x] NoBot Solutions -> **DataDome** Solution -> `OLD VERSION`
       - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
  
 

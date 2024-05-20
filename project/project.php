@@ -1,6 +1,6 @@
 <?php  
 require_once('infos_programs.php');
-$version = "1.0";
+$version = "1.4";
 $programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
 				"scrapper_intermarche.php","scrapper_auchan.php",
 				"scrapper_monoprix.php", "scrapper_systemeu.php"
@@ -82,7 +82,8 @@ function print_help() {
 */
 function print_version() {
 	echo "Version of Scrapping program : ". $GLOBALS["version"] ."\n";
-	echo "Copyright @-2024 [:chriSmile0:] \n";
+	$dt = new DateTime("now", new DateTimeZone('America/New_York'));
+	echo "Copyright @-".$dt->format('Y')." [:chriSmile0:] \n";
 }
 
 /**
@@ -115,5 +116,5 @@ function main($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
-//main($argc,$argv);
+main($argc,$argv);
 ?>

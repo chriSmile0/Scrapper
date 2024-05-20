@@ -1,4 +1,6 @@
 <?php 
+//********************************** DATADOME NOW ****************************//
+
 ## USAGE -> launch geckodriver (sudo snap install firefox -> >$geckodriver)
 // For document file 
 /**
@@ -50,8 +52,6 @@ namespace ChriSmile0\Scrapper;
 use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
-use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
-use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
@@ -59,19 +59,67 @@ use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 require __DIR__ . '/../../../autoload.php'; // EXPORT 
 //require __DIR__ . '/../vendor/autoload.php'; // DEV
 
+function change_quantity_i(string $libelle, $kg_price, $price) : string  {
+	preg_match_all('!\d+(?:\.\d{1,2})?!', $libelle, $matches);
+	$unity = (strpos($libelle,"kg"));
+	$idx_t = strpos($libelle," - ");
+	$total = "";
+	if($unity === FALSE) {
+		$i = 0;
+		$g_ = strpos($libelle," g");
+		$unity = "g";
+		if($g_ === FALSE) {
+			$s_lib = strlen($libelle);
+			while(($i+1 < $s_lib) && ($f=!(is_numeric($libelle[$i]) && ($libelle[$i+1]=='g'))))
+				$i++;
+			$unity = ($f === FALSE) ? "g" : "";
+		}
+	}
+	else {
+		$unity = "kg";
+	}
+	if($idx_t !== FALSE) {
+		$total = substr($libelle,0,$idx_t);
+		preg_match_all('!\d+(?:\.\d{1,2})?!', $total, $matches2);
+		$size_t = sizeof($matches2[0]);
+		if($size_t == 1) {
+			$unity_div = $unity;
+			$div = intval($matches[0][1]/$matches2[0][0]);
+			if(($unity == "kg") && ($div *= 1000)) {
+				if($div < 1000) {
+					$unity_div = "g";
+				}
+			}
+			return $matches2[0][0]."x".($div).$unity_div."-".$matches[0][1].$unity_div;
+		}
+		else if($size_t == 2) {
+			return $matches2[0][0]."x".($matches2[0][1]).$unity."-".$matches[0][2].$unity;
+		}
+	}
+	$size_m = sizeof($matches[0]);
+	if($size_m == 1) {
+		if($unity === "") {
+			$div = intval($kg_price/$price)*10;
+			$unity_d = ($div < 1) ? "g" : "kg";
+			return $matches[0][0]."x".(intval($div/$matches[0][0])).$unity_d."-".($div)."g";
+		}
+		return $matches[0][0].$unity;
+	}
+	return $libelle;
+}
 
 
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @param 	void 
+ * @param 	int	$p	port
  * @example	generate_driver_i()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_i() {
+function generate_driver_i(int $p) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	/*$host = 'http://localhost:4444/';
+	$host = 'http://localhost:'.$p.'/';
 
 	$capabilities = DesiredCapabilities::firefox();
 	$firefoxOptions = new FirefoxOptions;
@@ -83,23 +131,6 @@ function generate_driver_i() {
 	catch (Exception $e) {
 		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
 		return NULL;
-	}*/
-
-	//------------FirefoxDriver, geckodriver directly on this process--------//
-	// in `` the command to launch in kill -s kill command !!
-	shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");
-	sleep(1);
-	$firefoxOptions = new FirefoxOptions();
-	$firefoxOptions->setProfile(new FirefoxProfile());
-	$capabilities = DesiredCapabilities::firefox();
-	//$firefoxOptions->addArguments(['--headless']);
-	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
-	try {
-		return FirefoxDriver::start($capabilities);
-	}
-	catch (Exception $e) {
-		echo "ERRRRRR : ".$e->getMessage()."\n";
-		return NULL;//FirefoxDriver::start($capabilities);
 	}
 }
 
@@ -211,13 +242,19 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 			$res_find = findElement_i($driver,"xpath","//*[@id=\"didomi-popup\"]/div/div/div/span",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->click();
 			//COOKIE DISABLE -> use js for click on the button 
+			echo "INTER1:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"class","headerInteractiveV3__btn",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->click();
 
-
+			echo "INTER2:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"class","selectAddressForStore__search",$res_find[1]);
-			if($res_find[0]!=="") $res_find[0]->findElement(WebDriverBy::tagName('input'))->sendKeys($town);			
+			if($res_find[0]!=="") $res_find[0]->findElement(WebDriverBy::tagName('input'))->sendKeys($town);
 			
+			sleep(3);
+			$res_find = findElement_i($driver,"xpath","//*[@id=\"didomi-popup\"]/div/div/div/span",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->click();
+			
+			echo "INTER3:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"classes","selectAddressForStore__suggestion",$res_find[1]);
 			if($res_find[0]!=="") {
 				try {
@@ -228,15 +265,18 @@ function extract_source_intermarche(string $url,$driver, string $town, string $t
 				}
 			}
 			sleep(1);
+			echo "INTER4:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[3]/div/section/div/div[1]/div/div[2]/div[1]/div/div[4]/div/button",$res_find[1]);	
 			if($res_find[0]!=="") $res_find[0]->click();
 
+			echo "INTER5:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"class","search-input__input",$res_find[1]);
 			if($res_find[0]!=="") {
 				$res_find[0]->sendKeys($target);
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
-			
+
+			echo "INTER6:".$res_find[1]."\n";
 			$res_find = findElement_i($driver,"xpath","/html/body/div[2]/div[1]/main/div/div[2]/div[2]/div[2]/div/div[1]/div/div",$res_find[1]);
 			if($res_find[1]==="")
 				$src = $driver->getPageSource();
@@ -397,11 +437,6 @@ function parse_json_product_i(string $output_json) : array {
 	return json_decode($output_json,true);
 }
 
-$list_of_product = [
-	"lardons",
-	"oeufs"
-];
-
 
 $product_needed_key = [ // On ATTRIBUTES
 	"type" => [],
@@ -484,6 +519,7 @@ function extract_needed_information_pro_i(array $json, array $needed_key) : arra
 	$sub_info = $json["prices"]["productPrice"];
 	$rtn = array_merge($rtn,["prices"=>$sub_info]);
 	$sub_key_info = $needed_key["informations"];
+	$json["informations"]["packaging"] = change_quantity_i($json["informations"]["packaging"],$json["prices"]["unitPrice"]["value"],$sub_info["value"]);
 	$rtn = array_merge($rtn,["informations"=>[]]);
 	foreach($sub_key_info as $k=>$value)
 		$rtn["informations"] = array_merge($rtn["informations"],[$value=>$json["informations"][$value]]);
@@ -494,20 +530,17 @@ function extract_needed_information_pro_i(array $json, array $needed_key) : arra
  * [BRIEF]	The main procedure -> for include in other path 
  * 
  * @param	string 	$target_product	the target product
+ * @param 	string 	$town			the town
+ * @param 	int		$p				port
  * @example content_scrap_intermarche((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_intermarche(string $target_product, string $town) : array {
+function content_scrap_intermarche(string $target_product, string $town, int $p) : array {
 	$url = "https://www.intermarche.com/";
 	$rtn = array();
-	$driver = generate_driver_i();
+	$driver = generate_driver_i($p);
 	if($driver !== NULL) {
-		$list_of_product = [
-			"lardons",
-			"oeufs"
-		];
-		
 		
 		$product_needed_key = [ // On ATTRIBUTES
 			"type" => [],
@@ -535,7 +568,7 @@ function content_scrap_intermarche(string $target_product, string $town) : array
 			"hasNextPage",
 		];
 		$file_content = extract_source_intermarche($url,$driver,$town,$target_product);
-		$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
+		$sp_res = search_product_in_script_json_i($file_content,$target_product);
 		if(empty($sp_res)) {
 			$driver->quit();
 			return array();
@@ -551,7 +584,7 @@ function content_scrap_intermarche(string $target_product, string $town) : array
 		for($i = $next_page ; $i < $nb_page+1 ; $i++) {
 			$url_ = $new_url."?page=".$i;
 			$file_content = extract_source($url_,$driver);
-			$sp_res = search_product_in_script_json_i($file_content,$target_product,$list_of_product);
+			$sp_res = search_product_in_script_json_i($file_content,$target_product);
 			if(empty($sp_res)) {
 				$driver->quit();
 				return $rtn;
@@ -573,14 +606,14 @@ function content_scrap_intermarche(string $target_product, string $town) : array
  * 					test or if the scrapping failed 
 */
 function main_i($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_intermarche($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3]))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] [port] --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";
@@ -589,6 +622,7 @@ function main_i($argc, $argv) : bool {
 //var_dump(content_scrap_intermarche("https://www.intermarche.com/","lardons","Paris"));
 //main_i($argc,$argv);
 //var_dump(content_scrap_intermarche("https://www.intermarche.com/","Lardons","Paris"));
+
 /**
  * [BRIEF]	
  * @param	

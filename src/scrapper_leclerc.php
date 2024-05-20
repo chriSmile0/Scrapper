@@ -2,7 +2,6 @@
 
 // URL1 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/rayon-315991-Charcuteries.aspx?Filtres=4-316011"
 // URL2 = "https://fd7-courses.leclercdrive.fr/magasin-037301-037301-Voglans/recherche.aspx?TexteRecherche=lardons"
-// UPDATE OF 13/02 
 // For document file 
 /**
  * Short description for file
@@ -67,6 +66,75 @@ function get_global(string $choice) {
 	return $GLOBALS[$choice];
 }
 
+function extract_brand_l(string $label) : string {
+	preg_match('![A-Z][0-9a-zA-Z-]+.aspx!',$label,$matches);
+	$size = sizeof($matches);
+	if($size > 0) {
+		preg_match_all('/(?:[A-Z]\w+)/',$matches[0],$matches2);
+		$size2 = (sizeof($matches2)>0) ? sizeof($matches2[0]) : 0;
+		if($size2 > 1) {
+			return implode(" ",array_slice($matches2[0],1));
+		}
+	}
+	return "";
+}
+
+function change_quantity_l(string $libelle) : string  {
+	$libelle = strtolower($libelle);
+	$i = 0;
+	$s_l = strlen($libelle);
+	if(!is_numeric($libelle[$i])) {
+		while($i+1 < $s_l) {
+			if((($libelle[$i]==' ')) && (is_numeric($libelle[$i+1])))
+				break;
+			$i++;
+		}
+	}
+	
+	$wanted = substr($libelle,$i);
+	preg_match_all("/[x|^-]*[0-9]+[x|g|t| |,]{1}/",$libelle,$matches);
+	$str = implode(" ",$matches[0]);
+	preg_match_all("/[0-9]+/",$str,$matches2);
+	$siz = sizeof($matches2[0]);
+	if($siz < 2) 
+		return $libelle;
+	else {
+		if(($matches[0][0][0]=="x"))
+			return substr($libelle,0,strpos($libelle,"x")) . " ".($matches2[0][0])."x".($matches2[0][1]/$matches2[0][0])."g-".($matches2[0][1])."g";
+		if((strpos($matches[0][0],"x")===FALSE) && (strpos($matches[0][0],"g")===FALSE))
+			return $libelle;
+	
+	}
+
+	$j = 0;
+	$i_u = -1;
+	$i_m = -1;
+	$mul = "";
+	foreach($matches[0] as $elem) {
+		if(strpos($elem,"g")!==FALSE) {
+			$i_u = $j;
+
+		}
+		else if(strpos($elem,"x")!==FALSE) {
+			$i_m = $j;
+			$mul = "x";
+		}
+
+		$j++;
+	}
+
+	if(($j > 1) && ($mul == ""))
+		$i_m = $j-1;
+	
+	if($i_m != -1) {
+		$rtn = $matches2[0][$i_m]."x".$matches2[0][$i_u]."g-".(intval($matches2[0][$i_m])*intval($matches2[0][$i_u]))."g";
+		$len_wanted = strlen($wanted);
+		$t = substr($libelle,0,$i) . ($i!=0? " ": "") .$rtn . substr($libelle,$i+$len_wanted);
+		return $t;
+	}	
+	return $libelle;
+}
+
 /**
  * [BRIEF]	A function for extract the html content of the leclerc website
  * @param	string 	$url	The number of paramter in the command line execution
@@ -77,7 +145,6 @@ function get_global(string $choice) {
 */
 function research_city_in_JSON(string $file_path, string $city) : string  {
 	$file_content = file_get_contents($file_path);
-	//DECODE
 	$arr = json_decode($file_content,true);
 	$found = array();
 	foreach($arr as $k => $v) {
@@ -160,16 +227,14 @@ function all_subcontent_with_trunk(string $str, string $trunk, string $end_conte
  * @param	string	$output				datas
  * @param	string	$product			product to research in datas
  * @param	array	$list_of_product	the list of searchable product
- * @example	search_product("CDATA..sLibelleLigne1,price ...//]","lardons",["lardons"])
+ * @example	search_product("CDATA..sLibelleLigne1,price ...//]","lardons")
  * @author	chriSmile0
  * @return	array	split the data by product or empty array if product is not
  * 						in the list
 */
-function search_product(string $output, string $product, array $list_of_product) : array {
+function search_product(string $output, string $product) : array {
 	$subcontent = all_subcontent_with_trunk($output,"CDATA","//]]");
 	$last_cdata_content = array_pop($subcontent);
-	if(!in_array($product,$list_of_product))
-		return array();
 	$array_lardons = explode("sLibelleLigne1",$last_cdata_content);
 	$size = sizeof($array_lardons);
 	$index = 1;
@@ -201,9 +266,11 @@ function search_product(string $output, string $product, array $list_of_product)
 */
 function extract_needed_information(array $product_sheet, array $extract_list) : array  {
 	$rtn = array();
-	foreach($extract_list as $e_l)
+	$product_sheet["sLibelleLigne2"] = change_quantity_l($product_sheet["sLibelleLigne2"]);
+	$product_sheet["sLibelleLigne1"] = change_quantity_l($product_sheet["sLibelleLigne1"]);
+	foreach($extract_list as $e_l) 
 		$rtn = array_merge($rtn,[$e_l=>$product_sheet[$e_l]]);
-
+	$rtn = array_merge($rtn,["brand"=>extract_brand_l($product_sheet["sUrlPageProduit"])]);
 	return $rtn;
 }
 
@@ -235,14 +302,10 @@ function extract_needed_information_of_all_product(array $products, array $ex_li
 */
 function content_scrap_leclerc(string $target_product, string $city) : array {
 	$file_content = extract_data_script_leclerc($target_product,$city);
-	$list_of_product = [
-		"Lardons",
-		"Saucisse"
-	];
 	
 	$extract_list_item = [
 		"sLibelleLigne1",
-		"sLibelleLigne2",
+		"sLibelleLigne2", // quantity
 		"sPrixUnitaire",
 		"nrPVUnitaireTTC",
 		"sPrixPromo",
@@ -250,7 +313,7 @@ function content_scrap_leclerc(string $target_product, string $city) : array {
 		"nrPVParUniteDeMesureTTC",
 		"sUrlPageProduit"
 	];
-	$s_p_res = search_product($file_content,$target_product,$list_of_product);
+	$s_p_res = search_product($file_content,$target_product);
 	if(empty($s_p_res))
 		return array();
 	$all_products_find = extract_needed_information_of_all_product($s_p_res,$extract_list_item);
@@ -297,7 +360,6 @@ $universal_URL_END = "/recherche.aspx?TexteRecherche=";
 $search = "Lardons";
 $city_choice = "";//ARGV2;
 //var_dump(content_scrap_leclerc($search,"Voglans"));// -> UnComment for test :-)
-
 /**
  * [BRIEF]	
  * @param	

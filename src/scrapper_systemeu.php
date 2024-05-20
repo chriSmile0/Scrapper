@@ -39,6 +39,58 @@
 // URL1 = https://www.coursesu.com/drive/home
 namespace ChriSmile0\Scrapper;
 
+
+function change_quantity_u(string $libelle) : string { 
+	$libelle = strtolower($libelle);
+	$i = 0;
+	$s_l = strlen($libelle);
+	while($i+1 < $s_l) {
+		if((($libelle[$i]==' ')) && (is_numeric($libelle[$i+1])))
+			break;
+		$i++;
+	}
+	$wanted = substr($libelle,$i);
+	preg_match_all("/[x|^-]*[0-9]+[x|g|| |,]+/",$libelle,$matches);
+	$str = implode(" ",$matches[0]);
+	preg_match_all("/[0-9]+/",$str,$matches2);
+	$siz = sizeof($matches2[0]);
+	if($siz < 2) 
+		return $libelle;
+	else {
+		if(($matches[0][0][0]=="x"))
+			return $libelle;
+		if((strpos($matches[0][0],"x")===FALSE) && (strpos($matches[0][0],"g")===FALSE))
+			return $libelle;
+	}
+
+	$j = 0;
+	$i_u = -1;
+	$i_m = -1;
+	$mul = "";
+	foreach($matches[0] as $elem) {
+		if(strpos($elem,"g")!==FALSE) {
+			$i_u = $j;
+		}
+		else if(strpos($elem,"x")!==FALSE) {
+			$i_m = $j;
+			$mul = "x";
+		}
+		$j++;
+	}
+	if(($j > 1) && ($mul == ""))
+		$i_m = $j-1;
+	
+	if($i_m != -1) {
+		$rtn = $matches2[0][$i_m]."x".$matches2[0][$i_u]."g-".(intval($matches2[0][$i_m])*intval($matches2[0][$i_u]))."g";
+		$len_wanted = strlen($wanted);
+		$t = substr($libelle,0,$i) . " - " .$rtn . substr($libelle,$i+$len_wanted);
+		return $t;
+	}	
+	return $libelle;
+}
+
+
+
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
  * 
@@ -52,9 +104,10 @@ function extract_source_systemeu(string $town, string $target) : string {
 	$town_ = escapeshellarg($town);
 	$nodeScriptPath = __DIR__.'/scrape_su.js';
 	// while $src.indexOF('products') == -1) ?? because not 100% regular for the moment 
-	$src = shell_exec("node $nodeScriptPath $town_ $target");
-	//$src = file_get_contents(__DIR__. "/products_su.txt"); // OK 
-	//shell_exec("rm -r screen")
+	$dest = __DIR__.'/products.txt';
+	shell_exec("`node $nodeScriptPath $town_ $target > $dest`");
+	$src = file_get_contents(__DIR__. "/products.txt"); // OK 
+	shell_exec("rm $dest");
 	return $src;
 }
 
@@ -191,6 +244,7 @@ function search_product_in_script_json(string $output, string $product) : array 
 $product_needed_key = [ // On ATTRIBUTES
 	"promotion" => [],
 	"id" => "",
+	"name" => "",
 	"notation" => "",
 	"EAN" => "",
 	"brand" => "",
@@ -229,6 +283,7 @@ function extract_info_for_all_products(array $tab_json, array $needed_key) : arr
 */
 function extract_needed_information_pro(array $json, array $needed_key) : array {
 	$rtn = array();
+	$json["name"] = change_quantity_u($json["name"]);
 	foreach($needed_key as $k=>$value) 
 		$rtn = array_merge($rtn,[$k=>$json[$k]]);
 
@@ -254,6 +309,7 @@ function content_scrap_systemeu(string $target_product, string $town) : array {
 	$product_needed_key = [ // On ATTRIBUTES
 		"promotion" => [],
 		"id" => "",
+		"name" => "",
 		"notation" => "",
 		"EAN" => "",
 		"brand" => "",

@@ -1,6 +1,5 @@
 <?php
 
-use function PHPSTORM_META\type;
 
 $test = "0011_2_23_Aix_25km";
 $test2 = "0012_3_24_Paris_800km";
