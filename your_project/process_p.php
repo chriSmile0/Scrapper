@@ -143,10 +143,9 @@ function sort_list(array $products) {
 
 //-----------------------------END UTILS--------------------------------------//
 
-
-function main_(array $elements) {
+function main_(array $elements, int $web_server) {
 	$str = my_json_encoding($elements);
-	exec("php usage.php $str > out.txt");
+	exec("php usage.php $str $web_server > out.txt");
 	$rtn = file_get_contents("out.txt");
 	$parsing = parse_exec_usage($rtn);
 	return $parsing;
@@ -154,6 +153,8 @@ function main_(array $elements) {
 
 $arr = array("Auchan"=>["Lardons","Paris"]);
 $arr2 = array("Leclerc"=>["lardons","Voglans"]);
+$arr3 = array("Monoprix"=>["lardons"]);
+$arr23 = array("Leclerc"=>["lardons","Voglans"],"Monoprix"=>["lardons"]);
 
 
 function my_json_encoding(array $to_encode) { // FOR MAIN PARAMETER
@@ -263,7 +264,7 @@ function display_compare(array $ens, string $product, string $label, array $citi
 		$elements = array_merge($elements,[$e=>[$product,$cities[$i]]]);
 		$i++;
 	}
-	$to_display = main_($elements); // OK
+	$to_display = main_($elements,1); // OK
 	$full_rtn = display_each_brand(create_cmp_product($to_display,$label));
 	return $full_rtn;
 }
@@ -352,5 +353,6 @@ function main(string $command_line, bool $web) {
 	}
 
 }
-main(implode(" ",$argv),false);
+//main(implode(" ",$argv),false);
+main_($arr23,2);
 ?>

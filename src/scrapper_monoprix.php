@@ -43,6 +43,8 @@ use Exception;
 use Facebook\WebDriver\Firefox\FirefoxOptions as FirefoxOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 require __DIR__ . '/../../../autoload.php'; // EXPORT 
 //require __DIR__ . '/../vendor/autoload.php'; // DEV
 
@@ -100,24 +102,42 @@ function change_quantity_m(string $libelle) : string {
 /**
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
- * @param 	int	$o	port
+ * @param 	int		$o	port	
+ * @param 	bool	$web_server	true of false 
  * @example	generate_driver_m()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_m(int $p) {
+function generate_driver_m(int $p, bool $web_server) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	$host = 'http://localhost:'.$p.'/';
+	var_dump($web_server);
+	if(!$web_server) {
+		$host = 'http://localhost:'.$p.'/';
 
+		$capabilities = DesiredCapabilities::firefox();
+		$firefoxOptions = new FirefoxOptions;
+		$firefoxOptions->addArguments(['-headless']);
+		$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+		try {
+			return RemoteWebDriver::create($host,$capabilities);
+		}
+		catch (Exception $e) {
+			echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+			return NULL;
+		}
+	}
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	//shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");sleep(1);
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions;
-	$firefoxOptions->addArguments(['-headless']);
+	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
-		return RemoteWebDriver::create($host,$capabilities);
+		return FirefoxDriver::start($capabilities);
 	}
 	catch (Exception $e) {
-		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
 	}
 }
@@ -128,13 +148,15 @@ function generate_driver_m(int $p) {
  * @param	string	$url			the url to get in the browser
  * @param 	int		$js_or_selenium	0 for js 1 for sele
  * @param 	int 	$p				port
+ * @param 	bool 	$web_server		true or false
  * @example	extract_source_monoprix((@see URL1),1)
  * @author	chriSmile0
  * @return	string	the source code
 */
-function extract_source_monoprix(string $url, int $js_or_selenium, int $p) : string {
+function extract_source_monoprix(string $url, int $js_or_selenium, int $p, 
+									bool $web_server) : string {
 	if($js_or_selenium == 1) {
-		$driver = generate_driver_m($p);
+		$driver = generate_driver_m($p,$web_server);
 		if($driver == NULL)
 			return "";
 		$driver->get($url);
@@ -321,15 +343,16 @@ function extract_needed_information_pro_m(array $json, array $needed_key) : arra
  * 
  * @param	string 	$target_product	the target product
  * @param	int		$p				port
+ * @param 	bool 	$web_server		true or false
  * @example content_scrap_monoprix((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_monoprix(string $target_product, int $p) : array {
+function content_scrap_monoprix(string $target_product, int $p, bool $web_server) : array {
 	$url = "https://courses.monoprix.fr/products/search?q=";
 	$rtn = array();
 	//check if $target_product is in the list of product (lardons,oeufs , etc)
-	$script = extract_source_monoprix($url.$target_product,1,$p);
+	$script = extract_source_monoprix($url.$target_product,1,$p,$web_server);
 	if(empty($prods = all_subcontent_with_trunk_v21_m($script,"{\"productId\":",[",\"retailerFinancingPlanIds\""],false,0,"}")))
 		return $rtn;
 	
@@ -356,14 +379,14 @@ function content_scrap_monoprix(string $target_product, int $p) : array {
  * 					test or if the scrapping failed 
 */
 function main_m($argc, $argv) : bool {
-	if($argc == 4) {
-		if(empty(content_scrap_monoprix($argv[1],$argv[2]))) {
+	if($argc == 5) {
+		if(empty(content_scrap_monoprix($argv[1],$argv[2],strtolower($argv[3])==="true"))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type] [port]  --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [port] [?webserver]  --with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

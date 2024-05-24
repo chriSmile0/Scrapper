@@ -56,6 +56,8 @@ use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
+use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
+use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 require __DIR__ . '/../../../autoload.php'; // EXPORT 
 //require __DIR__ . '/../vendor/autoload.php'; // DEV
 
@@ -113,23 +115,40 @@ function change_quantity_i(string $libelle, $kg_price, $price) : string  {
  * [BRIEF]	generate an instance of a firefox driver with 'geckodriver' server
  * 				(localhost:4444)
  * @param 	int	$p	port
+ * @param 	bool	$web_server	true of false 
  * @example	generate_driver_i()
  * @author	chriSmile0
  * @return	/
 */
-function generate_driver_i(int $p) {
+function generate_driver_i(int $p, bool $web_server) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	$host = 'http://localhost:'.$p.'/';
+	if(!$web_server) {
+		$host = 'http://localhost:'.$p.'/';
 
+		$capabilities = DesiredCapabilities::firefox();
+		$firefoxOptions = new FirefoxOptions;
+		$firefoxOptions->addArguments(['-headless']);
+		$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
+		try {
+			return RemoteWebDriver::create($host,$capabilities);
+		}
+		catch (Exception $e) {
+			echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+			return NULL;
+		}
+	}
+	//------------FirefoxDriver, geckodriver directly on this process--------//
+	//shell_exec("kill -s kill `ps -e | grep -e geckodriver | grep -Eo '[0-9]{1,10}' | head -n 1`");sleep(1);
+	$firefoxOptions = new FirefoxOptions();
+	$firefoxOptions->setProfile(new FirefoxProfile());
 	$capabilities = DesiredCapabilities::firefox();
-	$firefoxOptions = new FirefoxOptions;
 	$firefoxOptions->addArguments(['--headless']);
 	$capabilities->setCapability(FirefoxOptions::CAPABILITY, $firefoxOptions);
 	try {
-		return RemoteWebDriver::create($host,$capabilities);
+		return FirefoxDriver::start($capabilities);
 	}
 	catch (Exception $e) {
-		echo "ERRRRRR_REMOTE : ".$e->getMessage()."\n";
+		echo "ERRRRRR : ".$e->getMessage()."\n";
 		return NULL;
 	}
 }
@@ -532,14 +551,15 @@ function extract_needed_information_pro_i(array $json, array $needed_key) : arra
  * @param	string 	$target_product	the target product
  * @param 	string 	$town			the town
  * @param 	int		$p				port
+ * @param 	bool	$web_server	true of false 
  * @example content_scrap_intermarche((@see URL1),"lardons")
  * @author	chriSmile0
  * @return	array 	array of all product with specific information that we needed
 */
-function content_scrap_intermarche(string $target_product, string $town, int $p) : array {
+function content_scrap_intermarche(string $target_product, string $town, int $p, bool $web_server) : array {
 	$url = "https://www.intermarche.com/";
 	$rtn = array();
-	$driver = generate_driver_i($p);
+	$driver = generate_driver_i($p,$web_server);
 	if($driver !== NULL) {
 		
 		$product_needed_key = [ // On ATTRIBUTES
@@ -606,14 +626,14 @@ function content_scrap_intermarche(string $target_product, string $town, int $p)
  * 					test or if the scrapping failed 
 */
 function main_i($argc, $argv) : bool {
-	if($argc == 5) {
-		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3]))) {
+	if($argc == 6) {
+		if(empty(content_scrap_intermarche($argv[1],$argv[2],$argv[3],strtolower($argv[4])==="true"))) {
 			echo "NO CORRESPONDENCE FOUND \n";
 			return 0;
 		}
 	}
 	else {
-		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] [port] --with-openssl\n";
+		echo "ERROR : format : ". $argv[0] . "[research_product_type] [town] [port] [?webserver]--with-openssl\n";
 		return 0;
 	}
 	echo "EXECUTION FINISH WITH SUCCESS \n";

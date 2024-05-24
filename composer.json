@@ -1,5 +1,5 @@
 {
-	"description": "Scrapping French 'Drive' Supermarket wWbsite",
+	"description": "Scrapping French 'Drive' Supermarket Website",
 	"license": "MIT",
 	"name": "chrismile0/scrapper",
 	"autoload": {
