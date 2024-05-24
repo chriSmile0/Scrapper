@@ -9,31 +9,30 @@ use function ChriSmile0\Scrapper\content_scrap_leclerc;
 use function ChriSmile0\Scrapper\content_scrap_intermarche;
 use function ChriSmile0\Scrapper\content_scrap_monoprix;
 use function ChriSmile0\Scrapper\content_scrap_systemeu;
-use function ChriSmile0\Scrapper\new_version;
 require_once('../vendor/autoload.php');
 
 function use_scrapper(string $url, bool $with_js) { // OK 
 	return scrap_https($url,$with_js);
 }
 
-function use_content_scrapper_auchan(string $product, string $city, int $p) { // OK 
-	return content_scrap_auchan($product,$city,$p);
+function use_content_scrapper_auchan(string $product, string $city, int $p, bool $web_server) { // OK 
+	return content_scrap_auchan($product,$city,$p,$web_server);
 }
 
-function use_content_scrapper_carrefour(string $product, string $city, int $p) { // OK 
-	return content_scrap_carrefour($product,$city,$p);
+function use_content_scrapper_carrefour(string $product, string $city, int $p, bool $web_server) { // OK 
+	return content_scrap_carrefour($product,$city,$p,$web_server);
 }
 
 function use_content_scrapper_leclerc(string $product, string $city) { // OK 
 	return content_scrap_leclerc($product,$city);
 }
 
-function use_content_scrapper_intermarche(string $product, string $city, int $p) { // OK 
-	return content_scrap_intermarche($product,$city,$p);
+function use_content_scrapper_intermarche(string $product, string $city, int $p, bool $web_server) { // OK 
+	return content_scrap_intermarche($product,$city,$p,$web_server);
 }
 
-function use_content_scrapper_monoprix(string $product, int $p) { // OK 
-	return content_scrap_monoprix($product,$p);
+function use_content_scrapper_monoprix(string $product, int $p, bool $web_server) { // OK 
+	return content_scrap_monoprix($product,$p,$web_server);
 }
 
 function use_content_scrapper_systemeu(string $product, string $city) { // OK
@@ -62,6 +61,7 @@ $scrappers_usages_example = [
 	"Intermarche" => ["lardons","Paris"],
 	"Monoprix" => ["lardons"]
 ];
+
 $scrappers_usages_min = [
 	"Carrefour" => ["lardons","Paris"]
 ];
@@ -82,6 +82,11 @@ $scrappers_usages_min4 = [
 	"Monoprix" => ["lardons"],
 	"Leclerc" => ["Lardons","Voglans"],
 	"Auchan" => ["lardons","Paris"] // NOT STABLE 
+];
+
+$scrappers_usages_min_mc = [
+	"Monoprix" => ["lardons"],
+	"Leclerc" => ["Lardons","Voglans"]
 ];
 
 $scrappers_usages_min5 = [
@@ -172,16 +177,16 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 						$exec_scrapper = 1;
 						switch($ens) {
 							case "A":
-								$content = content_scrap_auchan($scrapper_usage[0],$scrapper_usage[1],$port);
+								$content = content_scrap_auchan($scrapper_usage[0],$scrapper_usage[1],$port,false);
 								break;
 							case "C":
-								$content = content_scrap_carrefour($scrapper_usage[0],$scrapper_usage[1],$port);
+								$content = content_scrap_carrefour($scrapper_usage[0],$scrapper_usage[1],$port,false);
 								break;
 							case "I":
-								$content = content_scrap_intermarche($scrapper_usage[0],$scrapper_usage[1],$port);
+								$content = content_scrap_intermarche($scrapper_usage[0],$scrapper_usage[1],$port,false);
 								break;
 							case "M":
-								$content = content_scrap_monoprix($scrapper_usage[0],$port);
+								$content = content_scrap_monoprix($scrapper_usage[0],$port,false);
 								break;
 							default:
 								$exec_scrapper = 2; // ERROR
@@ -210,13 +215,67 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 }
 
 /**
+ * @version 2	-> use web_server element to true because geckodriver is in the execution
+ * [BRIEF]	If A/C/I/M then : 
+ * 				- We launch 2 process, one for the geckodriver, and the other for the duplicate
+ * 				- When we sure the geckodriver is launch we call the target scrapper by the `$key`
+ * 				- We kill all sub processes and geckodriver processes
+ * 			Else (no need process)
+ * 			The return is the size of the return or just a ',' if we found nothing
+ * 
+ * @param	string	$key			the supermarket name
+ * @param	array	$scrapper_usage	the research and the target city
+ * @param	int		$port			port to connect geckodriver in case we use the port 
+ * @example	parrallelize_scrapping_process("Monoprix",["lardons"],4444=default)
+ * @author	chriSmile0
+ * @return	string	content_scrap_... return or "," if not found
+*/
+function parrallelize_scrapping_process_v2(string $key, array $scrapper_usage, 
+										int $port) : string { // gecko -> auchan,monoprix,carrefour,intermarche
+	$ens = $key[0];
+	$rtn = "";
+	$content = array();
+	if($ens !== "S" && $ens !== "L") {
+		switch($ens) {
+			case "A":
+				$content = content_scrap_auchan($scrapper_usage[0],$scrapper_usage[1],$port,true);
+				break;
+			case "C":
+				$content = content_scrap_carrefour($scrapper_usage[0],$scrapper_usage[1],$port,true);
+				break;
+			case "I":
+				$content = content_scrap_intermarche($scrapper_usage[0],$scrapper_usage[1],$port,true);
+				break;
+			case "M":
+				$content = content_scrap_monoprix($scrapper_usage[0],$port,true);
+				break;
+			default:
+				break;
+		}
+	}
+	else if($ens === "L") { // NO GECKODRIVER
+		$content = content_scrap_leclerc($scrapper_usage[0],$scrapper_usage[1]);
+	}
+	else if($ens === "S") {	// PUPPETEER
+		$content = content_scrap_systemeu($scrapper_usage[0],$scrapper_usage[1]);
+	}
+	else { // UNKNOWN 
+		$content = "";
+	}
+	$rtn = (check_scrapper_return($content)==-1) ? "" : json_encode($content);
+	if($rtn !== "")
+		return "".strlen($rtn).",".$rtn;
+	return ",";
+}
+
+/**
  * [BRIEF]	
  * @param	array	$scrappers_usage	target supermarket and target_product and town
  * @example	globals_execs(["Monoprix"=>["lardons"])
  * @author	chriSmile0
  * @return	the scrapping content of each usage in the array in parameter
 */
-function globals_execs(array $scrappers_usage) { // OK 
+function globals_execs(array $scrappers_usage, int $v1_or_v2) { // OK 
 	$childs = array();
 	$recv_content = array();
 	$ports = 4444;
@@ -234,7 +293,7 @@ function globals_execs(array $scrappers_usage) { // OK
 				die('Fork failed');
 				exit(0);
 			case 0:
-				$rtn = parrallelize_scrapping_process($key,$usages,$port); // DUMP RESULT IN PIPE
+				$rtn = ($v1_or_v2==1) ? parrallelize_scrapping_process($key,$usages,$port) : parrallelize_scrapping_process_v2($key,$usages,$port); // DUMP RESULT IN PIPE
 				$offset = 0;
 				$size = substr($rtn,0,$offset=strpos($rtn,","));
 				$size = ($size===FALSE || $size==="") ? "0" : $size; // FALSE -> 7.2, "" -> 8.0 // FOR REST OF THE PACKAGE FOR COMPATIBILITY!!!
@@ -294,18 +353,20 @@ function my_json_encoding_2($to_encode) { // FOR MAIN PARAMETER
 
 
 function main_u($argc, $argv) {
+	$web_server = intval($argv[2]);
+	array_pop($argv);
 	$arr = implode(",",array_slice($argv,1));
 	$elements = json_decode($arr,true);// OK
-	echo json_encode(globals_execs($elements)); // recv this in process_p for print
+	echo json_encode(globals_execs($elements,$web_server)); // recv this in process_p for print
 }
 
 //echo json_encode(globals_execs($scrappers_usages_min_ca));
 main_u($argc,$argv);
-//var_dump(globals_execs($scrappers_usages_min_l));
+//var_dump(globals_execs($scrappers_usages_min_mc,2));
 //var_dump(use_content_scrapper_auchan("Lardons","Paris",4444));
 //var_dump(use_content_scrapper_leclerc("Saumon","Annecy"));
 //var_dump(use_content_scrapper_carrefour("Lardons fume","Paris",4444));
 //var_dump(use_content_scrapper_intermarche("Lardons","Paris",4444));
-//var_dump(use_content_scrapper_monoprix("Saumon",4444));
+//var_dump(use_content_scrapper_monoprix("Lardons",4444,true)); // TRY THIS 
 //var_dump(use_content_scrapper_systemeu("Lardons","Paris"));
 ?>
