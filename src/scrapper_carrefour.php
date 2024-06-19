@@ -51,8 +51,8 @@ use Facebook\WebDriver\WebDriverBy as WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 function extract_brand_c(string $title) : string {
 	preg_match_all('/[A-Z][A-Z]+/',$title,$matches2);
@@ -410,7 +410,6 @@ $product_needed_key = [ // On ATTRIBUTES
 		],
 	],
 	"packaging" => [],
-	"nutriscore" => [],
 ];
 
 $page_needed_key = [ // On META 
@@ -519,8 +518,7 @@ function content_scrap_carrefour(string $target_product, string $city, int $p, b
 					],
 				],
 			],
-			"packaging" => [],
-			"nutriscore" => [],
+			"packaging" => []
 		];
 		
 		$page_needed_key = [ // On META 
@@ -543,16 +541,18 @@ function content_scrap_carrefour(string $target_product, string $city, int $p, b
 			$nb_page = $infos['totalPage'];
 			$current_page = $infos['currentPage'];
 			$next_page = $current_page+1;
-			for($i = $next_page ; $i < $nb_page+1 ; $i++) {
-				$url_ = $url."&noRedirect=1&page=".$i;
-				$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
-				if($file_content !== "") {
-					$sp_res = search_product_in_script_json_c($file_content,$target_product);
-					if(empty($sp_res)) {
-						$driver->quit();
-						return $rtn;
+			if($nb_page < 5) {
+				for($i = $next_page ; $i < $nb_page+1 ; $i++) {
+					$url_ = $url."&noRedirect=1&page=".$i;
+					$file_content = extract_source_carrefour($url_,$driver,$city,$target_product);
+					if($file_content !== "") {
+						$sp_res = search_product_in_script_json_c($file_content,$target_product);
+						if(empty($sp_res)) {
+							$driver->quit();
+							return $rtn;
+						}
+						$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
 					}
-					$rtn = array_merge($rtn,extract_info_for_all_products_c($sp_res["products"],$product_needed_key));
 				}
 			}
 			$driver->quit();

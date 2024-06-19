@@ -145,8 +145,8 @@ function sort_list(array $products) {
 
 function main_(array $elements, int $web_server) {
 	$str = my_json_encoding($elements);
-	exec("php usage.php $str $web_server > out.txt");
-	$rtn = file_get_contents("out.txt");
+	//exec("php usage.php $str $web_server > out.txt");
+	$rtn = file_get_contents("proofs/dump_auchan.txt");
 	$parsing = parse_exec_usage($rtn);
 	return $parsing;
 }
@@ -155,6 +155,7 @@ $arr = array("Auchan"=>["Lardons","Paris"]);
 $arr2 = array("Leclerc"=>["lardons","Voglans"]);
 $arr3 = array("Monoprix"=>["lardons"]);
 $arr23 = array("Leclerc"=>["lardons","Voglans"],"Monoprix"=>["lardons"]);
+$arr31 = array("Auchan"=>["lardons","Paris"]);
 
 
 function my_json_encoding(array $to_encode) { // FOR MAIN PARAMETER
@@ -354,5 +355,5 @@ function main(string $command_line, bool $web) {
 
 }
 //main(implode(" ",$argv),false);
-main_($arr23,2);
+var_dump(main_($arr31,2));
 ?>

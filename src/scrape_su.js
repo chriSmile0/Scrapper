@@ -59,13 +59,16 @@ async function scrape(url,town,product) {
   //await page.waitForTimeout(2000);
   await page.screenshot({path:'screen_home_su.png'});
   await page.waitForSelector('#popin_tc_privacy_button_2');
-  await page.click('#popin_tc_privacy_button_2');
+  
+  /*await page.click('#popin_tc_privacy_button_2');
   // -----------------------NO DETECTION BOT USAGE (15 hit OK)----------------------------// 
   await page.waitForSelector('#store-search');
   await page.type('#store-search',town,{delay: 100});
 
   // -----------------------NO DETECTION BOT USAGE (15 hit OK)----------------------------//   
-  await page.waitForTimeout(3000); //-> necessary ?  delay ?
+  //await page.waitForTimeout(3000); //-> necessary ?  delay ?
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+  await sleep(3000);
   await page.waitForSelector('.ab-prehome-search-suggestion');
   await page.click('.ab-prehome-search-suggestion');
 
@@ -76,7 +79,7 @@ async function scrape(url,town,product) {
   await page.click('.store-delivery-mode-arrow');
   await page.waitForSelector('.ui-button');
   const wq2 = await page.$('.ui-button');
-  wq2.click();
+  wq2.click();*/
   /*if(wq2 === null) { // - NO Question
     console.log("no wq2"); // OK 
   }
@@ -89,7 +92,8 @@ async function scrape(url,town,product) {
     if(wq2_pos !== null)
       wq2.click();
   }*/
-  await page.waitForTimeout(1000);
+  //await page.waitForTimeout(1000);
+  /*await sleep(1000);
   await page.type('#q',product,{delay: 100});
   await page.waitForTimeout(1000);
   const suggets1 = await page.$('xpath//html/body/div[3]/main/div[1]/header/div[4]/div[2]/div/div[1]/div[1]/div[1]/a');
@@ -121,15 +125,67 @@ async function scrape(url,town,product) {
   // -----------------------NO DETECTION BOT USAGE(n hit OK ?)----------------------------//
   for(var i = 2 ; i < nb_page+1; i++) {
     await page.goto(_url+ '&page='+i);
-    await page.waitForTimeout(1000);
+    //await page.waitForTimeout(1000);
+    await sleep(1000);
     const content =  await page.content();
     const sub_line = content.substring(content.indexOf("products"));
     retour += sub_line.substring(0,sub_line.indexOf("page_filter")) + "\n";
-  }
-  console.log(retour);
+  }*/
+  //console.log(retour);
+  const content = await page.content();
+  console.log(content)
   await browser.close();
 }
-url = "https://www.coursesu.com/drive/home";
-town = argv[2];
+//url = "https://www.coursesu.com/drive/home";
+//url2 = "https://www.coursesu.com/drive-superu-";
+link = argv[2];
 product = argv[3];
-scrape(url,town,product);
+scrape_v2(link,product);
+
+
+async function scrape_v2(url,product) {
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+  const browser = await puppeteer.launch({headless: 'new'});
+  const page = await browser.newPage();
+  //parse town if it's necessary -> PHP better 
+  await page.goto(url);
+  const url_ = await page.url();
+  console.log(url_);
+  console.log(product);
+  const title = await page.title();
+  console.log(title);
+
+  const dD = url_.indexOf("on/demand"); 
+  console.log(dD);
+  if(dD != -1) {
+    console.log("DataDome activate");
+    //break_js.loadedBrk(page,url,'#captcha__puzzle','.slider',"canva_rd.png","screen_su.png");
+  }
+  else {
+    console.log("No DataDome");
+  }
+  // -----------------------NO DETECTION BOT USAGE (15 hit OK) ----------------------------// 
+  await page.screenshot({path:'screen_home_su2.png'});
+  await page.waitForSelector('#popin_tc_privacy_button'); 
+  await page.click('#popin_tc_privacy_button');
+  /*await page.waitForSelector('#q');
+  await page.type('#q',product,{delay: 100});
+
+  await sleep(1000);
+  await page.screenshot({ path: 'screen_after_search_.png', fullPage: true }); // necessary Idk why
+  const suggets1 = await page.$('xpath//html/body/div[3]/main/div[1]/header/div[4]/div[2]/div/div[1]/div[1]/div[1]/a');
+  if(suggets1 !== null) {
+    const suggets1_bouding = await suggets1.boundingBox();
+    console.log(suggets1_bouding);
+    suggets1.click();
+  }
+  await sleep(1000);
+  await page.screenshot({ path: 'screen_after_search2_.png', fullPage: true });
+
+  await sleep(5000);
+  await page.screenshot({ path: 'screen_after_search3_.png', fullPage: true });
+  await sleep(1000);*/
+  const content = await page.content();
+  console.log(content);
+  await browser.close();
+}

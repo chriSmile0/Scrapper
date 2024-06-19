@@ -47,8 +47,8 @@ use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 function extract_brand_a(string $label) : string {
@@ -302,7 +302,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 				$res_find[0]->sendKeys(WebDriverKeys::ENTER);
 			}
 			echo "AUCHA2:".$res_find[1]."\n";
-			sleep(5);
+			sleep(1);
 			$res_find =  findElement_a($driver,"xpath","/html/body/div[3]/div[2]/div[2]/div[4]/article[1]/div[2]/footer/button",$res_find[1]); // click option
 			if($res_find[0]!=="") {
 				try {
@@ -313,13 +313,24 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
+			try {
+				$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click(); // accept just try
+			}
+			catch(Exception $e) {
+				$res_find[1] = $e->getMessage();
+			}
+			
+			//sleep(1);
 			echo "AUCHA3:".$res_find[1]."\n";
-			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
+			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
+			$driver->takescreenshot('t.png');
+			//echo "res_find1 : ".$res_find[1]."\n";
+			var_dump($res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
 
 			echo "AUCHA4:".$res_find[1]."\n";
-			sleep(2);
-			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option
+			sleep(3);
+			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option*/
 			if($res_find[0]!=="") {
 				try {
 					sleep(1); // for the moment 
@@ -329,8 +340,11 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
+
+			sleep(2);
+			$driver->takescreenshot('t2.png');
 			echo "AUCHA5:".$res_find[1]."\n";
-			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
+			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
 			sleep(4);
@@ -344,6 +358,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 		}
 	}
 	if($error !== "") {
+		var_dump($driver->getPageSource());
 		$driver->quit();
 		return array();
 	}
