@@ -1,12 +1,12 @@
 # Scrapper 
 
-## STATUS [PENDING]
+## STATUS [ACTIVE]
 
-## UPDATE 05/20/2024
+## UPDATE 06/20/2024
 **At this time `Intermarche`,`SystemeU` and `Leclerc` use `Datadome` protection**
 - `Intermarche` -> Impossible for me to bypass the new version of Datadome -> Target waiting 
-- `SystemeU` -> Bypass the old version of Datadome in this website
-- `Leclerc` -> Bypass OK
+- `SystemeU` -> Same to Intermarche , bypass with proxy and IP Rotating is possible 
+- `Leclerc` -> Same to Intermarche
 
 ## PRESHOT 2024 TARGET EVOLUTION 
 - `SystemeU` -> Update the version of the DataDome Solution
@@ -54,7 +54,6 @@ Or API :
 <summary>Paths</summary>
 <pre>
 dev
-├── copy_all_leclerc.html
 └── JSON_updates.php
 project
 ├── infos_programs.php
@@ -104,7 +103,7 @@ README.md
 
 ## Version 
 
-### V1.4.1
+### V1.5
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
@@ -114,11 +113,11 @@ README.md
 
 - Specific version for specific website : 
   - The french supermarket compagny : 
-    - [Leclerc](https://leclerc.fr) : 
+    - [Leclerc](https://leclerc.fr) [**BLOCKED**]: 
       - [x] parse specific JS -> json
       - [x] usage of https of [basic version](scrapper.php) : 
       - [x] NoBot Solutions **DataDome** Solution
-      - [x] Bypass NoBot Solutions with knownledge of all stores (`libJSON/leclercs.json`)
+      - Try Bypass NoBot Solutions with knownledge of all stores (`libJSON/leclercs.json`) (works before Datadome Solution buy)
     - [Carrefour](https://www.carrefour.fr) : 
       - [x] parse specific JS -> json
       - [x] usage of `php-webdriver` 
@@ -135,12 +134,13 @@ README.md
     - [Intermaché](https://www.intermarche.com) [**BLOCKED**] :
       - [x] parse specific JS -> json 
       - [x] usage of `php-webdriver`
-      - [x] NoBot Solutions -> **DataDome** Solution -> `NEW_VERSION`
-    - [SystemeU](https://www.magasins-u.com) [**UPDATE SOON FOR NEW PUPPETEER VERSION**]:  
+      - [x] NoBot Solutions -> **DataDome** Solution
+    - [SystemeU](https://www.magasins-u.com) [**BLOCKED**]:  
       - [x] parse specific JS -> json (products only on the display page)
       - [ ] usage of `puppeteer` or `php-webdriver` **IMPOSSIBLE**
-      - [x] NoBot Solutions -> **DataDome** Solution -> `OLD VERSION`
-      - [x] Necessary to use `puppeteer-extra-plugin-stealth`   
+      - [x] NoBot Solutions -> **DataDome** Solution
+      - [x] Necessary to use `puppeteer-extra-plugin-stealth` -> not enough
+      - Try Bypass with src/libJSON/* (scrape2() in `scrape_su.js`) but blocked again 
  
 
 ## Features 

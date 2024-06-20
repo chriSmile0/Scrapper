@@ -39,6 +39,16 @@
 // URL1 = https://www.coursesu.com/drive/home
 namespace ChriSmile0\Scrapper;
 
+function town_in_specific_syntax(string $town) : string {
+	$unwanted_array = array(    'Š'=>'S', 'š'=>'s', 'Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
+                            'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U',
+                            'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss', 'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c',
+                            'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o',
+                            'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y' );
+	$str = strtr( $town, $unwanted_array );
+	$tr = str_replace(array(' ','-','\''), '',$str);
+	return strtolower($tr);
+}
 
 function change_quantity_u(string $libelle) : string { 
 	$libelle = strtolower($libelle);
@@ -89,7 +99,42 @@ function change_quantity_u(string $libelle) : string {
 	return $libelle;
 }
 
-
+/**
+ * [BRIEF]	A function for extract the html content of the leclerc website
+ * @param 	string 	$city	The store to target
+ * @param 	string 	$type 	
+ * @example	research_city_json("libJSON/.json","Paris")
+ * @author	chriSmile0
+ * @return	string 	the url 
+*/
+function research_city_in_JSON_su(string $city, string $type) : string  {
+	$file_content = file_get_contents(__DIR__."/libJSON/systemeu_per_city.json");
+	$arr = json_decode($file_content,true);
+	$t = "";
+	$c = "";
+	$city_ = town_in_specific_syntax($city);
+	foreach($arr as $k => $v) {
+		if($k === $city_) {
+			if(is_array($v)) { 
+				foreach($v as $val) 
+					if($val === $type) {
+						$t = $val;
+						break;
+					}
+				if($t === "") {
+					$t = $v[0];
+				}
+			}
+			$t = ($t === "") ? $v : $t;
+			$c = $k;
+			break;
+		}
+	}
+	if($t === "" || $c === "")
+		return "";
+	$universal_URL = "https://www.coursesu.com/drive-";
+	return $universal_URL."$t-"."$c";
+}
 
 /**
  * [BRIEF]	simulate the url get in the browser and return the display content
@@ -102,12 +147,14 @@ function change_quantity_u(string $libelle) : string {
 */
 function extract_source_systemeu(string $town, string $target) : string {
 	$town_ = escapeshellarg($town);
+	$link_ = research_city_in_JSON_su($town_,"superu");
+	//return $link_; 
 	$nodeScriptPath = __DIR__.'/scrape_su.js';
 	// while $src.indexOF('products') == -1) ?? because not 100% regular for the moment 
 	$dest = __DIR__.'/products.txt';
-	shell_exec("`node $nodeScriptPath $town_ $target > $dest`");
+	shell_exec("`node $nodeScriptPath $link_ $target > $dest`");
 	$src = file_get_contents(__DIR__. "/products.txt"); // OK 
-	shell_exec("rm $dest");
+	//shell_exec("rm $dest");
 	return $src;
 }
 
@@ -345,9 +392,10 @@ function main_s($argc, $argv) : bool {
 	echo "EXECUTION FINISH WITH SUCCESS \n";
 	return 1;
 }
+//var_dump(research_city_in_JSON_su("chamonix","hyperu")); // OK
 //main_s($argc,$argv);
-//var_dump(content_scrap_systemeu("Lardons","Voglans"));
-//var_dump(extract_source_systemeu("Voglans","Lardons"));
+//var_dump(content_scrap_systemeu("Lardons","Chambéry")); // WORK BUT DATADOME AGAIN 
+//var_dump(extract_source_systemeu("Chambéry","Lardons"));
 /**
  * [BRIEF]	
  * @param	

@@ -15,23 +15,27 @@ function use_scrapper(string $url, bool $with_js) { // OK
 	return scrap_https($url,$with_js);
 }
 
-function use_content_scrapper_auchan(string $product, string $city, int $p, bool $web_server) { // OK 
+function use_content_scrapper_auchan(string $product, string $city, int $p,
+										bool $web_server) {
 	return content_scrap_auchan($product,$city,$p,$web_server);
 }
 
-function use_content_scrapper_carrefour(string $product, string $city, int $p, bool $web_server) { // OK 
+function use_content_scrapper_carrefour(string $product, string $city, int $p,
+										bool $web_server) { 
 	return content_scrap_carrefour($product,$city,$p,$web_server);
 }
 
-function use_content_scrapper_leclerc(string $product, string $city) { // OK 
+function use_content_scrapper_leclerc(string $product, string $city) { 
 	return content_scrap_leclerc($product,$city);
 }
 
-function use_content_scrapper_intermarche(string $product, string $city, int $p, bool $web_server) { // OK 
+function use_content_scrapper_intermarche(string $product, string $city, int $p,
+										bool $web_server) { 
 	return content_scrap_intermarche($product,$city,$p,$web_server);
 }
 
-function use_content_scrapper_monoprix(string $product, int $p, bool $web_server) { // OK 
+function use_content_scrapper_monoprix(string $product, int $p,
+										bool $web_server) {  
 	return content_scrap_monoprix($product,$p,$web_server);
 }
 
@@ -39,14 +43,14 @@ function use_content_scrapper_systemeu(string $product, string $city) { // OK
 	return content_scrap_systemeu($product,$city);
 }
 
-
-//var_dump(use_scrapper("https://Wikipedia.com",true)); 		// OK 
-//var_dump(use_content_scrapper_leclerc("Lardons","Voglans")); 	// OK
-//var_dump(use_content_scrapper_carrefour("lardons","Paris")); 	// OK 
-//var_dump(use_content_scrapper_monoprix("Lardons")); 			// OK 
-//var_dump(use_content_scrapper_auchan("lardons","Paris")); 	// OK
-//var_dump(use_content_scrapper_intermarche("lardons","Paris"));// OK
-//var_dump(use_content_scrapper_systemeu("Lardons","Voglans")); // OK
+//$w_s = false;
+//var_dump(use_scrapper("https://Wikipedia.com",true)); 				// OK 
+//var_dump(use_content_scrapper_leclerc("Lardons","Voglans")); 			// OK
+//var_dump(use_content_scrapper_carrefour("lardons","Paris",$w_s)); 	// OK 
+//var_dump(use_content_scrapper_monoprix("Lardons",,$w_s)); 			// OK 
+//var_dump(use_content_scrapper_auchan("lardons","Paris",,$w_s)); 		// OK
+//var_dump(use_content_scrapper_intermarche("lardons","Paris",,$w_s));	// OK
+//var_dump(use_content_scrapper_systemeu("Lardons","Voglans")); 		// OK
 
 
 // WITH INTERNAL GECKO TEST : 
@@ -61,10 +65,19 @@ $scrappers_usages_example = [
 	"Intermarche" => ["lardons","Paris"],
 	"Monoprix" => ["lardons"]
 ];
-
 $scrappers_usages_min = [
 	"Carrefour" => ["lardons","Paris"]
 ];
+
+$scrappers_usages_min_mon = [
+	"Monoprix" => ["lardons",["Paris","Annecy"]]
+];
+
+$scrappers_usages_min_mon2 = [
+	"Monoprix" => ["lardons",["Paris","Annecy"]],
+	"Carrefour" => ["lardons",["Paris","Brest"]]
+];
+
 
 $scrappers_usages_min2 = [
 	"Carrefour" => ["lardons","Paris"],
@@ -84,11 +97,6 @@ $scrappers_usages_min4 = [
 	"Auchan" => ["lardons","Paris"] // NOT STABLE 
 ];
 
-$scrappers_usages_min_mc = [
-	"Monoprix" => ["lardons"],
-	"Leclerc" => ["Lardons","Voglans"]
-];
-
 $scrappers_usages_min5 = [
 	"Carrefour" => ["lardons","Paris"],
 	"Monoprix" => ["lardons"],
@@ -98,7 +106,7 @@ $scrappers_usages_min5 = [
 ];
 
 $scrappers_usages_min_a = [
-	"Auchan" => ["lardons","Paris"]
+	"Auchan" => ["lardons",["Paris"]]
 ];
 
 $scrappers_usages_min_c = [
@@ -142,13 +150,31 @@ function check_scrapper_return(array $scrap) {
  * @author	chriSmile0
  * @return	string	content_scrap_... return or "," if not found
 */
-function parrallelize_scrapping_process(string $key, array $scrapper_usage, 
-										int $port) : string { // gecko -> auchan,monoprix,carrefour,intermarche
+function parrallelize_scrapping_process(string $key, array $scrapper_usage,
+											int $port, int $portf, int $store ) : string { // gecko -> auchan,monoprix,carrefour,intermarcheà
 	$childs = array();
 	$ens = $key[0];
 	$rtn = "";
+	$gb_rtn = array();
 	$content = array();
+	//$nb_cities = count($scrapper_usage[1]);
+	echo "portf : $portf\n";
+	echo "store : $store \n";
+	var_dump($scrapper_usage);
+	$i = $store;
+	// Solution 1 for multi store create loop here
+	/**
+	 * Pros : each city have your own geckodriver 
+	 * Cons : many process 
+	*/
+	// Solution 2 $scrapper_usage[1] in content_scrap_*
+	/**
+	 * Pros : Light in process
+	 * Cons : 
+	*/
+	// Solution 1 in globals_execs -> choice for the moment 
 	if($ens !== "S" && $ens !== "L") {
+		$childs = array();
 		for($x = 0; $x < 2; $x++) {
 			if($x == 1)
 				sleep(1);
@@ -177,13 +203,13 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 						$exec_scrapper = 1;
 						switch($ens) {
 							case "A":
-								$content = content_scrap_auchan($scrapper_usage[0],$scrapper_usage[1],$port,false);
+								$content = content_scrap_auchan($scrapper_usage[0],$scrapper_usage[1][$i],$port,false); // MULTI STORE SOON -> $scrapper_usage[1]
 								break;
 							case "C":
-								$content = content_scrap_carrefour($scrapper_usage[0],$scrapper_usage[1],$port,false);
+								$content = content_scrap_carrefour($scrapper_usage[0],$scrapper_usage[1][$i],$port,false);
 								break;
 							case "I":
-								$content = content_scrap_intermarche($scrapper_usage[0],$scrapper_usage[1],$port,false);
+								$content = content_scrap_intermarche($scrapper_usage[0],$scrapper_usage[1][$i],$port,false);
 								break;
 							case "M":
 								$content = content_scrap_monoprix($scrapper_usage[0],$port,false);
@@ -200,18 +226,18 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 		}
 	}
 	else if($ens === "L") { // NO GECKODRIVER
-		$content = content_scrap_leclerc($scrapper_usage[0],$scrapper_usage[1]);
+		$content = content_scrap_leclerc($scrapper_usage[0],$scrapper_usage[1][$i]);
 	}
 	else if($ens === "S") {	// PUPPETEER
-		$content = content_scrap_systemeu($scrapper_usage[0],$scrapper_usage[1]);
+		$content = content_scrap_systemeu($scrapper_usage[0],$scrapper_usage[1][$i]);
 	}
 	else { // UNKNOWN 
 		$content = "";
 	}
-	$rtn = (check_scrapper_return($content)==-1) ? "" : json_encode($content);
-	if($rtn !== "")
+	$rtn = (check_scrapper_return($content)==-1) ? "NO" : json_encode($content);
+	if($rtn !== "NO")
 		return "".strlen($rtn).",".$rtn;
-	return ",";
+	return  ",";
 }
 
 /**
@@ -232,6 +258,7 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 */
 function parrallelize_scrapping_process_v2(string $key, array $scrapper_usage, 
 										int $port) : string { // gecko -> auchan,monoprix,carrefour,intermarche
+	echo "v2 \n";
 	$ens = $key[0];
 	$rtn = "";
 	$content = array();
@@ -268,6 +295,7 @@ function parrallelize_scrapping_process_v2(string $key, array $scrapper_usage,
 	return ",";
 }
 
+
 /**
  * [BRIEF]	
  * @param	array	$scrappers_usage	target supermarket and target_product and town
@@ -275,44 +303,68 @@ function parrallelize_scrapping_process_v2(string $key, array $scrapper_usage,
  * @author	chriSmile0
  * @return	the scrapping content of each usage in the array in parameter
 */
-function globals_execs(array $scrappers_usage, int $v1_or_v2) { // OK 
+function globals_execs_locals(array $scrappers_usage) {
+	$recv_content = array();
+	$returns = array();
+	$arrys = array();
+	$i = 0;
+	$returns = array();
+	foreach($scrappers_usage as $key => $usages) {
+		$port = 0;
+		$returns = array_merge($returns,[$key=>parrallelize_scrapping_process_v2($key,$usages,$port)]); // DUMP RESULT IN PIPE
+	}
+	return $returns;
+}
+
+/**
+ * [BRIEF]	
+ * @param	array	$scrappers_usage	target supermarket and target_product and town
+ * @example	globals_execs(["Monoprix"=>["lardons"])
+ * @author	chriSmile0
+ * @return	the scrapping content of each usage in the array in parameter
+*/
+function globals_execs_server(array $scrappers_usage) {// OK 
 	$childs = array();
 	$recv_content = array();
 	$ports = 4444;
 	$returns = array();
 	$arrys = array();
 	$i = 0;
-	var_dump($childs);
 	foreach($scrappers_usage as $key => $usages) {
-		$port = $ports+$i;
-		$recv_content[] = [$key,false,$port];
+		$returns[$key] = [];
+		$portd = $ports+$i;
+		$nb_port = sizeof($usages[1]);
 		$arrys[] = array();
-		socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $arrys[$i]);
-		switch($pid = pcntl_fork()) {
-			case -1:
-				die('Fork failed');
-				exit(0);
-			case 0:
-				$rtn = ($v1_or_v2==1) ? parrallelize_scrapping_process($key,$usages,$port) : parrallelize_scrapping_process_v2($key,$usages,$port); // DUMP RESULT IN PIPE
-				$offset = 0;
-				$size = substr($rtn,0,$offset=strpos($rtn,","));
-				$size = ($size===FALSE || $size==="") ? "0" : $size; // FALSE -> 7.2, "" -> 8.0 // FOR REST OF THE PACKAGE FOR COMPATIBILITY!!!
-				socket_close($arrys[$i][1]);
-				socket_write($arrys[$i][0], $size);
-				if($offset > 0) {
-					$rtn_t = substr($rtn,$offset+1);
-					if(socket_read($arrys[$i][0],2)=="OK") 
-						socket_write($arrys[$i][0], $rtn_t, strlen($rtn_t));
+		for($j = 0 , $k = $i ;$k < $i+$nb_port ;$k++,$j++) {
+			$recv_content[] = [$key,false,$portd+$j];
+			socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $arrys[$k]);
+			switch($pid = pcntl_fork()) {
+				case -1:
+					die('Fork failed');
+					exit(0);
+				case 0:
+					$rtn = parrallelize_scrapping_process($key,$usages,$portd+$j,$nb_port,$j); // DUMP RESULT IN PIPE
+					$offset = 0;
+					$size = substr($rtn,0,$offset=strpos($rtn,","));
+					$size = ($size===FALSE || $size==="") ? "0" : $size; // FALSE -> 7.2, "" -> 8.0 // FOR REST OF THE PACKAGE FOR COMPATIBILITY!!!
+					echo "s : $size $key \n";
+					echo "o : $offset $key\n";
+					socket_close($arrys[$k][1]);
+					socket_write($arrys[$k][0], $size);
+					if($offset > 0) {
+						$rtn_t = substr($rtn,$offset+1);
+						if(socket_read($arrys[$k][0],2)=="OK") 
+							socket_write($arrys[$k][0], $rtn_t, strlen($rtn_t));
 
-				}
-				socket_close($arrys[$i][0]);
-				exit(1); // IMPORTANT
-			default:
-				$childs[] = [$pid,$i,$key];
-				break;
-			
+					}
+					socket_close($arrys[$k][0]);
+					exit(1); // IMPORTANT
+				default:
+					$childs[] = [$pid,$k,$key,$usages[1][$j]];
+					break;
+			}	
 		}
-		$i++;
+		$i += $nb_port;
 	}
 	while(count($childs) > 0) {
 		foreach($childs as $key => $pid) {
@@ -320,13 +372,14 @@ function globals_execs(array $scrappers_usage, int $v1_or_v2) { // OK
 			if($res == -1 || $res > 0) {
 				unset($childs[$key]);
 			}
+	
 			if(($res == 0) && (!$recv_content[$key][1])) {
 				socket_close($arrys[$pid[1]][0]);
 				$size = trim(socket_read($arrys[$pid[1]][1],10));
 				if($size > 0)  // send content 
 					if(socket_write($arrys[$pid[1]][1],"OK")) 
 						if($rtn_tt = trim(socket_read($arrys[$pid[1]][1],$size))) {
-							$returns = array_merge($returns,[$pid[2]=>json_decode($rtn_tt,true)]);
+							$returns[$pid[2]] = array_merge($returns[$pid[2]],[$pid[3]=>json_decode($rtn_tt,true)]);
 							$recv_content[$key][1] = true;
 						}
 				
@@ -351,22 +404,20 @@ function my_json_encoding_2($to_encode) { // FOR MAIN PARAMETER
 	return $res;
 }
 
-
 function main_u($argc, $argv) {
-	$web_server = intval($argv[2]);
-	array_pop($argv);
 	$arr = implode(",",array_slice($argv,1));
 	$elements = json_decode($arr,true);// OK
-	echo json_encode(globals_execs($elements,$web_server)); // recv this in process_p for print
+	//var_dump($elements);
+	echo json_encode(globals_execs_server($elements)); // recv this in process_p for print
+	//var_dump($elements);
 }
 
-//echo json_encode(globals_execs($scrappers_usages_min_ca));
 main_u($argc,$argv);
-//var_dump(globals_execs($scrappers_usages_min_mc,2));
-//var_dump(use_content_scrapper_auchan("Lardons","Paris",4444));
-//var_dump(use_content_scrapper_leclerc("Saumon","Annecy"));
-//var_dump(use_content_scrapper_carrefour("Lardons fume","Paris",4444));
-//var_dump(use_content_scrapper_intermarche("Lardons","Paris",4444));
-//var_dump(use_content_scrapper_monoprix("Lardons",4444,true)); // TRY THIS 
-//var_dump(use_content_scrapper_systemeu("Lardons","Paris"));
+//echo "min_mon \n";
+//var_dump($scrappers_usages_min_mon);
+//echo parrallelize_scrapping_process("Monoprix",["lardons","lardons"],4444,2);
+//echo json_encode(globals_execs_server($scrappers_usages_min_a));
+//var_dump(use_content_scrapper_monoprix("Lardons",4444,false));
+//var_dump(parrallelize_scrapping_process("Monoprix",["lardons",["Paris"]],4444,1));
+//var_dump(use_content_scrapper_auchan("Lardons","Paris",4444,false));
 ?>
