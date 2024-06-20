@@ -45,8 +45,8 @@ use Facebook\WebDriver\Remote\DesiredCapabilities as DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver as RemoteWebDriver;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 function change_quantity_m(string $libelle) : string { 
 	$libelle = strtolower($libelle);

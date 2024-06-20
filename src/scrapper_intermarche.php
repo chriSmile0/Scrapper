@@ -58,8 +58,8 @@ use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
-//require __DIR__ . '/../../../autoload.php'; // EXPORT 
-require __DIR__ . '/../vendor/autoload.php'; // DEV
+require __DIR__ . '/../../../autoload.php'; // EXPORT 
+//require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 function change_quantity_i(string $libelle, $kg_price, $price) : string  {
 	preg_match_all('!\d+(?:\.\d{1,2})?!', $libelle, $matches);
