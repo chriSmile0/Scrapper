@@ -2,6 +2,8 @@
 
 namespace ChriSmile0\Scrapper;
 
+use Exception;
+
 use function ChriSmile0\Scrapper\scrap_https;
 use function ChriSmile0\Scrapper\content_scrap_auchan;
 use function ChriSmile0\Scrapper\content_scrap_carrefour;
@@ -109,6 +111,12 @@ $scrappers_usages_min_a = [
 	"Auchan" => ["lardons",["Paris"]]
 ];
 
+$scrappers_usages_min_am = [
+	"Auchan" => ["lardons",["Annecy"]],
+	"Monoprix" => ["lardons",["Paris"]]
+];
+
+
 $scrappers_usages_min_c = [
 	"Carrefour" => ["lardons","Paris"]
 ];
@@ -158,9 +166,6 @@ function parrallelize_scrapping_process(string $key, array $scrapper_usage,
 	$gb_rtn = array();
 	$content = array();
 	//$nb_cities = count($scrapper_usage[1]);
-	echo "portf : $portf\n";
-	echo "store : $store \n";
-	var_dump($scrapper_usage);
 	$i = $store;
 	// Solution 1 for multi store create loop here
 	/**
@@ -330,66 +335,83 @@ function globals_execs_server(array $scrappers_usage) {// OK
 	$returns = array();
 	$arrys = array();
 	$i = 0;
-	foreach($scrappers_usage as $key => $usages) {
-		$returns[$key] = [];
-		$portd = $ports+$i;
-		$nb_port = sizeof($usages[1]);
-		$arrys[] = array();
-		for($j = 0 , $k = $i ;$k < $i+$nb_port ;$k++,$j++) {
-			$recv_content[] = [$key,false,$portd+$j];
-			socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $arrys[$k]);
-			switch($pid = pcntl_fork()) {
-				case -1:
-					die('Fork failed');
-					exit(0);
-				case 0:
-					$rtn = parrallelize_scrapping_process($key,$usages,$portd+$j,$nb_port,$j); // DUMP RESULT IN PIPE
-					$offset = 0;
-					$size = substr($rtn,0,$offset=strpos($rtn,","));
-					$size = ($size===FALSE || $size==="") ? "0" : $size; // FALSE -> 7.2, "" -> 8.0 // FOR REST OF THE PACKAGE FOR COMPATIBILITY!!!
-					echo "s : $size $key \n";
-					echo "o : $offset $key\n";
-					socket_close($arrys[$k][1]);
-					socket_write($arrys[$k][0], $size);
-					if($offset > 0) {
-						$rtn_t = substr($rtn,$offset+1);
-						if(socket_read($arrys[$k][0],2)=="OK") 
-							socket_write($arrys[$k][0], $rtn_t, strlen($rtn_t));
+	$cpt = 2; // POSSIBLE TO ADAPT BUT ONE RETRY IS I THINK OK WITH THE PATIENCE OF THE USER
+	$j = 0;
+	while(($j < $cpt) && !empty($scrappers_usage)) {
+		foreach($scrappers_usage as $key => $usages) {
+			$returns[$key] = [];
+			$portd = $ports+$i;
+			$nb_port = sizeof($usages[1]);
+			$arrys[] = array();
+			for($j = 0 , $k = $i ;$k < $i+$nb_port ;$k++,$j++) {
+				$recv_content[] = [$key,false,$portd+$j,false];
+				socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $arrys[$k]);
+				switch($pid = pcntl_fork()) {
+					case -1:
+						die('Fork failed');
+						exit(0);
+					case 0:
+						$rtn = parrallelize_scrapping_process($key,$usages,$portd+$j,$nb_port,$j); // DUMP RESULT IN PIPE
+						$offset = 0;
+						$size = substr($rtn,0,$offset=strpos($rtn,","));
+						$size = ($size===FALSE || $size==="") ? "0" : $size; // FALSE -> 7.2, "" -> 8.0 // FOR REST OF THE PACKAGE FOR COMPATIBILITY!!!
+						echo "s : $size $key \n";
+						echo "o : $offset $key\n";
+						socket_close($arrys[$k][1]);
+						socket_write($arrys[$k][0], $size);
+						if($offset > 0) {
+							$rtn_t = substr($rtn,$offset+1);
+							if(socket_read($arrys[$k][0],2)=="OK") 
+								socket_write($arrys[$k][0], $rtn_t, strlen($rtn_t));
 
-					}
-					socket_close($arrys[$k][0]);
-					exit(1); // IMPORTANT
-				default:
-					$childs[] = [$pid,$k,$key,$usages[1][$j]];
-					break;
-			}	
-		}
-		$i += $nb_port;
-	}
-	while(count($childs) > 0) {
-		foreach($childs as $key => $pid) {
-			$res = pcntl_waitpid($pid[0], $status, WNOHANG);
-			if($res == -1 || $res > 0) {
-				unset($childs[$key]);
-			}
-	
-			if(($res == 0) && (!$recv_content[$key][1])) {
-				socket_close($arrys[$pid[1]][0]);
-				$size = trim(socket_read($arrys[$pid[1]][1],10));
-				if($size > 0)  // send content 
-					if(socket_write($arrys[$pid[1]][1],"OK")) 
-						if($rtn_tt = trim(socket_read($arrys[$pid[1]][1],$size))) {
-							$returns[$pid[2]] = array_merge($returns[$pid[2]],[$pid[3]=>json_decode($rtn_tt,true)]);
-							$recv_content[$key][1] = true;
 						}
-				
-				socket_close($arrys[$pid[1]][1]);
+						socket_close($arrys[$k][0]);
+						exit(1); // IMPORTANT
+					default:
+						$childs[] = [$pid,$k,$key,$usages[1][$j]];
+						break;
+				}	
+			}
+			$i += $nb_port;
+		}
+		while(count($childs) > 0) {
+			foreach($childs as $key => $pid) {
+				$res = pcntl_waitpid($pid[0], $status, WNOHANG);
+				if($res == -1 || $res > 0) {
+					unset($childs[$key]);
+				}
+		
+				if(($res == 0) && (!$recv_content[$key][1])) {
+					socket_close($arrys[$pid[1]][0]);
+					$size = trim(socket_read($arrys[$pid[1]][1],10));
+					if($size > 0) { // send content 
+						if(socket_write($arrys[$pid[1]][1],"OK")) {
+							if($rtn_tt = trim(socket_read($arrys[$pid[1]][1],$size))) {
+								$returns[$pid[2]] = array_merge($returns[$pid[2]],[$pid[3]=>json_decode($rtn_tt,true)]);
+								$recv_content[$key][1] = true;
+								$recv_content[$key][3] = true;
+							}
+						}
+					}
+					else {
+						socket_write($arrys[$pid[1]][1],"NOK");
+						$recv_content[$key][1] = true;
+					}
+					socket_close($arrys[$pid[1]][1]);
+				}
 			}
 		}
-	}
-	foreach($recv_content as $rc) { // check if we have all contents, if this is not the case we relaunch the forgot research
-		if($rc[1]==false)
-			echo "re-LAUNCH :".$rc[0].", on port : ".$rc[2]."\n";
+		var_dump($recv_content);
+		foreach($recv_content as $rc) { // check if we have all contents, if this is not the case we relaunch the forgot research
+			if($rc[3]==false) {
+				echo "re-LAUNCH :".$rc[0].", on port : ".$rc[2]."\n";
+			}
+			else {
+				unset($scrappers_usage[$rc[0]]);
+			}
+		}
+		var_dump($scrappers_usage);
+		$j++;
 	}
 	return $returns;
 }
@@ -416,8 +438,9 @@ main_u($argc,$argv);
 //echo "min_mon \n";
 //var_dump($scrappers_usages_min_mon);
 //echo parrallelize_scrapping_process("Monoprix",["lardons","lardons"],4444,2);
-//echo json_encode(globals_execs_server($scrappers_usages_min_a));
+//echo json_encode(globals_execs_server($scrappers_usages_min_am));
 //var_dump(use_content_scrapper_monoprix("Lardons",4444,false));
+//var_dump(use_content_scrapper_auchan("Lardons","Annecy",4444,false));
 //var_dump(parrallelize_scrapping_process("Monoprix",["lardons",["Paris"]],4444,1));
 //var_dump(use_content_scrapper_auchan("Lardons","Paris",4444,false));
 ?>

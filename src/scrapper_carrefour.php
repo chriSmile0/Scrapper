@@ -9,7 +9,7 @@
  *
  * Long description for file
  *
- * PHP version 7.2
+ * PHP version >= 8.2
  *
  * LICENSE: --
  *

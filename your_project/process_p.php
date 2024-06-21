@@ -558,7 +558,7 @@ function post(string $url, array $fields) {
 //post("pricecomparator.co/product/cities.php",["__)(__"=>"1","Monoprix"=>"L'yon"]);
 
 //var_dump(display_compare(["Auchan"=>["Paris"]],"Lardons","lardons"));
-var_dump(display_compare(["Monoprix"=>["Paris"],"Auchan"=>["Paris"]],"Lardons","Lardons"));
+//var_dump(display_compare(["Monoprix"=>["Paris"],"Auchan"=>["Annecy"]],"Lardons","Lardons"));
 //var_dump(display_compare(["Monoprix"=>["Paris"]],"Lardons","lardons"));
 
 ?>
