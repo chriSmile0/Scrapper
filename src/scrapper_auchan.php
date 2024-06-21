@@ -47,6 +47,8 @@ use Facebook\WebDriver\WebDriverExpectedCondition as WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverKeys as WebDriverKeys;
 use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
+use Facebook\WebDriver\Remote\ExecuteMethod;
+
 require __DIR__ . '/../../../autoload.php'; // EXPORT 
 //require __DIR__ . '/../vendor/autoload.php'; // DEV
 
@@ -223,7 +225,7 @@ function text_to_associative_array(string $get_text, array $associative_list,
 		$rtn = [$associative_list[2]=>$text_to_explode[$dep],
 					$associative_list[3]=>extract_brand_a($text_to_explode[$dep]),
 					$associative_list[4]=>$text_to_explode[$h-1],
-					$associative_list[9]=>substr($text_to_explode[$size-1],0,strpos($text_to_explode[$size-1],"€"))
+					$associative_list[9]=>str_replace(",",".",substr($text_to_explode[$size-1],0,strpos($text_to_explode[$size-1],"€")))
 		];
 		return $rtn;
 	} // $size == 5n 'Afficher le Prix' is present' -> products dont load correctly
@@ -313,43 +315,31 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 					$res_find[1] = $e->getMessage();
 				}
 			}
+
+			$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click(); // accept just try
+			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
+			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
+			sleep(3); // for the moment 
+			$driver->takeScreenshot("t.png");
 			try {
-				$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click(); // accept just try
+				$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()");
 			}
 			catch(Exception $e) {
 				$res_find[1] = $e->getMessage();
 			}
 			
-			//sleep(1);
-			echo "AUCHA3:".$res_find[1]."\n";
-			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
-			$driver->takescreenshot('t.png');
-			//echo "res_find1 : ".$res_find[1]."\n";
-			var_dump($res_find[1]);
-			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
-
-			echo "AUCHA4:".$res_find[1]."\n";
 			sleep(3);
-			$res_find =  findElement_a($driver,"class","journey__search-suggests-list",$res_find[1]); // click option*/
-			if($res_find[0]!=="") {
-				try {
-					sleep(1); // for the moment 
-					$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()");
-				}
-				catch(Exception $e) {
-					$res_find[1] = $e->getMessage();
-				}
-			}
+			$driver->takeScreenshot("t2.png");
 
-			sleep(2);
-			$driver->takescreenshot('t2.png');
+		
 			echo "AUCHA5:".$res_find[1]."\n";
 			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
-			sleep(4);
+			sleep(10);
 			echo "AUCHA6:".$res_find[1]."\n";
 			$driver->executeScript('window.scrollTo(0,200);');
+			$driver->takeScreenshot("t3.png");
 			$error = $res_find[1];
 			$src = $driver->getPageSource();
 		}
@@ -358,7 +348,6 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 		}
 	}
 	if($error !== "") {
-		var_dump($driver->getPageSource());
 		$driver->quit();
 		return array();
 	}
@@ -411,6 +400,7 @@ function content_scrap_auchan(string $target_product, string $town, int $p, bool
 				$nb_prod = $off_total;
 			else 
 				$nb_prod = $pages_["limit"];
+	
 			$produits = $driver->findElements(WebDriverBy::xpath('/html/body/div[3]/div[2]/div[2]/div[4]/article'));
 			$prods = array_merge($prods,extract_info_for_all_products_a($produits,$nb_prod));
 			if($i < $nb_page) {

@@ -1,10 +1,12 @@
 <?php  
 require_once('infos_programs.php');
-$version = "1.4";
-$programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
-				"scrapper_intermarche.php","scrapper_auchan.php",
-				"scrapper_monoprix.php", "scrapper_systemeu.php"
-			];
+$version = "1.5";
+$programsv2 = [
+	"scrapper"=>print_info_scrapper(),"leclerc"=>print_info_scrapper_leclerc(),
+	"carrefour"=>print_info_scrapper_carrefour(),"intermarche"=>print_info_scrapper_intermarche(),
+	"auchan"=>print_info_scrapper_auchan(),"monoprix"=>print_info_scrapper_monoprix(),
+	"systemeu"=>print_info_scrapper_systemeu()
+];
 
 /**
  * [BRIEF]	[LOCAL_INFO_PRINTER]
@@ -15,12 +17,11 @@ $programs = [	"scrapper.php","scrapper_leclerc.php","scrapper_carrefour.php",
 */
 function print_info_local() {
 	$retour = "[USAGE]\n 	php project.php --info ";
-	foreach($GLOBALS['programs'] as $p) 
-		$retour .= "\033[01;37m$p\033[0m|";
+	foreach($GLOBALS['programsv2'] as $k=>$p) 
+		$retour .= "\033[01;37m$k\033[0m|";
 	echo $retour . "\n";
 	echo "[END INFO LOCAL]\n";
 }
-
 
 /**
  * [BRIEF]	[INFO_PRINTER]
@@ -28,33 +29,12 @@ function print_info_local() {
  * @author	chriSmile0
  * @return	void
 */
-function print_info(string $arg = "") {
-	switch($arg) {
-		case $GLOBALS['programs'][0]: 
-				print_info_scrapper();
-			break;
-		case $GLOBALS['programs'][1]:
-				print_info_scrapper_leclerc();
-			break;
-		case $GLOBALS['programs'][2]:
-				print_info_scrapper_carrefour();
-			break;
-		case $GLOBALS['programs'][3]:
-				print_info_scrapper_intermarche();
-			break;
-		case $GLOBALS['programs'][4]:
-				print_info_scrapper_auchan();
-			break;
-		case $GLOBALS['programs'][5]:
-				print_info_scrapper_monoprix();
-			break;
-		case $GLOBALS['programs'][6]:
-				print_info_scrapper_systemeu();
-			break;
-		default: 
-			print_info_local();
-			break;
-	}
+function print_info(string $arg = "N") {
+	if($arg != "N") 
+		echo $GLOBALS['programsv2'][$arg];
+	else 
+		print_info_local();
+
 }
 
 /**
@@ -100,7 +80,7 @@ function main($argc, $argv) : bool {
 		switch($argv[1])  {
 			case "--help": print_help();
 				break;
-			case "--info": print_info(($argc > 2) ? $argv[2] : "");
+			case "--info": print_info(($argc > 2) ? $argv[2] : "N");
 				break;
 			case "--version": print_version();
 				break;

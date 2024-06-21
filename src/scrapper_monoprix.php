@@ -6,7 +6,7 @@
  *
  * Long description for file
  *
- * PHP version 7.2
+ * PHP version >= 8.2
  *
  * LICENSE: --
  *
@@ -194,7 +194,7 @@ function extract_source_monoprix(string $url, int $js_or_selenium, int $p,
  * 						the $offset of the $trunk is detected] // USAGE $trunk = "" -> V1.0
  * @version	1.0
 */
-function util_subcontent_trunk_m(string $output,string $trunk = "", array $end_content) : array {
+function util_subcontent_trunk_m(string $output,array $end_content, string $trunk = "") : array {
 	$min_offset = strlen($output);
 	$min_index = 0;
 	$len_end_content = sizeof($end_content);
@@ -241,7 +241,7 @@ function util_subcontent_trunk_m(string $output,string $trunk = "", array $end_c
  * 					in tabs for each instance of trunk in str
  * @version	2.2	-> NEW VERSION, $adds version 
 */
-function all_subcontent_with_trunk_v21_m(string $str, string $trunk = "", 
+function all_subcontent_with_trunk_v21_m(string $str, string $trunk, 
 										array $end_content, bool $with_end = false, 
 										int $size_end = 0, string $adds = "") : array {
 	$res = array();
@@ -277,7 +277,7 @@ function all_subcontent_with_trunk_v21_m(string $str, string $trunk = "",
 		}
 	}
 	else {
-		while(!empty($res_util = util_subcontent_trunk_m($copy_str,"",$end_content))) {
+		while(!empty($res_util = util_subcontent_trunk_m($copy_str,$end_content,""))) {
 			$with_end_trunk = ($with_end == true) ? strlen($res_util[0])+$size_end : 0;
 			$s_str = $copy_str;
 			$offset_next = 0;

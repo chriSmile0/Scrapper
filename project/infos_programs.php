@@ -7,9 +7,9 @@
  * @return	void
 */
 function print_info_scrapper() {
-	echo "[**BASIC SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**BASIC SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the html content who 
 		is display on the website (for example a h2 title section).
 		Usage of docXpath is my move to travel the document 
@@ -28,10 +28,11 @@ function print_info_scrapper() {
 				maybe aftet a first scrape with the query\033[01;37m html/body/div/article \033[0mfor example   
 
 	[OPTIONS]\n";
-	echo "		php $prog --test --with-openssl\n";
-	echo "		php $prog --help \t print $prog help\n";
-	echo "		php $prog --version \t print $prog version\n\n";
-	echo "[**END BASIC SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "		php $prog --test --with-openssl\n";
+	$rtn .= "		php $prog --help \t print $prog help\n";
+	$rtn .= "		php $prog --version \t print $prog version\n\n";
+	$rtn .= "[**END BASIC SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -41,9 +42,9 @@ function print_info_scrapper() {
  * @return	void
 */
 function print_info_scrapper_leclerc() {
-	echo "[**LECLERC SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**LECLERC SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_leclerc.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the js CDATA array/json 
 
 		The CDATA array contain many data per product but we extract many of
@@ -59,7 +60,8 @@ function print_info_scrapper_leclerc() {
 	[PARAMETERS]
 		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
 		[city] -> \033[01;37m Paris/Lyon \033[0m\n\n";		
-	echo "[**END LECLERC BASIC SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END LECLERC BASIC SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -69,9 +71,9 @@ function print_info_scrapper_leclerc() {
  * @return	void
 */
 function print_info_scrapper_carrefour() {
-	echo "[**CARREFOUR SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**CARREFOUR SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_carrefour.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the js we contain a very big
 		json who contain very much informations on all products 
 
@@ -90,7 +92,8 @@ function print_info_scrapper_carrefour() {
 
 	[PARAMETERS]
 		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";
-	echo "[**END CARREFOUR SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END CARREFOUR SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -100,9 +103,9 @@ function print_info_scrapper_carrefour() {
  * @return	void
 */
 function print_info_scrapper_auchan() {
-	echo "[**AUCHAN SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**AUCHAN SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_auchan.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the html content directly
 
 		For this tool we use \033[01;37m php-webdriver\033[0m to simulate a browser and  
@@ -123,7 +126,8 @@ function print_info_scrapper_auchan() {
 		[research_product_type] -> the product we search,\033[01;37m lardons/oeufs\033[0m
 		[town] -> the research area \033[01;37mParis/Lyon\033[0m\n\n";
 
-	echo "[**END AUCHAN BASIC SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END AUCHAN BASIC SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -133,9 +137,9 @@ function print_info_scrapper_auchan() {
  * @return	void
 */
 function print_info_scrapper_systemeu() {
-	echo "[**SYSTEME_U SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**SYSTEME_U SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_systemeu.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the js array/json
 		For scrap this set of data we use \033[01;37m puppeteer-extra-plugin-stealth\033[0m		
 
@@ -151,7 +155,8 @@ function print_info_scrapper_systemeu() {
 		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m
 		[town] -> the research area \033[01;37mParis/Lyon\033[0m\n\n";	
 
-	echo "[**END SYSTEME_U SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END SYSTEME_U SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -161,9 +166,9 @@ function print_info_scrapper_systemeu() {
  * @return	void
 */
 function print_info_scrapper_monoprix() {
-	echo "[**MONOPRIX SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**MONOPRIX SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_monoprix.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the js array/json
 		For scrap this set of data we use \033[01;37m php-webdriver\033[0m or
 		\033[01;37m puppeteer\033[0m		
@@ -177,7 +182,8 @@ function print_info_scrapper_monoprix() {
 	[PARAMETERS]
 		[research_product_type] -> the product we search,\033[01;37m lardons/allumettes\033[0m\n\n";			
 
-	echo "[**END MONOPRIX SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END MONOPRIX SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 
 /**
@@ -187,9 +193,9 @@ function print_info_scrapper_monoprix() {
  * @return	void
 */
 function print_info_scrapper_intermarche() {
-	echo "[**INTERMARCHE SCRAPPER INFORMATIONS**]\n";
+	$rtn = "[**INTERMARCHE SCRAPPER INFORMATIONS**]\n";
 	$prog = "scrapper_intermarche.php";
-	echo "\t[BRIEF]	 
+	$rtn .= "\t[BRIEF]	 
 		It's use for scrap the data in the js we contain a very big
 		json who contain very much informations on all products 
 
@@ -210,6 +216,7 @@ function print_info_scrapper_intermarche() {
 		[research_product_type] -> the product we search,\033[01;37m lardons/oeufs\033[0m
 		[town] -> the research area  \033[01;37m Paris/Lyon\033[0m\n\n";
 
-	echo "[**END INTERMARCHE SCRAPPER INFORMATIONS**]\n";
+	$rtn .= "[**END INTERMARCHE SCRAPPER INFORMATIONS**]\n";
+	return $rtn;
 }
 ?> 

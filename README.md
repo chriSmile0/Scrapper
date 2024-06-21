@@ -103,7 +103,7 @@ README.md
 
 ## Version 
 
-### V1.5
+### V1.5.1
 - Basic version of scrapper : 
   - [x] http, https
   - [x] html content generate by JS -> `puppeteer`  
