@@ -530,7 +530,7 @@ function post_to_otherphp_file(string $url, array $key_elements) {
 
 //$url_ = 'pricecomparator.co/product/cities.php';
 //post_to_otherphp_file($url_,["Monoprix"=>"Test"]);
-//echo display_compare(["Monoprix"=>["Paris","Annecy"],"Carrefour"=>["Paris","Brest"]],"lardons","lardons"); // !!!!!!!!!!!!
+echo display_compare(["Monoprix"=>["Paris"],"Auchan"=>["Annecy"]],"lardons","lardons"); // !!!!!!!!!!!!
 //echo display_compare_web(["Monoprix"=>["Paris","Annecy"],"Carrefour"=>["Paris","Brest"]],"lardons","lardons");
 //var_dump(display_compare(["Carrefour"=>["Paris"]],"lardons","lardons"));
 

@@ -110,7 +110,6 @@ function change_quantity_m(string $libelle) : string {
 */
 function generate_driver_m(int $p, bool $web_server) {
 	//-----------------Remote with geckodriver in terminal--------------------// 
-	var_dump($web_server);
 	if(!$web_server) {
 		$host = 'http://localhost:'.$p.'/';
 

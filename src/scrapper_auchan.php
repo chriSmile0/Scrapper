@@ -316,11 +316,22 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 				}
 			}
 
-			$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click(); // accept just try
-			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
+			$res_spe = "";
+			try {
+				$driver->wait(5)->until(WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::id('onetrust-accept-btn-handler')));
+				$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click();
+			}
+			catch (Exception $e) {
+				$res_spe = $e->getMessage();
+			}
+			echo "|$res_spe|\n";
+			
+			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1],"visibility");
+			echo "AUCHA4:".$res_find[1]."\n";
+	
 			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
-			sleep(3); // for the moment 
-			$driver->takeScreenshot("t.png");
+			sleep(1); // for the moment 
+			//$driver->takeScreenshot("t.png");
 			try {
 				$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()");
 			}
@@ -328,18 +339,18 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 				$res_find[1] = $e->getMessage();
 			}
 			
-			sleep(3);
-			$driver->takeScreenshot("t2.png");
+			sleep(2);
+			//$driver->takeScreenshot("t2.png");
 
 		
 			echo "AUCHA5:".$res_find[1]."\n";
-			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
+			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
-			sleep(10);
+			sleep(2);
 			echo "AUCHA6:".$res_find[1]."\n";
 			$driver->executeScript('window.scrollTo(0,200);');
-			$driver->takeScreenshot("t3.png");
+			//$driver->takeScreenshot("t3.png");
 			$error = $res_find[1];
 			$src = $driver->getPageSource();
 		}
