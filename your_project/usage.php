@@ -434,13 +434,13 @@ function main_u($argc, $argv) {
 	//var_dump($elements);
 }
 
-main_u($argc,$argv);
+//main_u($argc,$argv);
 //echo "min_mon \n";
 //var_dump($scrappers_usages_min_mon);
 //echo parrallelize_scrapping_process("Monoprix",["lardons","lardons"],4444,2);
 //echo json_encode(globals_execs_server($scrappers_usages_min_am));
 //var_dump(use_content_scrapper_monoprix("Lardons",4444,false));
-//var_dump(use_content_scrapper_auchan("Lardons","Annecy",4444,false));
+var_dump(use_content_scrapper_auchan("Lardons","Annecy",4444,false));
 //var_dump(parrallelize_scrapping_process("Monoprix",["lardons",["Paris"]],4444,1));
 //var_dump(use_content_scrapper_auchan("Lardons","Paris",4444,false));
 ?>

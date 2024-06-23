@@ -49,8 +49,8 @@ use Facebook\WebDriver\Firefox\FirefoxDriver as FirefoxDriver;
 use Facebook\WebDriver\Firefox\FirefoxProfile as FirefoxProfile;
 use Facebook\WebDriver\Remote\ExecuteMethod;
 
-require __DIR__ . '/../../../autoload.php'; // EXPORT 
-//require __DIR__ . '/../vendor/autoload.php'; // DEV
+//require __DIR__ . '/../../../autoload.php'; // EXPORT 
+require __DIR__ . '/../vendor/autoload.php'; // DEV
 
 
 function extract_brand_a(string $label) : string {
@@ -317,9 +317,17 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 			}
 
 			$driver->findElement(WebDriverBy::id('onetrust-accept-btn-handler'))->click(); // accept just try
+			$driver->takeScreenshot("0.png");
 			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[1]/div/div[1]/input",$res_find[1]);
-			if($res_find[0]!=="") $res_find[0]->sendKeys($town);
-			sleep(3); // for the moment 
+			echo "find : ". $res_find[1]."\n";
+			//if($res_find[0]!=="") $res_find[0]->sendKeys($town);
+			try {
+				$driver->findElement(WebDriverBy::xpath('/html/body/div[13]/div[1]/main/div[1]/div[1]/div/div[1]/input'))->sendKeys($town);
+			}
+			catch (Exception $e) {
+				echo $e->getMessage();
+			}
+			sleep(10); // for the moment 
 			$driver->takeScreenshot("t.png");
 			try {
 				$driver->executeScript("(document.getElementsByClassName('journey__search-suggests-list')[0]).childNodes[0].click()");
@@ -333,7 +341,7 @@ function extract_source_auchan(string $url,$driver, string $town, string $target
 
 		
 			echo "AUCHA5:".$res_find[1]."\n";
-			$res_find = findElement_a($driver,"xpath","/html/body/div[14]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
+			$res_find = findElement_a($driver,"xpath","/html/body/div[13]/div[1]/main/div[1]/div[2]/div[2]/section/div[1]/div/div/div[2]/form/button",$res_find[1]);
 			if($res_find[0]!=="") $res_find[0]->submit();
 			
 			sleep(10);
