@@ -330,14 +330,16 @@ function globals_execs_locals(array $scrappers_usage) {
 */
 function globals_execs_server(array $scrappers_usage) {// OK 
 	$childs = array();
-	$recv_content = array();
 	$ports = 4444;
 	$returns = array();
 	$arrys = array();
 	$i = 0;
 	$cpt = 2; // POSSIBLE TO ADAPT BUT ONE RETRY IS I THINK OK WITH THE PATIENCE OF THE USER
-	$j = 0;
-	while(($j < $cpt) && !empty($scrappers_usage)) {
+	$l = 0;
+	$recv_content = array();
+	while(($l < $cpt) && (!empty($scrappers_usage))) {
+		//$recv_content = array();
+		echo "\nl : $l\n";
 		foreach($scrappers_usage as $key => $usages) {
 			$returns[$key] = [];
 			$portd = $ports+$i;
@@ -390,6 +392,7 @@ function globals_execs_server(array $scrappers_usage) {// OK
 								$returns[$pid[2]] = array_merge($returns[$pid[2]],[$pid[3]=>json_decode($rtn_tt,true)]);
 								$recv_content[$key][1] = true;
 								$recv_content[$key][3] = true;
+								//unset($scrappers_usage($rc[$key]))
 							}
 						}
 					}
@@ -401,17 +404,16 @@ function globals_execs_server(array $scrappers_usage) {// OK
 				}
 			}
 		}
-		var_dump($recv_content);
 		foreach($recv_content as $rc) { // check if we have all contents, if this is not the case we relaunch the forgot research
 			if($rc[3]==false) {
 				echo "re-LAUNCH :".$rc[0].", on port : ".$rc[2]."\n";
+				$i--;
 			}
 			else {
 				unset($scrappers_usage[$rc[0]]);
 			}
 		}
-		var_dump($scrappers_usage);
-		$j++;
+		$l++;
 	}
 	return $returns;
 }
@@ -434,13 +436,13 @@ function main_u($argc, $argv) {
 	//var_dump($elements);
 }
 
-//main_u($argc,$argv);
+main_u($argc,$argv);
 //echo "min_mon \n";
 //var_dump($scrappers_usages_min_mon);
 //echo parrallelize_scrapping_process("Monoprix",["lardons","lardons"],4444,2);
 //echo json_encode(globals_execs_server($scrappers_usages_min_am));
 //var_dump(use_content_scrapper_monoprix("Lardons",4444,false));
-var_dump(use_content_scrapper_auchan("Lardons","Annecy",4444,false));
+//var_dump(use_content_scrapper_auchan("Lardons","Annecy",4444,false));
 //var_dump(parrallelize_scrapping_process("Monoprix",["lardons",["Paris"]],4444,1));
 //var_dump(use_content_scrapper_auchan("Lardons","Paris",4444,false));
 ?>
